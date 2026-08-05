@@ -24,9 +24,7 @@
 #define NDEBUG          // comment out to enable assert()
 #endif
 
-#include <stdlib.h>     // malloc
 #include <string.h>     // strlen
-#include <stdarg.h>     // va_list
 #include <assert.h>
 #include <string>
 
