@@ -294,3 +294,49 @@ jobs:
     - name: Build
       working-directory: ${{github.workspace}}/build
       run: cmake --build . --config Release
+
+  build-bsd:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - { name: freebsd, version: '14.0', architecture: x86-64 }
+          - { name: freebsd, version: '14.0', architecture: arm64 }
+          - { name: openbsd, version: '7.5', architecture: x86-64 }
+          - { name: openbsd, version: '7.5', architecture: arm64 }
+          - { name: netbsd, version: '10.0', architecture: x86-64 }
+          - { name: netbsd, version: '10.0', architecture: arm64 }
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        submodules: recursive
+
+    - name: Build and Test in VM
+      uses: cross-platform-actions/action@v0.25.0
+      with:
+        operating_system: ${{ matrix.os.name }}
+        version: ${{ matrix.os.version }}
+        architecture: ${{ matrix.os.architecture }}
+        run: |
+          if [ "${{ matrix.os.name }}" = "freebsd" ]; then
+            sudo env IGNORE_OSVERSION=yes pkg update
+            sudo env IGNORE_OSVERSION=yes pkg install -y git cmake ninja pkgconf libX11 libXext libXft libXinerama libXcursor libXfixes libXrender
+          elif [ "${{ matrix.os.name }}" = "openbsd" ]; then
+            sudo pkg_add -I git cmake ninja
+          elif [ "${{ matrix.os.name }}" = "netbsd" ]; then
+            sudo pkgin -y install git cmake ninja pkgconf libX11 libXext libXft libXinerama libXcursor libXfixes libXrender
+          fi
+
+          cmake -B build -G Ninja \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D CMAKE_CXX_STANDARD=11 \
+            -D FLTK_USE_SYSTEM_LIBJPEG=OFF \
+            -D FLTK_USE_SYSTEM_LIBPNG=OFF \
+            -D FLTK_USE_SYSTEM_ZLIB=OFF \
+            -D FLTK_BUILD_FORMS=ON \
+            -D FLTK_BUILD_SHARED_LIBS=OFF
+
+          cmake --build build
+
+          ./build/bin/test/unittests --core
