@@ -49,11 +49,11 @@ void close_cb(Fl_Widget *, void *) {
 
 
 Fl_Menu_Item items[] = {
-  { "File", 0, 0, 0, FL_SUBMENU},
-  { "Choose image file…", 0, (Fl_Callback*)chooser_cb},
-  { "Quit", 0, close_cb},
-  {0},
-  {0},
+  { .text = "File", .shortcut_ = 0, .flags = FL_SUBMENU, .callback_ = 0, .user_data_ = 0},
+  { .text = "Choose image file…", .shortcut_ = 0, .callback_ = (Fl_Callback*)chooser_cb},
+  { .text = "Quit", .shortcut_ = 0, .callback_ = close_cb},
+  {.text = 0},
+  {.text = 0},
 };
 
 

@@ -659,30 +659,30 @@ Sudoku::Sudoku()
   Fl_Group *g;
   SudokuCell *cell;
   static Fl_Menu_Item   items[] = {
-    { "&Game", 0, 0, 0, FL_SUBMENU },
-    {   "&New Game", FL_COMMAND | 'n', new_cb, 0, FL_MENU_DIVIDER },
-    {   "&Check Game", FL_COMMAND | 'c', check_cb, 0, 0 },
-    {   "&Restart Game", FL_COMMAND | 'r', restart_cb, 0, 0 },
-    {   "&Solve Game", FL_COMMAND | 's', solve_cb, 0, FL_MENU_DIVIDER },
-    {   "&Update Helpers", 0, update_helpers_cb, 0, 0 },
-    {   "&Mute Sound", FL_COMMAND | 'm', mute_cb, 0, FL_MENU_TOGGLE | FL_MENU_DIVIDER },
+    { "&Game", 0, FL_SUBMENU, 0, 0 },
+    {   "&New Game", FL_COMMAND | 'n', FL_MENU_DIVIDER, new_cb, 0 },
+    {   "&Check Game", FL_COMMAND | 'c', 0, check_cb, 0 },
+    {   "&Restart Game", FL_COMMAND | 'r', 0, restart_cb, 0 },
+    {   "&Solve Game", FL_COMMAND | 's', FL_MENU_DIVIDER, solve_cb, 0 },
+    {   "&Update Helpers", 0, 0, update_helpers_cb, 0 },
+    {   "&Mute Sound", FL_COMMAND | 'm', FL_MENU_TOGGLE | FL_MENU_DIVIDER, mute_cb, 0 },
 #ifndef USE_MACOS
-    {   "&Quit", FL_COMMAND | 'q', close_cb, 0, 0 },
+    {   "&Quit", FL_COMMAND | 'q', 0, close_cb, 0 },
 #endif
     {   0 },
-    { "&Edit", 0, 0, 0, FL_SUBMENU },
-    {   "&Undo", FL_COMMAND | 'z', undo_cb },
-    {   "&Redo", FL_COMMAND | 'Z', redo_cb },
+    { "&Edit", 0, FL_SUBMENU, 0, 0 },
+    {   "&Undo", FL_COMMAND | 'z', 0, undo_cb },
+    {   "&Redo", FL_COMMAND | 'Z', 0, redo_cb },
     {   0 },
-    { "&Difficulty", 0, 0, 0, FL_SUBMENU },
-    {   "&Easy", 0, diff_cb, (void *)"0", FL_MENU_RADIO },
-    {   "&Medium", 0, diff_cb, (void *)"1", FL_MENU_RADIO },
-    {   "&Hard", 0, diff_cb, (void *)"2", FL_MENU_RADIO },
-    {   "&Impossible", 0, diff_cb, (void *)"3", FL_MENU_RADIO },
+    { "&Difficulty", 0, FL_SUBMENU, 0, 0 },
+    {   "&Easy", 0, FL_MENU_RADIO, diff_cb, (void *)"0" },
+    {   "&Medium", 0, FL_MENU_RADIO, diff_cb, (void *)"1" },
+    {   "&Hard", 0, FL_MENU_RADIO, diff_cb, (void *)"2" },
+    {   "&Impossible", 0, FL_MENU_RADIO, diff_cb, (void *)"3" },
     {   0 },
 #ifndef USE_MACOS
-    { "&Help", 0, 0, 0, FL_SUBMENU },
-    {   "&About Sudoku", FL_F + 1, help_cb, 0, 0 },
+    { "&Help", 0, FL_SUBMENU, 0, 0 },
+    {   "&About Sudoku", FL_F + 1, 0, help_cb, 0 },
     {   0 },
 #endif
     { 0 }

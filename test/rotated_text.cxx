@@ -155,11 +155,11 @@ void engraved_cb(Fl_Widget *,void *) {
 }
 
 Fl_Menu_Item choices[] = {
-  {"FL_NORMAL_LABEL",0,normal_cb},
-  {"FL_SHADOW_LABEL",0,shadow_cb},
-  {"FL_ENGRAVED_LABEL",0,engraved_cb},
-  {"FL_EMBOSSED_LABEL",0,embossed_cb},
-  {0}};
+  {.text = "FL_NORMAL_LABEL", .shortcut_ = 0, .callback_ = normal_cb},
+  {.text = "FL_SHADOW_LABEL", .shortcut_ = 0, .callback_ = shadow_cb},
+  {.text = "FL_ENGRAVED_LABEL", .shortcut_ = 0, .callback_ = engraved_cb},
+  {.text = "FL_EMBOSSED_LABEL", .shortcut_ = 0, .callback_ = embossed_cb},
+  {.text = 0}};
 
 int main(int argc, char **argv) {
   window = new Fl_Double_Window(400,425);

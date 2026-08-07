@@ -1283,29 +1283,29 @@ void stop_cb(Fl_Widget*, void*) {abortflag = 1;}
 void continue_cb(Fl_Widget*, void*) {}
 
 Fl_Menu_Item menu[] = {
-  {"Autoplay", 'a', autoplay_cb},
-  {"Legal moves", 'l', legal_cb},
-  {"Move for me", 'm', move_cb},
-  {"New game", 'n', newgame_cb},
-  {"Predict", 'p', predict_cb},
-  {"Switch sides", 's', switch_cb},
-  {"Undo", 'u', undo_cb, 0, FL_MENU_DIVIDER},
-  {"Forced jumps rule", 'f', forced_cb, 0, FL_MENU_TOGGLE|FL_MENU_VALUE},
-  {"Debug", 'd', debug_cb, (void *)"d", FL_MENU_TOGGLE},
-  {"Intelligence...", 'i', intel_cb, 0, FL_MENU_DIVIDER},
-  {"Copyright", 'c', copyright_cb},
-  {"Quit", 'q', quit_cb},
-  {0}};
+  {.text = "Autoplay", .shortcut_ = 'a', .callback_ = autoplay_cb},
+  {.text = "Legal moves", .shortcut_ = 'l', .callback_ = legal_cb},
+  {.text = "Move for me", .shortcut_ = 'm', .callback_ = move_cb},
+  {.text = "New game", .shortcut_ = 'n', .callback_ = newgame_cb},
+  {.text = "Predict", .shortcut_ = 'p', .callback_ = predict_cb},
+  {.text = "Switch sides", .shortcut_ = 's', .callback_ = switch_cb},
+  {.text = "Undo", .shortcut_ = 'u', .callback_ = undo_cb, .user_data_ = 0, .flags = FL_MENU_DIVIDER},
+  {.text = "Forced jumps rule", .shortcut_ = 'f', .callback_ = forced_cb, .user_data_ = 0, .flags = FL_MENU_TOGGLE | FL_MENU_VALUE},
+  {.text = "Debug", .shortcut_ = 'd', .callback_ = debug_cb, .user_data_ = (void*)"d", .flags = FL_MENU_TOGGLE},
+  {.text = "Intelligence...", .shortcut_ = 'i', .callback_ = intel_cb, .user_data_ = 0, .flags = FL_MENU_DIVIDER},
+  {.text = "Copyright", .shortcut_ = 'c', .callback_ = copyright_cb},
+  {.text = "Quit", .shortcut_ = 'q', .callback_ = quit_cb},
+  {.text = 0}};
 
 Fl_Menu_Item busymenu[] = {
-  {"Stop", '.', stop_cb},
-  {"Autoplay", 'a', autoplay_cb},
-  {"Continue", 0, continue_cb},
-  {"Debug", 'd', debug_cb, (void *)"d", FL_MENU_TOGGLE},
-  {"Intelligence...", 'i', intel_cb},
-  {"Copyright", 'c', copyright_cb},
-  {"Quit", 'q', quit_cb},
-  {0}};
+  {.text = "Stop", .shortcut_ = '.', .callback_ = stop_cb},
+  {.text = "Autoplay", .shortcut_ = 'a', .callback_ = autoplay_cb},
+  {.text = "Continue", .shortcut_ = 0, .callback_ = continue_cb},
+  {.text = "Debug", .shortcut_ = 'd', .callback_ = debug_cb, .user_data_ = (void*)"d", .flags = FL_MENU_TOGGLE},
+  {.text = "Intelligence...", .shortcut_ = 'i', .callback_ = intel_cb},
+  {.text = "Copyright", .shortcut_ = 'c', .callback_ = copyright_cb},
+  {.text = "Quit", .shortcut_ = 'q', .callback_ = quit_cb},
+  {.text = 0}};
 
 #endif
 

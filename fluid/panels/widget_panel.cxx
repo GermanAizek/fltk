@@ -748,32 +748,32 @@ static void cb_Browse1(Fl_Button* o, void* v) {
 Fl_Group* wp_gui_alignment = (Fl_Group*)nullptr;
 
 Fl_Menu_Item menu_[] = {
- {"   Image Alignment   ", 0,  nullptr, (void*)((fl_intptr_t)-1), 0, (uchar)FL_NORMAL_LABEL, 1, 10, 0 },
- {"image over text", 0,  nullptr, (void*)((fl_intptr_t)FL_ALIGN_IMAGE_OVER_TEXT), 0, (uchar)FL_NORMAL_LABEL, 0, 9, 0 },
- {"text over image", 0,  nullptr, (void*)((fl_intptr_t)FL_ALIGN_TEXT_OVER_IMAGE), 0, (uchar)FL_NORMAL_LABEL, 0, 9, 0 },
- {"text next to image", 0,  nullptr, (void*)((fl_intptr_t)FL_ALIGN_TEXT_NEXT_TO_IMAGE), 0, (uchar)FL_NORMAL_LABEL, 0, 9, 0 },
- {"image next to text", 0,  nullptr, (void*)((fl_intptr_t)FL_ALIGN_IMAGE_NEXT_TO_TEXT), 0, (uchar)FL_NORMAL_LABEL, 0, 9, 0 },
- {"image is backdrop", 0,  nullptr, (void*)((fl_intptr_t)FL_ALIGN_IMAGE_BACKDROP), 0, (uchar)FL_NORMAL_LABEL, 0, 9, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "   Image Alignment   ", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)-1), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 1, .labelsize_ = 10, .labelcolor_ = 0 },
+ {.text = "image over text", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_ALIGN_IMAGE_OVER_TEXT), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 9, .labelcolor_ = 0 },
+ {.text = "text over image", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_ALIGN_TEXT_OVER_IMAGE), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 9, .labelcolor_ = 0 },
+ {.text = "text next to image", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_ALIGN_TEXT_NEXT_TO_IMAGE), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 9, .labelcolor_ = 0 },
+ {.text = "image next to text", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_ALIGN_IMAGE_NEXT_TO_TEXT), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 9, .labelcolor_ = 0 },
+ {.text = "image is backdrop", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_ALIGN_IMAGE_BACKDROP), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 9, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 Fl_Menu_Item menu_1[] = {
- {"   Inside && Outside   ", 0,  nullptr, (void*)((fl_intptr_t)-1), 0, (uchar)FL_NORMAL_LABEL, 1, 10, 0 },
- {"top left", 0,  nullptr, (void*)((fl_intptr_t)FL_ALIGN_TOP_LEFT), 0, (uchar)FL_NORMAL_LABEL, 0, 9, 0 },
- {"top", 0,  nullptr, (void*)((fl_intptr_t)FL_ALIGN_TOP), 0, (uchar)FL_NORMAL_LABEL, 0, 9, 0 },
- {"top right", 0,  nullptr, (void*)((fl_intptr_t)FL_ALIGN_TOP_RIGHT), 0, (uchar)FL_NORMAL_LABEL, 0, 9, 0 },
- {"left", 0,  nullptr, (void*)((fl_intptr_t)FL_ALIGN_LEFT), 0, (uchar)FL_NORMAL_LABEL, 0, 9, 0 },
- {"center", 0,  nullptr, (void*)((fl_intptr_t)FL_ALIGN_CENTER), 0, (uchar)FL_NORMAL_LABEL, 0, 9, 0 },
- {"right", 0,  nullptr, (void*)((fl_intptr_t)FL_ALIGN_RIGHT), 0, (uchar)FL_NORMAL_LABEL, 0, 9, 0 },
- {"bottom left", 0,  nullptr, (void*)((fl_intptr_t)FL_ALIGN_BOTTOM_LEFT), 0, (uchar)FL_NORMAL_LABEL, 0, 9, 0 },
- {"bottom", 0,  nullptr, (void*)((fl_intptr_t)FL_ALIGN_BOTTOM), 0, (uchar)FL_NORMAL_LABEL, 0, 9, 0 },
- {"bottom right", 0,  nullptr, (void*)((fl_intptr_t)FL_ALIGN_BOTTOM_RIGHT), 0, (uchar)FL_NORMAL_LABEL, 0, 9, 0 },
- {"   Outside Alignment   ", 0,  nullptr, (void*)((fl_intptr_t)-1), 0, (uchar)FL_NORMAL_LABEL, 1, 10, 0 },
- {"left top", 0,  nullptr, (void*)((fl_intptr_t)FL_ALIGN_LEFT_TOP), 0, (uchar)FL_NORMAL_LABEL, 0, 9, 0 },
- {"right top", 0,  nullptr, (void*)((fl_intptr_t)FL_ALIGN_RIGHT_TOP), 0, (uchar)FL_NORMAL_LABEL, 0, 9, 0 },
- {"left bottom", 0,  nullptr, (void*)((fl_intptr_t)FL_ALIGN_LEFT_BOTTOM), 0, (uchar)FL_NORMAL_LABEL, 0, 9, 0 },
- {"right bottom", 0,  nullptr, (void*)((fl_intptr_t)FL_ALIGN_RIGHT_BOTTOM), 0, (uchar)FL_NORMAL_LABEL, 0, 9, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "   Inside && Outside   ", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)-1), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 1, .labelsize_ = 10, .labelcolor_ = 0 },
+ {.text = "top left", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_ALIGN_TOP_LEFT), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 9, .labelcolor_ = 0 },
+ {.text = "top", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_ALIGN_TOP), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 9, .labelcolor_ = 0 },
+ {.text = "top right", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_ALIGN_TOP_RIGHT), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 9, .labelcolor_ = 0 },
+ {.text = "left", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_ALIGN_LEFT), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 9, .labelcolor_ = 0 },
+ {.text = "center", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_ALIGN_CENTER), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 9, .labelcolor_ = 0 },
+ {.text = "right", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_ALIGN_RIGHT), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 9, .labelcolor_ = 0 },
+ {.text = "bottom left", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_ALIGN_BOTTOM_LEFT), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 9, .labelcolor_ = 0 },
+ {.text = "bottom", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_ALIGN_BOTTOM), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 9, .labelcolor_ = 0 },
+ {.text = "bottom right", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_ALIGN_BOTTOM_RIGHT), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 9, .labelcolor_ = 0 },
+ {.text = "   Outside Alignment   ", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)-1), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 1, .labelsize_ = 10, .labelcolor_ = 0 },
+ {.text = "left top", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_ALIGN_LEFT_TOP), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 9, .labelcolor_ = 0 },
+ {.text = "right top", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_ALIGN_RIGHT_TOP), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 9, .labelcolor_ = 0 },
+ {.text = "left bottom", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_ALIGN_LEFT_BOTTOM), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 9, .labelcolor_ = 0 },
+ {.text = "right bottom", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_ALIGN_RIGHT_BOTTOM), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 9, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 fluid::widget::Formula_Input* widget_x_input = (fluid::widget::Formula_Input*)nullptr;
@@ -934,10 +934,10 @@ static void cb_Children(Fl_Choice* o, void* v) {
 }
 
 Fl_Menu_Item menu_Children[] = {
- {"Fixed", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"Reposition", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"Resize", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "Fixed", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "Reposition", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "Resize", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 Fl_Group* wp_gui_flexp = (Fl_Group*)nullptr;
@@ -2222,8 +2222,8 @@ static void cb_e(Fl_Input* o, void* v) {
 static void cb_f(Fl_Choice* o, void* v) {
 //ﬂ ▼ ---------------------- callback -~-~~~~=-~-~~~--~=-~=- ▼ ﬂ//
   static Fl_Menu_Item empty_type_menu[] = {
-      {"Normal",0,nullptr,(void*)nullptr},
-      {nullptr}};
+      {.text = "Normal", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)nullptr},
+      {.text = nullptr}};
 
     if (v == LOAD) {
       Fl_Menu_Item* m = current_widget->subtypes();
@@ -2320,16 +2320,16 @@ static void cb_11(Fl_Choice* o, void* v) {
 }
 
 Fl_Menu_Item menu_2[] = {
- {"private", 0,  nullptr, (void*)(0), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"public", 0,  nullptr, (void*)(1), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"protected", 0,  nullptr, (void*)(2), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "private", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(0), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "public", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(1), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "protected", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(2), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 Fl_Menu_Item menu_3[] = {
- {"local", 0,  nullptr, (void*)(0), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"global", 0,  nullptr, (void*)(1), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "local", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(0), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "global", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(1), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 static void cb_code_choice(Fl_Button*, void* v) {
@@ -2579,9 +2579,9 @@ static void cb_13(Fl_Input_Choice* o, void* v) {
 }
 
 Fl_Menu_Item menu_4[] = {
- {"void*", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 4, 11, 0 },
- {"long", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 4, 11, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "void*", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 4, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "long", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 4, .labelsize_ = 11, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 Fl_Box* w_when_box = (Fl_Box*)nullptr;
@@ -2638,11 +2638,11 @@ static void cb_14(Fl_Choice* o, void* v) {
 }
 
 Fl_Menu_Item menu_5[] = {
- {"in source file only", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"in header file only", 0,  nullptr, nullptr, 16, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"\"static\" in source file", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"in source and \"extern\" in header", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "in source file only", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "in header file only", .shortcut_ = 0,  .flags = 16, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "\"static\" in source file", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "in source and \"extern\" in header", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 static void cb_15(Fl_Choice* o, void* v) {
@@ -2670,10 +2670,10 @@ static void cb_15(Fl_Choice* o, void* v) {
 }
 
 Fl_Menu_Item menu_6[] = {
- {"private", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"public", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"protected", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "private", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "public", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "protected", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 static void cb_16(Fl_Choice* o, void* v) {
@@ -2693,13 +2693,13 @@ static void cb_16(Fl_Choice* o, void* v) {
 }
 
 Fl_Menu_Item menu_7[] = {
- {"binary: unsigned char[]", 0,  nullptr, (void*)(0), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"text: const char*", 0,  nullptr, (void*)(1), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"compressed: unsigned char[]", 0,  nullptr, (void*)(2), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"binary: std::vector<uint8_t>", 0,  nullptr, (void*)(3), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"text: std::string", 0,  nullptr, (void*)(4), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"compressed: std::vector<uint8_t>", 0,  nullptr, (void*)(5), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "binary: unsigned char[]", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(0), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "text: const char*", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(1), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "compressed: unsigned char[]", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(2), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "binary: std::vector<uint8_t>", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(3), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "text: std::string", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(4), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "compressed: std::vector<uint8_t>", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(5), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 static void cb_Name(Fl_Input* o, void* v) {
@@ -3015,10 +3015,10 @@ static void cb_17(Fl_Choice* o, void* v) {
 }
 
 Fl_Menu_Item menu_8[] = {
- {"private", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"public", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"protected", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "private", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "public", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "protected", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 static void cb_Attribute(Fl_Input* o, void* v) {
@@ -3309,11 +3309,11 @@ static void cb_18(Fl_Choice* o, void* v) {
 }
 
 Fl_Menu_Item menu_9[] = {
- {"in source file only", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"in header file only", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"\"static\" in source file", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"in source and \"extern\" in header", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "in source file only", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "in header file only", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "\"static\" in source file", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "in source and \"extern\" in header", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 static void cb_19(Fl_Choice* o, void* v) {
@@ -3341,10 +3341,10 @@ static void cb_19(Fl_Choice* o, void* v) {
 }
 
 Fl_Menu_Item menu_a[] = {
- {"private", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"public", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"protected", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "private", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "public", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "protected", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 static void cb_1a(Fl_Tile* o, void* v) {
@@ -3541,10 +3541,10 @@ static void cb_1c(Fl_Choice* o, void* v) {
 }
 
 Fl_Menu_Item menu_b[] = {
- {"static", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"global", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"local", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "static", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "global", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "local", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 static void cb_1d(Fl_Choice* o, void* v) {
@@ -3572,10 +3572,10 @@ static void cb_1d(Fl_Choice* o, void* v) {
 }
 
 Fl_Menu_Item menu_c[] = {
- {"private", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"public", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"protected", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "private", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "public", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "protected", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 static void cb_declare(Fl_Check_Button* o, void* v) {

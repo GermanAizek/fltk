@@ -363,12 +363,12 @@ void quit_cb(Fl_Widget*, void*) {
 
 // A popup menu with a few test tasks.
 Fl_Menu_Item app_menu[] = {
-  { "with modal window", 0, modal_window_cb },
-  { "with non-modal window", 0, non_modal_window_cb },
-  { "unsubscribe middle canvas", 0, unsubscribe_cb },
-  { "resubscribe middle canvas", 0, subscribe_cb },
-  { "delete middle canvas", 0, delete_cb },
-  { nullptr }
+  { .text = "with modal window", .shortcut_ = 0, .callback_ = modal_window_cb },
+  { .text = "with non-modal window", .shortcut_ = 0, .callback_ = non_modal_window_cb },
+  { .text = "unsubscribe middle canvas", .shortcut_ = 0, .callback_ = unsubscribe_cb },
+  { .text = "resubscribe middle canvas", .shortcut_ = 0, .callback_ = subscribe_cb },
+  { .text = "delete middle canvas", .shortcut_ = 0, .callback_ = delete_cb },
+  { .text = nullptr }
 };
 
 //

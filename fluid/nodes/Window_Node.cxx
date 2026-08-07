@@ -113,9 +113,12 @@ void show_settings_cb(Fl_Widget *, void *) {
 ////////////////////////////////////////////////////////////////
 
 Fl_Menu_Item window_type_menu[] = {
-  {"Single",0,nullptr,(void*)FL_WINDOW},
-  {"Double",0,nullptr,(void*)(FL_DOUBLE_WINDOW)},
-  {nullptr}};
+  {.text = "Single", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_WINDOW},
+  {.text = "Double",
+     .shortcut_ = 0,
+     .callback_ = nullptr,
+     .user_data_ = (void*)(FL_DOUBLE_WINDOW)},
+  {.text = nullptr}};
 
 static int overlays_invisible;
 

@@ -35,12 +35,12 @@ public:
   Fl_Image_Reader()
     : is_file_(0)
     , is_data_(0)
+    , error_(0)
     , file_(0L)
     , data_(0L)
     , start_(0L)
     , end_((const unsigned char *)(-1L))
-    , name_(0L)
-    , error_(0) {}
+    , name_(0L) {}
 
   // Initialize the reader to access the file system, filename is copied
   // and stored.
@@ -107,6 +107,8 @@ private:
   char is_file_;
   // open() sets this if we read from memory
   char is_data_;
+  // a flag to store EOF or error status
+  int error_;
   // a pointer to the opened file
   FILE *file_;
   // a pointer to the current byte in memory
@@ -119,8 +121,6 @@ private:
   const unsigned char *end_;
   // a copy of the name associated with this reader
   char *name_;
-  // a flag to store EOF or error status
-  int error_;
 };
 
 #endif // FL_IMAGE_READER_H

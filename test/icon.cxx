@@ -36,11 +36,11 @@ void choice_cb(Fl_Widget *, void *v) {
 }
 
 Fl_Menu_Item choices[] = {
-  {"None",  0, choice_cb, fl_voidptr(0)},
-  {"Red",   0, choice_cb, fl_voidptr(FL_RED)},
-  {"Green", 0, choice_cb, fl_voidptr(FL_GREEN)},
-  {"Blue",  0, choice_cb, fl_voidptr(FL_BLUE)},
-  {0}
+  {.text = "None",  .shortcut_ = 0, .callback_ = choice_cb, .user_data_ = fl_voidptr(0)},
+  {.text = "Red",   .shortcut_ = 0, .callback_ = choice_cb, .user_data_ = fl_voidptr(FL_RED)},
+  {.text = "Green", .shortcut_ = 0, .callback_ = choice_cb, .user_data_ = fl_voidptr(FL_GREEN)},
+  {.text = "Blue",  .shortcut_ = 0, .callback_ = choice_cb, .user_data_ = fl_voidptr(FL_BLUE)},
+  {.text = 0}
 };
 
 int main(int argc, char **argv) {

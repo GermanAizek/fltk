@@ -269,9 +269,9 @@ Pack_Node Pack_Node::prototype;      // the "factory"
 const char pack_type_name[] = "Fl_Pack";
 
 Fl_Menu_Item pack_type_menu[] = {
-  {"HORIZONTAL", 0, nullptr, (void*)Fl_Pack::HORIZONTAL},
-  {"VERTICAL", 0, nullptr, (void*)Fl_Pack::VERTICAL},
-  {nullptr}
+  {.text = "HORIZONTAL", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)Fl_Pack::HORIZONTAL},
+  {.text = "VERTICAL", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)Fl_Pack::VERTICAL},
+  {.text = nullptr}
 };
 
 Fl_Widget *Pack_Node::enter_live_mode(int) {
@@ -291,9 +291,9 @@ void Pack_Node::copy_properties()
 const char flex_type_name[] = "Fl_Flex";
 
 Fl_Menu_Item flex_type_menu[] = {
-  {"HORIZONTAL", 0, nullptr, (void*)Fl_Flex::HORIZONTAL},
-  {"VERTICAL", 0, nullptr, (void*)Fl_Flex::VERTICAL},
-  {nullptr}};
+  {.text = "HORIZONTAL", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)Fl_Flex::HORIZONTAL},
+  {.text = "VERTICAL", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)Fl_Flex::VERTICAL},
+  {.text = nullptr}};
 
 Flex_Node Flex_Node::prototype;      // the "factory"
 
@@ -799,13 +799,13 @@ Scroll_Node Scroll_Node::prototype;  // the "factory"
 const char scroll_type_name[] = "Fl_Scroll";
 
 Fl_Menu_Item scroll_type_menu[] = {
-  {"BOTH", 0, nullptr, nullptr/*(void*)Fl_Scroll::BOTH*/},
-  {"HORIZONTAL", 0, nullptr, (void*)Fl_Scroll::HORIZONTAL},
-  {"VERTICAL", 0, nullptr, (void*)Fl_Scroll::VERTICAL},
-  {"HORIZONTAL_ALWAYS", 0, nullptr, (void*)Fl_Scroll::HORIZONTAL_ALWAYS},
-  {"VERTICAL_ALWAYS", 0, nullptr, (void*)Fl_Scroll::VERTICAL_ALWAYS},
-  {"BOTH_ALWAYS", 0, nullptr, (void*)Fl_Scroll::BOTH_ALWAYS},
-  {nullptr}};
+  {.text = "BOTH", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = nullptr /*(void*)Fl_Scroll::BOTH*/},
+  {.text = "HORIZONTAL", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)Fl_Scroll::HORIZONTAL},
+  {.text = "VERTICAL", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)Fl_Scroll::VERTICAL},
+  {.text = "HORIZONTAL_ALWAYS", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)Fl_Scroll::HORIZONTAL_ALWAYS},
+  {.text = "VERTICAL_ALWAYS", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)Fl_Scroll::VERTICAL_ALWAYS},
+  {.text = "BOTH_ALWAYS", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)Fl_Scroll::BOTH_ALWAYS},
+  {.text = nullptr}};
 
 Fl_Widget *Scroll_Node::enter_live_mode(int) {
   Fl_Group *grp = new Fl_Scroll(o->x(), o->y(), o->w(), o->h());

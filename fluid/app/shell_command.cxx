@@ -952,8 +952,8 @@ void Fd_Shell_Command_List::update_settings_dialog() {
  The default shell submenu in batch mode.
  */
 Fl_Menu_Item Fd_Shell_Command_List::default_menu[] = {
-  {   "Customize...", FL_ALT+'x', menu_shell_customize_cb },
-  { nullptr }
+  {   .text = "Customize...", .shortcut_ = FL_ALT + 'x', .callback_ = menu_shell_customize_cb },
+  { .text = nullptr }
 };
 
 /**

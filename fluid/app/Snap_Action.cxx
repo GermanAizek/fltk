@@ -101,20 +101,22 @@ static Layout_Preset grid_tool = {
 Layout_Preset *fluid::app::default_layout_preset = &fltk_app;
 
 static Layout_Suite static_suite_list[] = {
-  { (char*)"FLTK", (char*)"@fd_beaker FLTK", { &fltk_app, &fltk_dlg, &fltk_tool }, fluid::Tool_Store::INTERNAL },
-  { (char*)"Grid", (char*)"@fd_beaker Grid", { &grid_app, &grid_dlg, &grid_tool }, fluid::Tool_Store::INTERNAL }
+  { .name_ = (char*)"FLTK", .menu_label = (char*)"@fd_beaker FLTK",
+                                            .layout = {&fltk_app, &fltk_dlg, &fltk_tool}, .storage_ = fluid::Tool_Store::INTERNAL },
+  { .name_ = (char*)"Grid", .menu_label = (char*)"@fd_beaker Grid",
+                                            .layout = {&grid_app, &grid_dlg, &grid_tool}, .storage_ = fluid::Tool_Store::INTERNAL }
 };
 
 Fl_Menu_Item main_layout_submenu_[] = {
-  { static_suite_list[0].menu_label, 0, select_layout_suite_cb, (void*)0, FL_MENU_RADIO|FL_MENU_VALUE },
-  { static_suite_list[1].menu_label, 0, select_layout_suite_cb, (void*)1, FL_MENU_RADIO },
-  { nullptr }
+  { .text = static_suite_list[0].menu_label, .shortcut_ = 0, .flags = FL_MENU_RADIO | FL_MENU_VALUE, .callback_ = select_layout_suite_cb, .user_data_ = (void*)0 },
+  { .text = static_suite_list[1].menu_label, .shortcut_ = 0, .flags = FL_MENU_RADIO, .callback_ = select_layout_suite_cb, .user_data_ = (void*)1 },
+  { .text = nullptr }
 };
 
 static Fl_Menu_Item static_choice_menu[] = {
-  { static_suite_list[0].menu_label },
-  { static_suite_list[1].menu_label },
-  { nullptr }
+  { .text = static_suite_list[0].menu_label },
+  { .text = static_suite_list[1].menu_label },
+  { .text = nullptr }
 };
 
 

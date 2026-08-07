@@ -50,10 +50,10 @@ using namespace fluid;
 using namespace fluid::proj;
 
 Fl_Menu_Item menu_item_type_menu[] = {
-  {"Normal",0,nullptr,(void*)nullptr},
-  {"Toggle",0,nullptr,(void*)FL_MENU_BOX},
-  {"Radio",0,nullptr,(void*)FL_MENU_RADIO},
-  {nullptr}};
+  {.text = "Normal", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)nullptr},
+  {.text = "Toggle", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_MENU_BOX},
+  {.text = "Radio", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_MENU_RADIO},
+  {.text = nullptr}};
 
 static void delete_dependents(Fl_Menu_Item *m) {
   if (!m)
@@ -787,15 +787,36 @@ void Menu_Base_Node::copy_properties() {
 ////////////////////////////////////////////////////////////////
 
 Fl_Menu_Item button_type_menu[] = {
-  {"normal",0,nullptr,(void*)nullptr},
-  {"popup1",0,nullptr,(void*)Fl_Menu_Button::POPUP1},
-  {"popup2",0,nullptr,(void*)Fl_Menu_Button::POPUP2},
-  {"popup3",0,nullptr,(void*)Fl_Menu_Button::POPUP3},
-  {"popup12",0,nullptr,(void*)Fl_Menu_Button::POPUP12},
-  {"popup23",0,nullptr,(void*)Fl_Menu_Button::POPUP23},
-  {"popup13",0,nullptr,(void*)Fl_Menu_Button::POPUP13},
-  {"popup123",0,nullptr,(void*)Fl_Menu_Button::POPUP123},
-  {nullptr}};
+  {.text = "normal", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)nullptr},
+  {.text = "popup1",
+     .shortcut_ = 0,
+     .callback_ = nullptr,
+     .user_data_ = (void*)Fl_Menu_Button::POPUP1},
+  {.text = "popup2",
+     .shortcut_ = 0,
+     .callback_ = nullptr,
+     .user_data_ = (void*)Fl_Menu_Button::POPUP2},
+  {.text = "popup3",
+     .shortcut_ = 0,
+     .callback_ = nullptr,
+     .user_data_ = (void*)Fl_Menu_Button::POPUP3},
+  {.text = "popup12",
+     .shortcut_ = 0,
+     .callback_ = nullptr,
+     .user_data_ = (void*)Fl_Menu_Button::POPUP12},
+  {.text = "popup23",
+     .shortcut_ = 0,
+     .callback_ = nullptr,
+     .user_data_ = (void*)Fl_Menu_Button::POPUP23},
+  {.text = "popup13",
+     .shortcut_ = 0,
+     .callback_ = nullptr,
+     .user_data_ = (void*)Fl_Menu_Button::POPUP13},
+  {.text = "popup123",
+     .shortcut_ = 0,
+     .callback_ = nullptr,
+     .user_data_ = (void*)Fl_Menu_Button::POPUP123},
+  {.text = nullptr}};
 
 Menu_Button_Node Menu_Button_Node::prototype;
 
@@ -841,9 +862,9 @@ Node* Input_Choice_Node::click_test(int, int) {
 Menu_Bar_Node Menu_Bar_Node::prototype;
 
 Fl_Menu_Item menu_bar_type_menu[] = {
-  {"Fl_Menu_Bar",0,nullptr,(void*)nullptr},
-  {"Fl_Sys_Menu_Bar",0,nullptr,(void*)1},
-  {nullptr}};
+  {.text = "Fl_Menu_Bar", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)nullptr},
+  {.text = "Fl_Sys_Menu_Bar", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)1},
+  {.text = nullptr}};
 
 Menu_Bar_Node::Menu_Bar_Node()
 {

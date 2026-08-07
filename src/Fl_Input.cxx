@@ -50,10 +50,10 @@ const char *Fl_Input::copy_menu_text = "Copy";
 const char *Fl_Input::paste_menu_text = "Paste";
 
 static Fl_Menu_Item rmb_menu[] = {
-  { NULL, 0, NULL, (void*)1 },
-  { NULL, 0, NULL, (void*)2 },
-  { NULL, 0, NULL, (void*)3 },
-  { NULL }
+  {.text = NULL, .shortcut_ = 0, .callback_ = NULL, .user_data_ = (void*)1 },
+  {.text = NULL, .shortcut_ = 0, .callback_ = NULL, .user_data_ = (void*)2 },
+  {.text = NULL, .shortcut_ = 0, .callback_ = NULL, .user_data_ = (void*)3 },
+  {.text = NULL}
 };
 
 void Fl_Input::draw() {

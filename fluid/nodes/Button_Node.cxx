@@ -46,10 +46,10 @@
 Button_Node Button_Node::prototype;
 
 static Fl_Menu_Item buttontype_menu[] = {
-  {"Normal", 0, nullptr, (void*)nullptr},
-  {"Toggle", 0, nullptr, (void*)FL_TOGGLE_BUTTON},
-  {"Radio", 0, nullptr, (void*)FL_RADIO_BUTTON},
-  {nullptr}
+  {.text = "Normal", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)nullptr},
+  {.text = "Toggle", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_TOGGLE_BUTTON},
+  {.text = "Radio", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_RADIO_BUTTON},
+  {.text = nullptr}
 };
 
 Fl_Menu_Item *Button_Node::subtypes() {

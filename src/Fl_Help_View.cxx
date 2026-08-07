@@ -423,8 +423,8 @@ static Fl_Pixmap broken_image(broken_xpm);
 const char *Fl_Help_View::copy_menu_text = "Copy";
 
 static Fl_Menu_Item rmb_menu[] = {
-  { nullptr, 0, nullptr, (void*)1 },  // Copy
-  { nullptr }
+  { .text = nullptr, .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)1 },  // Copy
+  { .text = nullptr }
 };
 
 //

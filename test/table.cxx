@@ -297,52 +297,54 @@ void type_choice_cb(Fl_Widget *w, void *data)
 }
 
 Fl_Menu_Item tablebox_choices[] = {
-  {"No Box",         0, tablebox_choice_cb, (void*)FL_NO_BOX },
-  {"Flat Box",       0, tablebox_choice_cb, (void*)FL_FLAT_BOX },
-  {"Up Box",         0, tablebox_choice_cb, (void*)FL_UP_BOX },
-  {"Down Box",       0, tablebox_choice_cb, (void*)FL_DOWN_BOX },
-  {"Up Frame",       0, tablebox_choice_cb, (void*)FL_UP_FRAME },
-  {"Down Frame",     0, tablebox_choice_cb, (void*)FL_DOWN_FRAME },
-  {"Thin Up Box",    0, tablebox_choice_cb, (void*)FL_THIN_UP_BOX },
-  {"Thin Down Box",  0, tablebox_choice_cb, (void*)FL_THIN_DOWN_BOX },
-  {"Thin Up Frame",  0, tablebox_choice_cb, (void*)FL_THIN_UP_FRAME },
-  {"Thin Down Frame",0, tablebox_choice_cb, (void*)FL_THIN_DOWN_FRAME },
-  {"Engraved Box",   0, tablebox_choice_cb, (void*)FL_ENGRAVED_BOX },
-  {"Embossed Box",   0, tablebox_choice_cb, (void*)FL_EMBOSSED_BOX },
-  {"Engraved Frame", 0, tablebox_choice_cb, (void*)FL_ENGRAVED_FRAME },
-  {"Embossed Frame", 0, tablebox_choice_cb, (void*)FL_EMBOSSED_FRAME },
-  {"Border Box",     0, tablebox_choice_cb, (void*)FL_BORDER_BOX },
-  {"Shadow Box",     0, tablebox_choice_cb, (void*)FL_SHADOW_BOX },
-  {"Border Frame",   0, tablebox_choice_cb, (void*)FL_BORDER_FRAME },
-  {0}
+  {.text = "No Box",         .shortcut_ = 0, .callback_ = tablebox_choice_cb, .user_data_ = (void*)FL_NO_BOX },
+  {.text = "Flat Box",       .shortcut_ = 0, .callback_ = tablebox_choice_cb, .user_data_ = (void*)FL_FLAT_BOX },
+  {.text = "Up Box",         .shortcut_ = 0, .callback_ = tablebox_choice_cb, .user_data_ = (void*)FL_UP_BOX },
+  {.text = "Down Box",       .shortcut_ = 0, .callback_ = tablebox_choice_cb, .user_data_ = (void*)FL_DOWN_BOX },
+  {.text = "Up Frame",       .shortcut_ = 0, .callback_ = tablebox_choice_cb, .user_data_ = (void*)FL_UP_FRAME },
+  {.text = "Down Frame",     .shortcut_ = 0, .callback_ = tablebox_choice_cb, .user_data_ = (void*)FL_DOWN_FRAME },
+  {.text = "Thin Up Box",    .shortcut_ = 0, .callback_ = tablebox_choice_cb, .user_data_ = (void*)FL_THIN_UP_BOX },
+  {.text = "Thin Down Box",  .shortcut_ = 0, .callback_ = tablebox_choice_cb, .user_data_ = (void*)FL_THIN_DOWN_BOX },
+  {.text = "Thin Up Frame",  .shortcut_ = 0, .callback_ = tablebox_choice_cb, .user_data_ = (void*)FL_THIN_UP_FRAME },
+  {.text = "Thin Down Frame",
+     .shortcut_ = 0, .callback_ = tablebox_choice_cb, .user_data_ = (void*)FL_THIN_DOWN_FRAME },
+  {.text = "Engraved Box",   .shortcut_ = 0, .callback_ = tablebox_choice_cb, .user_data_ = (void*)FL_ENGRAVED_BOX },
+  {.text = "Embossed Box",   .shortcut_ = 0, .callback_ = tablebox_choice_cb, .user_data_ = (void*)FL_EMBOSSED_BOX },
+  {.text = "Engraved Frame", .shortcut_ = 0, .callback_ = tablebox_choice_cb, .user_data_ = (void*)FL_ENGRAVED_FRAME },
+  {.text = "Embossed Frame", .shortcut_ = 0, .callback_ = tablebox_choice_cb, .user_data_ = (void*)FL_EMBOSSED_FRAME },
+  {.text = "Border Box",     .shortcut_ = 0, .callback_ = tablebox_choice_cb, .user_data_ = (void*)FL_BORDER_BOX },
+  {.text = "Shadow Box",     .shortcut_ = 0, .callback_ = tablebox_choice_cb, .user_data_ = (void*)FL_SHADOW_BOX },
+  {.text = "Border Frame",   .shortcut_ = 0, .callback_ = tablebox_choice_cb, .user_data_ = (void*)FL_BORDER_FRAME },
+  {.text = 0}
 };
 
 Fl_Menu_Item widgetbox_choices[] = {
-  {"No Box",         0, widgetbox_choice_cb, (void*)FL_NO_BOX },
+  {.text = "No Box",         .shortcut_ = 0, .callback_ = widgetbox_choice_cb, .user_data_ = (void*)FL_NO_BOX },
 //{"Flat Box",       0, widgetbox_choice_cb, (void*)FL_FLAT_BOX },
 //{"Up Box",         0, widgetbox_choice_cb, (void*)FL_UP_BOX },
 //{"Down Box",       0, widgetbox_choice_cb, (void*)FL_DOWN_BOX },
-  {"Up Frame",       0, widgetbox_choice_cb, (void*)FL_UP_FRAME },
-  {"Down Frame",     0, widgetbox_choice_cb, (void*)FL_DOWN_FRAME },
+  {.text = "Up Frame",       .shortcut_ = 0, .callback_ = widgetbox_choice_cb, .user_data_ = (void*)FL_UP_FRAME },
+  {.text = "Down Frame",     .shortcut_ = 0, .callback_ = widgetbox_choice_cb, .user_data_ = (void*)FL_DOWN_FRAME },
 //{"Thin Up Box",    0, widgetbox_choice_cb, (void*)FL_THIN_UP_BOX },
 //{"Thin Down Box",  0, widgetbox_choice_cb, (void*)FL_THIN_DOWN_BOX },
-  {"Thin Up Frame",  0, widgetbox_choice_cb, (void*)FL_THIN_UP_FRAME },
-  {"Thin Down Frame",0, widgetbox_choice_cb, (void*)FL_THIN_DOWN_FRAME },
+  {.text = "Thin Up Frame",  .shortcut_ = 0, .callback_ = widgetbox_choice_cb, .user_data_ = (void*)FL_THIN_UP_FRAME },
+  {.text = "Thin Down Frame",
+     .shortcut_ = 0, .callback_ = widgetbox_choice_cb, .user_data_ = (void*)FL_THIN_DOWN_FRAME },
 //{"Engraved Box",   0, widgetbox_choice_cb, (void*)FL_ENGRAVED_BOX },
 //{"Embossed Box",   0, widgetbox_choice_cb, (void*)FL_EMBOSSED_BOX },
-  {"Engraved Frame", 0, widgetbox_choice_cb, (void*)FL_ENGRAVED_FRAME },
-  {"Embossed Frame", 0, widgetbox_choice_cb, (void*)FL_EMBOSSED_FRAME },
+  {.text = "Engraved Frame", .shortcut_ = 0, .callback_ = widgetbox_choice_cb, .user_data_ = (void*)FL_ENGRAVED_FRAME },
+  {.text = "Embossed Frame", .shortcut_ = 0, .callback_ = widgetbox_choice_cb, .user_data_ = (void*)FL_EMBOSSED_FRAME },
 //{"Border Box",     0, widgetbox_choice_cb, (void*)FL_BORDER_BOX },
 //{"Shadow Box",     0, widgetbox_choice_cb, (void*)FL_SHADOW_BOX },
-  {"Border Frame",   0, widgetbox_choice_cb, (void*)FL_BORDER_FRAME },
-  {0}
+  {.text = "Border Frame",   .shortcut_ = 0, .callback_ = widgetbox_choice_cb, .user_data_ = (void*)FL_BORDER_FRAME },
+  {.text = 0}
 };
 
 Fl_Menu_Item type_choices[] = {
-  {"SelectNone",         0, type_choice_cb, (void*)Fl_Table_Row::SELECT_NONE },
-  {"SelectSingle",       0, type_choice_cb, (void*)Fl_Table_Row::SELECT_SINGLE },
-  {"SelectMulti",        0, type_choice_cb, (void*)Fl_Table_Row::SELECT_MULTI },
-  {0}
+  {.text = "SelectNone",         .shortcut_ = 0, .callback_ = type_choice_cb, .user_data_ = (void*)Fl_Table_Row::SELECT_NONE },
+  {.text = "SelectSingle",       .shortcut_ = 0, .callback_ = type_choice_cb, .user_data_ = (void*)Fl_Table_Row::SELECT_SINGLE },
+  {.text = "SelectMulti",        .shortcut_ = 0, .callback_ = type_choice_cb, .user_data_ = (void*)Fl_Table_Row::SELECT_MULTI },
+  {.text = 0}
 };
 
 int main(int argc, char **argv)

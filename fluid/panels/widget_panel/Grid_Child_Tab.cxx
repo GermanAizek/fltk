@@ -120,11 +120,11 @@ void Grid_Child_Tab::cb_Horizontal(Fl_Choice* o, void* v) {
 }
 
 Fl_Menu_Item Grid_Child_Tab::menu_Horizontal[] = {
- {"GRID_LEFT", 0,  nullptr, (void*)((fl_intptr_t)FL_GRID_LEFT), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"GRID_CENTER", 0,  nullptr, (void*)((fl_intptr_t)FL_GRID_CENTER), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"GRID_RIGHT", 0,  nullptr, (void*)((fl_intptr_t)FL_GRID_RIGHT), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"GRID_FILL", 0,  nullptr, (void*)((fl_intptr_t)FL_GRID_HORIZONTAL), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "GRID_LEFT", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_GRID_LEFT), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "GRID_CENTER", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_GRID_CENTER), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "GRID_RIGHT", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_GRID_RIGHT), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "GRID_FILL", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_GRID_HORIZONTAL), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 Fl_Menu_Item* Grid_Child_Tab::GRID_LEFT = Grid_Child_Tab::menu_Horizontal + 0;
 
@@ -167,11 +167,11 @@ void Grid_Child_Tab::cb_Vertical(Fl_Choice* o, void* v) {
 }
 
 Fl_Menu_Item Grid_Child_Tab::menu_Vertical[] = {
- {"GRID_TOP", 0,  nullptr, (void*)((fl_intptr_t)FL_GRID_TOP), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"GRID_CENTER", 0,  nullptr, (void*)((fl_intptr_t)FL_GRID_CENTER), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"GRID_BOTTOM", 0,  nullptr, (void*)((fl_intptr_t)FL_GRID_BOTTOM), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"GRID_FILL", 0,  nullptr, (void*)((fl_intptr_t)FL_GRID_VERTICAL), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "GRID_TOP", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_GRID_TOP), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "GRID_CENTER", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_GRID_CENTER), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "GRID_BOTTOM", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_GRID_BOTTOM), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "GRID_FILL", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)((fl_intptr_t)FL_GRID_VERTICAL), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 void Grid_Child_Tab::cb_Width_i(fluid::widget::Formula_Input* o, void* v) {

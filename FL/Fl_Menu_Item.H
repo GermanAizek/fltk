@@ -137,9 +137,9 @@ class Fl_Menu_;
 struct FL_EXPORT Fl_Menu_Item {
   const char *text;         ///< menu item text, returned by label()
   int shortcut_;            ///< menu item shortcut
+  int flags;                ///< menu item flags like FL_MENU_TOGGLE, FL_MENU_RADIO
   Fl_Callback *callback_;   ///< menu item callback
   void *user_data_;         ///< menu item user_data for the menu's callback
-  int flags;                ///< menu item flags like FL_MENU_TOGGLE, FL_MENU_RADIO
   uchar labeltype_;         ///< how the menu item text looks like
   Fl_Font labelfont_;       ///< which font for this menu item text
   Fl_Fontsize labelsize_;   ///< size of menu item text

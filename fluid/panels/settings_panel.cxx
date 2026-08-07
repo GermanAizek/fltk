@@ -577,9 +577,9 @@ static void cb_layout_choice(Fl_Choice* o, void* v) {
 }
 
 Fl_Menu_Item menu_layout_choice[] = {
- {"FLTK", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0 },
- {"Grid", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "FLTK", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 14, .labelcolor_ = 0 },
+ {.text = "Grid", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 14, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 static void cb_2(Fl_Button*, void* v) {
@@ -723,15 +723,15 @@ static void cb_w_layout_menu_delete(Fl_Menu_*, void*) {
 }
 
 Fl_Menu_Item menu_w_layout_menu[] = {
- {"Rename...", 0,  (Fl_Callback*)cb_w_layout_menu_rename, nullptr, 128, (uchar)FL_NORMAL_LABEL, 0, 14, 0 },
- {"@fd_beaker  FLUID Built-In", 0,  (Fl_Callback*)cb_w_layout_menu_storage, nullptr, 9, (uchar)FL_NORMAL_LABEL, 0, 14, 0 },
- {"@fd_user  User Preference", 0,  (Fl_Callback*)cb_w_layout_menu_storage1, nullptr, 8, (uchar)FL_NORMAL_LABEL, 0, 14, 0 },
- {"@fd_project  Store in .fl Project File", 0,  (Fl_Callback*)cb_w_layout_menu_storage2, nullptr, 8, (uchar)FL_NORMAL_LABEL, 0, 14, 0 },
- {"@fd_file  Store in External File", 0,  (Fl_Callback*)cb_w_layout_menu_storage3, nullptr, 136, (uchar)FL_NORMAL_LABEL, 0, 14, 0 },
- {"Load...", 0,  (Fl_Callback*)cb_w_layout_menu_load, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0 },
- {"Save...", 0,  (Fl_Callback*)cb_w_layout_menu_save, nullptr, 128, (uchar)FL_NORMAL_LABEL, 0, 14, 0 },
- {"Delete", 0,  (Fl_Callback*)cb_w_layout_menu_delete, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "Rename...", .shortcut_ = 0,  .flags = 128, .callback_ = (Fl_Callback*)cb_w_layout_menu_rename, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 14, .labelcolor_ = 0 },
+ {.text = "@fd_beaker  FLUID Built-In", .shortcut_ = 0,  .flags = 9, .callback_ = (Fl_Callback*)cb_w_layout_menu_storage, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 14, .labelcolor_ = 0 },
+ {.text = "@fd_user  User Preference", .shortcut_ = 0,  .flags = 8, .callback_ = (Fl_Callback*)cb_w_layout_menu_storage1, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 14, .labelcolor_ = 0 },
+ {.text = "@fd_project  Store in .fl Project File", .shortcut_ = 0,  .flags = 8, .callback_ = (Fl_Callback*)cb_w_layout_menu_storage2, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 14, .labelcolor_ = 0 },
+ {.text = "@fd_file  Store in External File", .shortcut_ = 0,  .flags = 136, .callback_ = (Fl_Callback*)cb_w_layout_menu_storage3, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 14, .labelcolor_ = 0 },
+ {.text = "Load...", .shortcut_ = 0,  .flags = 0, .callback_ = (Fl_Callback*)cb_w_layout_menu_load, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 14, .labelcolor_ = 0 },
+ {.text = "Save...", .shortcut_ = 0,  .flags = 128, .callback_ = (Fl_Callback*)cb_w_layout_menu_save, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 14, .labelcolor_ = 0 },
+ {.text = "Delete", .shortcut_ = 0,  .flags = 0, .callback_ = (Fl_Callback*)cb_w_layout_menu_delete, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 14, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 Fl_Button* preset_choice[3] = {(Fl_Button*)nullptr};
@@ -1167,14 +1167,14 @@ static void cb_Export(Fl_Menu_*, void* v) {
 }
 
 Fl_Menu_Item menu_w_settings_shell_menu[] = {
- {"Import...", 0,  (Fl_Callback*)cb_Import, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- {"Export selected...", 0,  (Fl_Callback*)cb_Export, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- {"Example Scripts:", 0,  nullptr, nullptr, 17, (uchar)FL_NORMAL_LABEL, 1, 12, 0 },
- {"Compile with fltk-config", 0,  nullptr, nullptr, 16, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- {"Build and run", 0,  nullptr, nullptr, 16, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- {"Build with Xcode on macOS", 0,  nullptr, nullptr, 16, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- {"Build with CMake", 0,  nullptr, nullptr, 16, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "Import...", .shortcut_ = 0,  .flags = 0, .callback_ = (Fl_Callback*)cb_Import, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "Export selected...", .shortcut_ = 0,  .flags = 0, .callback_ = (Fl_Callback*)cb_Export, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "Example Scripts:", .shortcut_ = 0,  .flags = 17, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 1, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "Compile with fltk-config", .shortcut_ = 0,  .flags = 16, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "Build and run", .shortcut_ = 0,  .flags = 16, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "Build with Xcode on macOS", .shortcut_ = 0,  .flags = 16, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "Build with CMake", .shortcut_ = 0,  .flags = 16, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 static void cb_T(Fl_Button*, void* v) {
@@ -1313,9 +1313,9 @@ static void cb_Store(Fl_Choice* o, void* v) {
 }
 
 Fl_Menu_Item menu_Store[] = {
- {"@fd_user User Setting", 0,  nullptr, (void*)(fluid::Tool_Store::USER), 0, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- {"@fd_project Project File", 0,  nullptr, (void*)(fluid::Tool_Store::PROJECT), 0, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "@fd_user User Setting", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(fluid::Tool_Store::USER), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "@fd_project Project File", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(fluid::Tool_Store::PROJECT), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 static void cb_Condition(Fl_Choice* o, void* v) {
@@ -1348,16 +1348,16 @@ static void cb_Condition(Fl_Choice* o, void* v) {
 }
 
 Fl_Menu_Item menu_Condition[] = {
- {"all platforms", 0,  nullptr, (void*)(Fd_Shell_Command::ALWAYS), 0, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- {"Windows only", 0,  nullptr, (void*)(Fd_Shell_Command::WIN_ONLY), 0, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- {"Linux only", 0,  nullptr, (void*)(Fd_Shell_Command::UX_ONLY), 0, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- {"macOS only", 0,  nullptr, (void*)(Fd_Shell_Command::MAC_ONLY), 0, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- {"Linux and macOS", 0,  nullptr, (void*)(Fd_Shell_Command::MAC_AND_UX_ONLY), 0, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- {"don\'t use", 0,  nullptr, (void*)(Fd_Shell_Command::NEVER), 128, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- {"user only", 0,  nullptr, (void*)(Fd_Shell_Command::USER_ONLY), 0, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- {"host only", 0,  nullptr, (void*)(Fd_Shell_Command::HOST_ONLY), 0, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- {"env var only", 0,  nullptr, (void*)(Fd_Shell_Command::ENV_ONLY), 0, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "all platforms", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(Fd_Shell_Command::ALWAYS), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "Windows only", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(Fd_Shell_Command::WIN_ONLY), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "Linux only", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(Fd_Shell_Command::UX_ONLY), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "macOS only", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(Fd_Shell_Command::MAC_ONLY), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "Linux and macOS", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(Fd_Shell_Command::MAC_AND_UX_ONLY), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "don\'t use", .shortcut_ = 0,  .flags = 128, .callback_ = nullptr, .user_data_ = (void*)(Fd_Shell_Command::NEVER), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "user only", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(Fd_Shell_Command::USER_ONLY), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "host only", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(Fd_Shell_Command::HOST_ONLY), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "env var only", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(Fd_Shell_Command::ENV_ONLY), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 Fl_Input* w_shell_cond_text = (Fl_Input*)nullptr;
@@ -1429,19 +1429,19 @@ static void cb_w_settings_shell_text_macros(Fl_Menu_Button* o, void*) {
 }
 
 Fl_Menu_Item menu_w_settings_shell_text_macros[] = {
- {"@@BASENAME@@", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 4, 12, 0 },
- {"@@PROJECTFILE_PATH@@", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 4, 12, 0 },
- {"@@PROJECTFILE_NAME@@", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 4, 12, 0 },
- {"@@CODEFILE_PATH@@", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 4, 12, 0 },
- {"@@CODEFILE_NAME@@", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 4, 12, 0 },
- {"@@HEADERFILE_PATH@@", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 4, 12, 0 },
- {"@@HEADERFILE_NAME@@", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 4, 12, 0 },
- {"@@TEXTFILE_PATH@@", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 4, 12, 0 },
- {"@@TEXTFILE_NAME@@", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 4, 12, 0 },
+ {.text = "@@BASENAME@@", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 4, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "@@PROJECTFILE_PATH@@", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 4, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "@@PROJECTFILE_NAME@@", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 4, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "@@CODEFILE_PATH@@", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 4, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "@@CODEFILE_NAME@@", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 4, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "@@HEADERFILE_PATH@@", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 4, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "@@HEADERFILE_NAME@@", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 4, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "@@TEXTFILE_PATH@@", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 4, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "@@TEXTFILE_NAME@@", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 4, .labelsize_ = 12, .labelcolor_ = 0 },
  // Not yet implemented
- {"@@FLTK_CONFIG@@", 0,  nullptr, nullptr, 16, (uchar)FL_NORMAL_LABEL, 4, 12, 0 },
- {"@@TMPDIR@@", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 4, 12, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "@@FLTK_CONFIG@@", .shortcut_ = 0,  .flags = 16, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 4, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "@@TMPDIR@@", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 4, .labelsize_ = 12, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 static void cb_1fd_zoom(Fl_Button*, void*) {
@@ -2346,10 +2346,10 @@ static Fl_Image* image_language_64() {
 Fl_Choice* i18n_type_chooser = (Fl_Choice*)nullptr;
 
 Fl_Menu_Item menu_i18n_type_chooser[] = {
- {"None", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- {"GNU gettext", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- {"POSIX catgets", 0,  nullptr, nullptr, 0, (uchar)FL_NORMAL_LABEL, 0, 12, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "None", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "GNU gettext", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ {.text = "POSIX catgets", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 12, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 Fl_Group* i18n_gnu_group = (Fl_Group*)nullptr;

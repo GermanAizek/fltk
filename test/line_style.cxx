@@ -73,28 +73,28 @@ void test_box::draw() {
 }
 
 Fl_Menu_Item style_menu[] = {
-  {"FL_SOLID",  0, 0, (void*)FL_SOLID},
-  {"FL_DASH",   0, 0, (void*)FL_DASH},
-  {"FL_DOT",    0, 0, (void*)FL_DOT},
-  {"FL_DASHDOT",0, 0, (void*)FL_DASHDOT},
-  {"FL_DASHDOTDOT", 0, 0, (void*)FL_DASHDOTDOT},
-  {0}
+  {.text = "FL_SOLID",  .shortcut_ = 0, .callback_ = 0, .user_data_ = (void*)FL_SOLID},
+  {.text = "FL_DASH",   .shortcut_ = 0, .callback_ = 0, .user_data_ = (void*)FL_DASH},
+  {.text = "FL_DOT",    .shortcut_ = 0, .callback_ = 0, .user_data_ = (void*)FL_DOT},
+  {.text = "FL_DASHDOT", .shortcut_ = 0, .callback_ = 0, .user_data_ = (void*)FL_DASHDOT},
+  {.text = "FL_DASHDOTDOT", .shortcut_ = 0, .callback_ = 0, .user_data_ = (void*)FL_DASHDOTDOT},
+  {.text = 0}
 };
 
 Fl_Menu_Item cap_menu[] = {
-  {"default",           0, 0, 0},
-  {"FL_CAP_FLAT",       0, 0, (void*)FL_CAP_FLAT},
-  {"FL_CAP_ROUND",      0, 0, (void*)FL_CAP_ROUND},
-  {"FL_CAP_SQUARE",     0, 0, (void*)FL_CAP_SQUARE},
-  {0}
+  {.text = "default",           .shortcut_ = 0, .callback_ = 0, .user_data_ = 0},
+  {.text = "FL_CAP_FLAT",       .shortcut_ = 0, .callback_ = 0, .user_data_ = (void*)FL_CAP_FLAT},
+  {.text = "FL_CAP_ROUND",      .shortcut_ = 0, .callback_ = 0, .user_data_ = (void*)FL_CAP_ROUND},
+  {.text = "FL_CAP_SQUARE",     .shortcut_ = 0, .callback_ = 0, .user_data_ = (void*)FL_CAP_SQUARE},
+  {.text = 0}
 };
 
 Fl_Menu_Item join_menu[] = {
-  {"default",           0, 0, 0},
-  {"FL_JOIN_MITER",     0, 0, (void*)FL_JOIN_MITER},
-  {"FL_JOIN_ROUND",     0, 0, (void*)FL_JOIN_ROUND},
-  {"FL_JOIN_BEVEL",     0, 0, (void*)FL_JOIN_BEVEL},
-  {0}
+  {.text = "default",           .shortcut_ = 0, .callback_ = 0, .user_data_ = 0},
+  {.text = "FL_JOIN_MITER",     .shortcut_ = 0, .callback_ = 0, .user_data_ = (void*)FL_JOIN_MITER},
+  {.text = "FL_JOIN_ROUND",     .shortcut_ = 0, .callback_ = 0, .user_data_ = (void*)FL_JOIN_ROUND},
+  {.text = "FL_JOIN_BEVEL",     .shortcut_ = 0, .callback_ = 0, .user_data_ = (void*)FL_JOIN_BEVEL},
+  {.text = 0}
 };
 
 void do_redraw(Fl_Widget*,void*)

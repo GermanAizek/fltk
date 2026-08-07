@@ -84,8 +84,8 @@ typedef enum {
 // Record holding the information for headlines and options.
 typedef struct {
   Fo_Type type;
-  const char* text;
   Fl::Fl_Option id;
+  const char* text;
   const char* name;
   const char* prefs_name;
   bool bool_default;
@@ -98,82 +98,83 @@ typedef struct {
 // This list can be arbitrarily extended. The app will generate a scrollable
 // area if the list does not fit the app window.
 Fo_Option_Descr g_option_list[] = {
-  { FO_HEADLINE, "Keyboard Focus Options" },
-  { FO_OPTION_BOOL, "Visible Keyboard Focus:",
-    Fl::OPTION_VISIBLE_FOCUS, "OPTION_VISIBLE_FOCUS", "VisibleFocus", true,
-    "Draw a dotted rectangle in widget with keyboard focus.",
-    "If visible focus is switched on, FLTK will draw a dotted rectangle inside "
-    "the widget that will receive the next keystroke. If switched off, no such "
-    "indicator will be drawn and keyboard navigation is disabled." },
-  { FO_OPTION_BOOL, "Arrow Keys move Focus:",
-    Fl::OPTION_ARROW_FOCUS, "OPTION_ARROW_FOCUS", "ArrowFocus", false,
-    "Arrow keys will move focus beyond text input field.",
-    "When switched on, moving the text cursor beyond the start or end of the "
-    "text in a text widget will change focus to the next widget. When switched "
-    "off, the cursor will stop at the end of the text. Pressing Tab or Ctrl-Tab "
-    "will advance the keyboard focus. Switch this on, if you want the old "
-    "behavior of FLTK 1.1." },
-  { FO_HEADLINE, "Tooltip Options" },
-  { FO_OPTION_BOOL, "Show Tooltips:",
-    Fl::OPTION_SHOW_TOOLTIPS, "OPTION_SHOW_TOOLTIPS", "ShowTooltips", true,
-    "Show or hide tooltips.",
-    "If tooltips are enabled, hovering the mouse over a widget with a tooltip "
-    "text will open a little tooltip window until the mouse leaves the widget. "
-    "If disabled, no tooltip is shown." },
-  { FO_HEADLINE, "Drag And Drop Options" },
-  { FO_OPTION_BOOL, "Allow dragging Text:",
-    Fl::OPTION_DND_TEXT, "OPTION_DND_TEXT", "DNDText", true,
-    "User can drag text from FLTK into other apps.",
-    "If text drag-and-drop is enabled, the user can select and drag text from "
-    "any text widget. If disabled, no dragging is possible, however dropping "
-    "text from other applications still works." },
-  { FO_HEADLINE, "Native File Chooser Options" },
-  { FO_OPTION_BOOL, "Native File Chooser uses GTK:",
-    Fl::OPTION_FNFC_USES_GTK, "OPTION_FNFC_USES_GTK", "FNFCUsesGTK", true,
-    "Use GTK file chooser instead of FLTK if available.",
-    "If 'Native File Chooser uses GTK' is enabled, the Fl_Native_File_Chooser "
-    "class calls the GTK open/save file dialogs when they are available on the "
-    "platfom. If disabled, the Fl_Native_File_Chooser class always uses FLTK's "
-    "own file dialog (i.e., Fl_File_Chooser) even if GTK is available." },
-  { FO_OPTION_BOOL, "Native File Chooser uses Zenity:",
-    Fl::OPTION_FNFC_USES_ZENITY, "OPTION_FNFC_USES_ZENITY", "UseZenity", false,
-    "Fl_Native_File_Chooser uses the 'zenity' command if possible.",
-    "Meaningful for the Wayland/X11 platform only. When switched on, "
-    "the library uses a Zenity-based file dialog if command 'zenity' is available. "
-    "When switched off (default), command 'zenity' is not used."},
-  { FO_OPTION_BOOL, "Native File Chooser uses Kdialog:",
-    Fl::OPTION_FNFC_USES_KDIALOG, "OPTION_FNFC_USES_KDIALOG", "UseKdialog", false,
-    "Fl_Native_File_Chooser uses the 'kdialog' command if possible.",
-    "Meaningful for the Wayland/X11 platform. "
-    "When switched on, the library uses a kdialog-based file dialog if command 'kdialog' is "
-    "available. When switched off (default), command 'kdialog' is not used." },
-  { FO_HEADLINE, "Print dialog Options" },
-  { FO_OPTION_BOOL, "Print dialog uses GTK:",
-    Fl::OPTION_PRINTER_USES_GTK, "OPTION_PRINTER_USES_GTK", "PrintUsesGTK", true,
-    "Use GTK printer dialog instead of FLTK if available.",
-    "If 'Print dialog uses GTK' is enabled, the Fl_Printer class calls the "
-    "GTK print dialog when it's available on the platfom. If disabled, the "
-    "Fl_Printer class always uses FLTK's own print dialog even "
-    "if GTK is available." },
-  { FO_HEADLINE, "Scaling Factor Options" },
-  { FO_OPTION_BOOL, "Transiently show scaling factor:",
-    Fl::OPTION_SHOW_SCALING, "OPTION_SHOW_SCALING", "ShowZoomFactor", true,
-    "Show the zoom factor in a transient popup window.",
-    "If 'Transiently show scaling factor' is enabled, the library shows in a "
-    "transient popup window the display scaling factor value when it is "
-    "changed. If disabled, no such transient window is used." },
-  { FO_OPTION_BOOL, "Allow simple zoom-in shortcut:",
-    Fl::OPTION_SIMPLE_ZOOM_SHORTCUT, "OPTION_SIMPLE_ZOOM_SHORTCUT", "SimpleZoomShortcut", false,
-    "Fine tune the shortcut that triggers the zoom-in operation.",
-    "When the keyboard in use has '+' in the shifted position of its key, "
-    "pressing that key and ctrl triggers the zoom-in operation. "
-    "If disabled, the zoom-in operation requires the shift key to be pressed also "
-    "with such a keyboard." },
+  { .type = FO_HEADLINE, .text = "Keyboard Focus Options" },
+  { .type = FO_OPTION_BOOL, .id = Fl::OPTION_VISIBLE_FOCUS,
+    .text = "Visible Keyboard Focus:", .name = "OPTION_VISIBLE_FOCUS", .prefs_name = "VisibleFocus", .bool_default = true,
+    .brief = "Draw a dotted rectangle in widget with keyboard focus.",
+    .tooltip = "If visible focus is switched on, FLTK will draw a dotted rectangle inside "
+                "the widget that will receive the next keystroke. If switched off, no such "
+                "indicator will be drawn and keyboard navigation is disabled." },
+  { .type = FO_OPTION_BOOL, .id = Fl::OPTION_ARROW_FOCUS,
+    .text = "Arrow Keys move Focus:", .name = "OPTION_ARROW_FOCUS", .prefs_name = "ArrowFocus", .bool_default = false,
+    .brief = "Arrow keys will move focus beyond text input field.",
+    .tooltip = "When switched on, moving the text cursor beyond the start or end of the "
+                "text in a text widget will change focus to the next widget. When switched "
+                "off, the cursor will stop at the end of the text. Pressing Tab or Ctrl-Tab "
+                "will advance the keyboard focus. Switch this on, if you want the old "
+                "behavior of FLTK 1.1." },
+  { .type = FO_HEADLINE, .text = "Tooltip Options" },
+  { .type = FO_OPTION_BOOL, .id = Fl::OPTION_SHOW_TOOLTIPS,
+    .text = "Show Tooltips:", .name = "OPTION_SHOW_TOOLTIPS", .prefs_name = "ShowTooltips", .bool_default = true,
+    .brief = "Show or hide tooltips.",
+    .tooltip = "If tooltips are enabled, hovering the mouse over a widget with a tooltip "
+                "text will open a little tooltip window until the mouse leaves the widget. "
+                "If disabled, no tooltip is shown." },
+  { .type = FO_HEADLINE, .text = "Drag And Drop Options" },
+  { .type = FO_OPTION_BOOL, .id = Fl::OPTION_DND_TEXT,
+    .text = "Allow dragging Text:", .name = "OPTION_DND_TEXT", .prefs_name = "DNDText", .bool_default = true,
+    .brief = "User can drag text from FLTK into other apps.",
+    .tooltip = "If text drag-and-drop is enabled, the user can select and drag text from "
+                "any text widget. If disabled, no dragging is possible, however dropping "
+                "text from other applications still works." },
+  { .type = FO_HEADLINE, .text = "Native File Chooser Options" },
+  { .type = FO_OPTION_BOOL, .id = Fl::OPTION_FNFC_USES_GTK,
+    .text = "Native File Chooser uses GTK:", .name = "OPTION_FNFC_USES_GTK", .prefs_name = "FNFCUsesGTK", .bool_default = true,
+    .brief = "Use GTK file chooser instead of FLTK if available.",
+    .tooltip = "If 'Native File Chooser uses GTK' is enabled, the Fl_Native_File_Chooser "
+                "class calls the GTK open/save file dialogs when they are available on the "
+                "platfom. If disabled, the Fl_Native_File_Chooser class always uses FLTK's "
+                "own file dialog (i.e., Fl_File_Chooser) even if GTK is available." },
+  { .type = FO_OPTION_BOOL, .id = Fl::OPTION_FNFC_USES_ZENITY,
+    .text = "Native File Chooser uses Zenity:", .name = "OPTION_FNFC_USES_ZENITY", .prefs_name = "UseZenity", .bool_default = false,
+    .brief = "Fl_Native_File_Chooser uses the 'zenity' command if possible.",
+    .tooltip = "Meaningful for the Wayland/X11 platform only. When switched on, "
+                "the library uses a Zenity-based file dialog if command 'zenity' is available. "
+                "When switched off (default), command 'zenity' is not used."},
+  { .type = FO_OPTION_BOOL, .id = Fl::OPTION_FNFC_USES_KDIALOG,
+    .text = "Native File Chooser uses Kdialog:", .name = "OPTION_FNFC_USES_KDIALOG", .prefs_name = "UseKdialog", .bool_default = false,
+    .brief = "Fl_Native_File_Chooser uses the 'kdialog' command if possible.",
+    .tooltip =
+         "Meaningful for the Wayland/X11 platform. "
+         "When switched on, the library uses a kdialog-based file dialog if command 'kdialog' is "
+         "available. When switched off (default), command 'kdialog' is not used." },
+  { .type = FO_HEADLINE, .text = "Print dialog Options" },
+  { .type = FO_OPTION_BOOL, .id = Fl::OPTION_PRINTER_USES_GTK,
+    .text = "Print dialog uses GTK:", .name = "OPTION_PRINTER_USES_GTK", .prefs_name = "PrintUsesGTK", .bool_default = true,
+    .brief = "Use GTK printer dialog instead of FLTK if available.",
+    .tooltip = "If 'Print dialog uses GTK' is enabled, the Fl_Printer class calls the "
+                "GTK print dialog when it's available on the platfom. If disabled, the "
+                "Fl_Printer class always uses FLTK's own print dialog even "
+                "if GTK is available." },
+  { .type = FO_HEADLINE, .text = "Scaling Factor Options" },
+  { .type = FO_OPTION_BOOL, .id = Fl::OPTION_SHOW_SCALING,
+    .text = "Transiently show scaling factor:", .name = "OPTION_SHOW_SCALING", .prefs_name = "ShowZoomFactor", .bool_default = true,
+    .brief = "Show the zoom factor in a transient popup window.",
+    .tooltip = "If 'Transiently show scaling factor' is enabled, the library shows in a "
+                "transient popup window the display scaling factor value when it is "
+                "changed. If disabled, no such transient window is used." },
+  { .type = FO_OPTION_BOOL, .id = Fl::OPTION_SIMPLE_ZOOM_SHORTCUT,
+    .text = "Allow simple zoom-in shortcut:", .name = "OPTION_SIMPLE_ZOOM_SHORTCUT", .prefs_name = "SimpleZoomShortcut", .bool_default = false,
+    .brief = "Fine tune the shortcut that triggers the zoom-in operation.",
+    .tooltip = "When the keyboard in use has '+' in the shifted position of its key, "
+                "pressing that key and ctrl triggers the zoom-in operation. "
+                "If disabled, the zoom-in operation requires the shift key to be pressed also "
+                "with such a keyboard." },
   // -- When adding new options here, please make sure that you also update
   // --   documentation/src/fltk-options.dox
   // -- and
   // --   documentation/src/fltk-options.man
-  { FO_END_OF_LIST }
+  { .type = FO_END_OF_LIST }
 };
 
 /** Check for write permission.
@@ -506,10 +507,10 @@ void set_user_option_cb(Fl_Widget* w, void* user_data) {
  */
 void add_option(Fl_Pack* pack, Fo_Option_Descr* opt) {
   static Fl_Menu_Item bool_option_menu[] = {
-    { "off",      0, 0, (void*)(0),   0},
-    { "on",       0, 0, (void*)(1),   FL_MENU_DIVIDER},
-    { "default",  0, 0, (void*)(-1),  0},
-    { NULL }
+    { .text = "off",      .shortcut_ = 0, .flags = 0, .callback_ = 0,   .user_data_ = (void*)(0)},
+    { .text = "on",       .shortcut_ = 0, .flags = FL_MENU_DIVIDER, .callback_ = 0,   .user_data_ = (void*)(1)},
+    { .text = "default",  .shortcut_ = 0, .flags = 0, .callback_ = 0,  .user_data_ = (void*)(-1)},
+    {.text = NULL}
   };
   // -- get the height of the tooltip text, so we can create the correct group size
   int tooltip_h = 0;

@@ -374,12 +374,12 @@ static void cb_cv_code_choice_w(Fl_Choice* o, void*) {
 }
 
 Fl_Menu_Item menu_cv_code_choice_w[] = {
- {"prolog", 0,  nullptr, (void*)(0), 16, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"static data", 0,  nullptr, (void*)(1), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"instantiate", 0,  nullptr, (void*)(2), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"setup", 0,  nullptr, (void*)(3), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- {"finalize", 0,  nullptr, (void*)(4), 0, (uchar)FL_NORMAL_LABEL, 0, 11, 0 },
- { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }
+ {.text = "prolog", .shortcut_ = 0,  .flags = 16, .callback_ = nullptr, .user_data_ = (void*)(0), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "static data", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(1), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "instantiate", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(2), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "setup", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(3), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ {.text = "finalize", .shortcut_ = 0,  .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(4), .labeltype_ = (uchar)FL_NORMAL_LABEL, .labelfont_ = 0, .labelsize_ = 11, .labelcolor_ = 0 },
+ { .text = nullptr, .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = nullptr, .labeltype_ = 0, .labelfont_ = 0, .labelsize_ = 0, .labelcolor_ = 0 }
 };
 
 Fl_Double_Window* make_codeview() {

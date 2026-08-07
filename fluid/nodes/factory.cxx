@@ -89,11 +89,11 @@
 // ---- Browser_Base ----
 
 static Fl_Menu_Item browser_base_type_menu[] = {
-  {"No Select", 0, nullptr, (void*)nullptr},
-  {"Select", 0, nullptr, (void*)FL_SELECT_BROWSER},
-  {"Hold", 0, nullptr, (void*)FL_HOLD_BROWSER},
-  {"Multi", 0, nullptr, (void*)FL_MULTI_BROWSER},
-  {nullptr}
+  {.text = "No Select", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)nullptr},
+  {.text = "Select", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_SELECT_BROWSER},
+  {.text = "Hold", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_HOLD_BROWSER},
+  {.text = "Multi", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_MULTI_BROWSER},
+  {.text = nullptr}
 };
 
 /**
@@ -332,9 +332,9 @@ Valuator_Node Valuator_Node::prototype;
 // ---- Counter ----
 
 static Fl_Menu_Item counter_type_menu[] = {
-  { "Normal", 0, nullptr, (void*)nullptr },
-  { "Simple", 0, nullptr, (void*)FL_SIMPLE_COUNTER },
-  { nullptr }
+  { .text = "Normal", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)nullptr },
+  { .text = "Simple", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_SIMPLE_COUNTER},
+  { .text = nullptr }
 };
 
 /**
@@ -408,10 +408,10 @@ Adjuster_Node Adjuster_Node::prototype;
 // ---- Dial ----
 
 static Fl_Menu_Item dial_type_menu[] = {
-  { "Dot", 0, nullptr, (void*)nullptr },
-  { "Line", 0, nullptr, (void*)FL_LINE_DIAL },
-  { "Fill", 0, nullptr, (void*)FL_FILL_DIAL },
-  { nullptr }
+  { .text = "Dot", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)nullptr },
+  { .text = "Line", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_LINE_DIAL},
+  { .text = "Fill", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_FILL_DIAL},
+  { .text = nullptr }
 };
 
 /**
@@ -443,9 +443,9 @@ Dial_Node Dial_Node::prototype;
 // ---- Roller ----
 
 static Fl_Menu_Item roller_type_menu[] = {
-  { "Vertical", 0, nullptr, (void*)nullptr },
-  { "Horizontal", 0, nullptr, (void*)FL_HORIZONTAL },
-  { nullptr }
+  { .text = "Vertical", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)nullptr },
+  { .text = "Horizontal", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_HORIZONTAL},
+  { .text = nullptr }
 };
 
 /**
@@ -483,13 +483,13 @@ Roller_Node Roller_Node::prototype;
 // can dynamic_cast to them.)
 
 Fl_Menu_Item slider_type_menu[] = {
-  { "Vertical", 0, nullptr, (void*)nullptr },
-  { "Horizontal", 0, nullptr, (void*)FL_HOR_SLIDER },
-  { "Vert Fill", 0, nullptr, (void*)FL_VERT_FILL_SLIDER },
-  { "Horz Fill", 0, nullptr, (void*)FL_HOR_FILL_SLIDER },
-  { "Vert Knob", 0, nullptr, (void*)FL_VERT_NICE_SLIDER },
-  { "Horz Knob", 0, nullptr, (void*)FL_HOR_NICE_SLIDER },
-  { nullptr }
+  { .text = "Vertical", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)nullptr },
+  { .text = "Horizontal", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_HOR_SLIDER},
+  { .text = "Vert Fill", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_VERT_FILL_SLIDER},
+  { .text = "Horz Fill", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_HOR_FILL_SLIDER},
+  { .text = "Vert Knob", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_VERT_NICE_SLIDER},
+  { .text = "Horz Knob", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_HOR_NICE_SLIDER},
+  { .text = nullptr }
 };
 
 Slider_Node Slider_Node::prototype;
@@ -497,9 +497,9 @@ Slider_Node Slider_Node::prototype;
 // ---- Scrollbar ----
 
 Fl_Menu_Item scrollbar_type_menu[] = {
-  { "Vertical", 0, nullptr, (void*)nullptr },
-  { "Horizontal", 0, nullptr, (void*)FL_HOR_SLIDER },
-  { nullptr }
+  { .text = "Vertical", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)nullptr },
+  { .text = "Horizontal", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_HOR_SLIDER},
+  { .text = nullptr }
 };
 
 Scrollbar_Node Scrollbar_Node::prototype;
@@ -598,12 +598,12 @@ Value_Output_Node Value_Output_Node::prototype;
 // translation units can dynamic_cast to Input_Node.)
 
 Fl_Menu_Item input_type_menu[] = {
-  { "Normal", 0, nullptr, (void*)nullptr },
-  { "Multiline", 0, nullptr, (void*)FL_MULTILINE_INPUT },
-  { "Secret", 0, nullptr, (void*)FL_SECRET_INPUT },
-  { "Int", 0, nullptr, (void*)FL_INT_INPUT },
-  { "Float", 0, nullptr, (void*)FL_FLOAT_INPUT },
-  {nullptr}
+  { .text = "Normal", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)nullptr },
+  { .text = "Multiline", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_MULTILINE_INPUT},
+  { .text = "Secret", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_SECRET_INPUT},
+  { .text = "Int", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_INT_INPUT},
+  { .text = "Float", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_FLOAT_INPUT},
+  {.text = nullptr}
 };
 
 Input_Node Input_Node::prototype;
@@ -644,9 +644,9 @@ File_Input_Node File_Input_Node::prototype;
 // ---- Output ----
 
 static Fl_Menu_Item output_type_menu[] = {
-  { "Normal", 0, nullptr, (void*)FL_NORMAL_OUTPUT },
-  { "Multiline", 0, nullptr, (void*)FL_MULTILINE_OUTPUT },
-  { nullptr }
+  { .text = "Normal", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_NORMAL_OUTPUT},
+  { .text = "Multiline", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_MULTILINE_OUTPUT},
+  { .text = nullptr }
 };
 
 /**
@@ -898,9 +898,9 @@ Progress_Node Progress_Node::prototype;
 // translation units can dynamic_cast to Spinner_Node.)
 
 Fl_Menu_Item spinner_type_menu[] = {
-  { "Integer", 0, nullptr, (void*)FL_INT_INPUT },
-  { "Float",  0, nullptr, (void*)FL_FLOAT_INPUT },
-  { nullptr }
+  { .text = "Integer", .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_INT_INPUT},
+  { .text = "Float",  .shortcut_ = 0, .callback_ = nullptr, .user_data_ = (void*)FL_FLOAT_INPUT},
+  { .text = nullptr }
 };
 
 Spinner_Node Spinner_Node::prototype;
@@ -1184,80 +1184,240 @@ static void cb(Fl_Widget *, void *v) {
     defined further up in this file.
  */
 Fl_Menu_Item New_Menu[] = {
-  {"Code",0,nullptr,nullptr,FL_SUBMENU},
-  {"Function/Method",0,cbf,(void*)&Function_Node::prototype},
-  {"Code",0,cbf,(void*)&Code_Node::prototype},
-  {"Code Block",0,cbf,(void*)&CodeBlock_Node::prototype},
-  {"Declaration",0,cbf,(void*)&Decl_Node::prototype},
-  {"Declaration Block",0,cbf,(void*)&DeclBlock_Node::prototype},
-  {"Class",0,cbf,(void*)&Class_Node::prototype},
-  {"Widget Class",0,cb,(void*)&Widget_Class_Node::prototype},
-  {"Comment",0,cbf,(void*)&Comment_Node::prototype},
-  {"Inlined Data",0,cbf,(void*)&Data_Node::prototype},
-  {nullptr},
-  {"Group",0,nullptr,nullptr,FL_SUBMENU},
-  {nullptr,0,cb,(void*)&Window_Node::prototype},
-  {nullptr,0,cb,(void*)&Group_Node::prototype},
-  {nullptr,0,cb,(void*)&Pack_Node::prototype},
-  {nullptr,0,cb,(void*)&Flex_Node::prototype},
-  {nullptr,0,cb,(void*)&Tabs_Node::prototype},
-  {nullptr,0,cb,(void*)&Scroll_Node::prototype},
-  {nullptr,0,cb,(void*)&Tile_Node::prototype},
-  {nullptr,0,cb,(void*)&Wizard_Node::prototype},
-  {nullptr,0,cb,(void*)&Grid_Node::prototype},
-  {nullptr},
-  {"Buttons",0,nullptr,nullptr,FL_SUBMENU},
-  {nullptr,0,cb,(void*)&Button_Node::prototype},
-  {nullptr,0,cb,(void*)&Return_Button_Node::prototype},
-  {nullptr,0,cb,(void*)&Light_Button_Node::prototype},
-  {nullptr,0,cb,(void*)&Check_Button_Node::prototype},
-  {nullptr,0,cb,(void*)&Repeat_Button_Node::prototype},
-  {nullptr,0,cb,(void*)&Round_Button_Node::prototype},
-  {nullptr},
-  {"Valuators",0,nullptr,nullptr,FL_SUBMENU},
-  {nullptr,0,cb,(void*)&Slider_Node::prototype},
-  {nullptr,0,cb,(void*)&Scrollbar_Node::prototype},
-  {nullptr,0,cb,(void*)&Value_Slider_Node::prototype},
-  {nullptr,0,cb,(void*)&Adjuster_Node::prototype},
-  {nullptr,0,cb,(void*)&Counter_Node::prototype},
-  {nullptr,0,cb,(void*)&Spinner_Node::prototype},
-  {nullptr,0,cb,(void*)&Dial_Node::prototype},
-  {nullptr,0,cb,(void*)&Roller_Node::prototype},
-  {nullptr,0,cb,(void*)&Value_Input_Node::prototype},
-  {nullptr,0,cb,(void*)&Value_Output_Node::prototype},
-  {nullptr},
-  {"Text",0,nullptr,nullptr,FL_SUBMENU},
-  {nullptr,0,cb,(void*)&Input_Node::prototype},
-  {nullptr,0,cb,(void*)&Output_Node::prototype},
-  {nullptr,0,cb,(void*)&Text_Editor_Node::prototype},
-  {nullptr,0,cb,(void*)&Text_Display_Node::prototype},
-  {nullptr,0,cb,(void*)&File_Input_Node::prototype},
-  {nullptr,0,cb,(void*)&Terminal_Node::prototype},
-  {nullptr},
-  {"Menus",0,nullptr,nullptr,FL_SUBMENU},
-  {nullptr,0,cb,(void*)&Menu_Bar_Node::prototype},
-  {nullptr,0,cb,(void*)&Menu_Button_Node::prototype},
-  {nullptr,0,cb,(void*)&Choice_Node::prototype},
-  {nullptr,0,cb,(void*)&Input_Choice_Node::prototype},
-  {nullptr,0,cb, (void*)&Submenu_Node::prototype},
-  {nullptr,0,cb, (void*)&Menu_Item_Node::prototype},
-  {"Checkbox Menu Item",0,cb, (void*)&Checkbox_Menu_Item_Node::prototype},
-  {"Radio Menu Item",0,cb, (void*)&Radio_Menu_Item_Node::prototype},
-  {nullptr},
-  {"Browsers",0,nullptr,nullptr,FL_SUBMENU},
-  {nullptr,0,cb,(void*)&Browser_Node::prototype},
-  {nullptr,0,cb,(void*)&Check_Browser_Node::prototype},
-  {nullptr,0,cb,(void*)&File_Browser_Node::prototype},
-  {nullptr,0,cb,(void*)&Tree_Node::prototype},
-  {nullptr,0,cb,(void*)&Help_View_Node::prototype},
-  {nullptr,0,cb,(void*)&Table_Node::prototype},
-  {nullptr},
-  {"Other",0,nullptr,nullptr,FL_SUBMENU},
-  {nullptr,0,cb,(void*)&Box_Node::prototype},
-  {nullptr,0,cb,(void*)&Clock_Node::prototype},
-  {nullptr,0,cb,(void*)&Progress_Node::prototype},
-  {nullptr},
-  {nullptr}};
+  {.text = "Code",
+     .shortcut_ = 0,
+     .flags = FL_SUBMENU,
+     .callback_ = nullptr,
+     .user_data_ = nullptr},
+  {.text = "Function/Method",
+     .shortcut_ = 0,
+     .callback_ = cbf,
+     .user_data_ = (void*)&Function_Node::prototype},
+  {.text = "Code", .shortcut_ = 0, .callback_ = cbf, .user_data_ = (void*)&Code_Node::prototype},
+  {.text = "Code Block",
+     .shortcut_ = 0,
+     .callback_ = cbf,
+     .user_data_ = (void*)&CodeBlock_Node::prototype},
+  {.text = "Declaration",
+     .shortcut_ = 0,
+     .callback_ = cbf,
+     .user_data_ = (void*)&Decl_Node::prototype},
+  {.text = "Declaration Block",
+     .shortcut_ = 0,
+     .callback_ = cbf,
+     .user_data_ = (void*)&DeclBlock_Node::prototype},
+  {.text = "Class",
+     .shortcut_ = 0,
+     .callback_ = cbf,
+     .user_data_ = (void*)&Class_Node::prototype},
+  {.text = "Widget Class",
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Widget_Class_Node::prototype},
+  {.text = "Comment",
+     .shortcut_ = 0,
+     .callback_ = cbf,
+     .user_data_ = (void*)&Comment_Node::prototype},
+  {.text = "Inlined Data",
+     .shortcut_ = 0,
+     .callback_ = cbf,
+     .user_data_ = (void*)&Data_Node::prototype},
+  {.text = nullptr},
+  {.text = "Group",
+     .shortcut_ = 0,
+     .flags = FL_SUBMENU,
+     .callback_ = nullptr,
+     .user_data_ = nullptr},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Window_Node::prototype},
+  {.text = nullptr, .shortcut_ = 0, .callback_ = cb, .user_data_ = (void*)&Group_Node::prototype},
+  {.text = nullptr, .shortcut_ = 0, .callback_ = cb, .user_data_ = (void*)&Pack_Node::prototype},
+  {.text = nullptr, .shortcut_ = 0, .callback_ = cb, .user_data_ = (void*)&Flex_Node::prototype},
+  {.text = nullptr, .shortcut_ = 0, .callback_ = cb, .user_data_ = (void*)&Tabs_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Scroll_Node::prototype},
+  {.text = nullptr, .shortcut_ = 0, .callback_ = cb, .user_data_ = (void*)&Tile_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Wizard_Node::prototype},
+  {.text = nullptr, .shortcut_ = 0, .callback_ = cb, .user_data_ = (void*)&Grid_Node::prototype},
+  {.text = nullptr},
+  {.text = "Buttons",
+     .shortcut_ = 0,
+     .flags = FL_SUBMENU,
+     .callback_ = nullptr,
+     .user_data_ = nullptr},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Button_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Return_Button_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Light_Button_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Check_Button_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Repeat_Button_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Round_Button_Node::prototype},
+  {.text = nullptr},
+  {.text = "Valuators",
+     .shortcut_ = 0,
+     .flags = FL_SUBMENU,
+     .callback_ = nullptr,
+     .user_data_ = nullptr},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Slider_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Scrollbar_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Value_Slider_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Adjuster_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Counter_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Spinner_Node::prototype},
+  {.text = nullptr, .shortcut_ = 0, .callback_ = cb, .user_data_ = (void*)&Dial_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Roller_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Value_Input_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Value_Output_Node::prototype},
+  {.text = nullptr},
+  {.text = "Text",
+     .shortcut_ = 0,
+     .flags = FL_SUBMENU,
+     .callback_ = nullptr,
+     .user_data_ = nullptr},
+  {.text = nullptr, .shortcut_ = 0, .callback_ = cb, .user_data_ = (void*)&Input_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Output_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Text_Editor_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Text_Display_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&File_Input_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Terminal_Node::prototype},
+  {.text = nullptr},
+  {.text = "Menus",
+     .shortcut_ = 0,
+     .flags = FL_SUBMENU,
+     .callback_ = nullptr,
+     .user_data_ = nullptr},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Menu_Bar_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Menu_Button_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Choice_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Input_Choice_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb, .user_data_ = (void*)&Submenu_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb, .user_data_ = (void*)&Menu_Item_Node::prototype},
+  {.text = "Checkbox Menu Item",
+     .shortcut_ = 0,
+     .callback_ = cb, .user_data_ = (void*)&Checkbox_Menu_Item_Node::prototype},
+  {.text = "Radio Menu Item",
+     .shortcut_ = 0,
+     .callback_ = cb, .user_data_ = (void*)&Radio_Menu_Item_Node::prototype},
+  {.text = nullptr},
+  {.text = "Browsers",
+     .shortcut_ = 0,
+     .flags = FL_SUBMENU,
+     .callback_ = nullptr,
+     .user_data_ = nullptr},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Browser_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Check_Browser_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&File_Browser_Node::prototype},
+  {.text = nullptr, .shortcut_ = 0, .callback_ = cb, .user_data_ = (void*)&Tree_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Help_View_Node::prototype},
+  {.text = nullptr, .shortcut_ = 0, .callback_ = cb, .user_data_ = (void*)&Table_Node::prototype},
+  {.text = nullptr},
+  {.text = "Other",
+     .shortcut_ = 0,
+     .flags = FL_SUBMENU,
+     .callback_ = nullptr,
+     .user_data_ = nullptr},
+  {.text = nullptr, .shortcut_ = 0, .callback_ = cb, .user_data_ = (void*)&Box_Node::prototype},
+  {.text = nullptr, .shortcut_ = 0, .callback_ = cb, .user_data_ = (void*)&Clock_Node::prototype},
+  {.text = nullptr,
+     .shortcut_ = 0,
+     .callback_ = cb,
+     .user_data_ = (void*)&Progress_Node::prototype},
+  {.text = nullptr},
+  {.text = nullptr}};
 
 #include <FL/Fl_Multi_Label.H>
 

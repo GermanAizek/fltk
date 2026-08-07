@@ -65,14 +65,14 @@ void type_cb(Fl_Widget*, void* v) {
 }
 
 Fl_Menu_Item choices[] = {
-  {"0", 0, type_cb, (void*)0},
-  {"HORIZONTAL", 0, type_cb, (void*)Fl_Scroll::HORIZONTAL},
-  {"VERTICAL", 0, type_cb, (void*)Fl_Scroll::VERTICAL},
-  {"BOTH", 0, type_cb, (void*)Fl_Scroll::BOTH},
-  {"HORIZONTAL_ALWAYS", 0, type_cb, (void*)Fl_Scroll::HORIZONTAL_ALWAYS},
-  {"VERTICAL_ALWAYS", 0, type_cb, (void*)Fl_Scroll::VERTICAL_ALWAYS},
-  {"BOTH_ALWAYS", 0, type_cb, (void*)Fl_Scroll::BOTH_ALWAYS},
-  {0}
+  {.text = "0", .shortcut_ = 0, .callback_ = type_cb, .user_data_ = (void*)0},
+  {.text = "HORIZONTAL", .shortcut_ = 0, .callback_ = type_cb, .user_data_ = (void*)Fl_Scroll::HORIZONTAL},
+  {.text = "VERTICAL", .shortcut_ = 0, .callback_ = type_cb, .user_data_ = (void*)Fl_Scroll::VERTICAL},
+  {.text = "BOTH", .shortcut_ = 0, .callback_ = type_cb, .user_data_ = (void*)Fl_Scroll::BOTH},
+  {.text = "HORIZONTAL_ALWAYS", .shortcut_ = 0, .callback_ = type_cb, .user_data_ = (void*)Fl_Scroll::HORIZONTAL_ALWAYS},
+  {.text = "VERTICAL_ALWAYS", .shortcut_ = 0, .callback_ = type_cb, .user_data_ = (void*)Fl_Scroll::VERTICAL_ALWAYS},
+  {.text = "BOTH_ALWAYS", .shortcut_ = 0, .callback_ = type_cb, .user_data_ = (void*)Fl_Scroll::BOTH_ALWAYS},
+  {.text = 0}
 };
 
 void align_cb(Fl_Widget*, void* v) {
@@ -81,11 +81,11 @@ void align_cb(Fl_Widget*, void* v) {
 }
 
 Fl_Menu_Item align_choices[] = {
-  {"left+top", 0, align_cb, (void*)(FL_ALIGN_LEFT+FL_ALIGN_TOP)},
-  {"left+bottom", 0, align_cb, (void*)(FL_ALIGN_LEFT+FL_ALIGN_BOTTOM)},
-  {"right+top", 0, align_cb, (void*)(FL_ALIGN_RIGHT+FL_ALIGN_TOP)},
-  {"right+bottom", 0, align_cb, (void*)(FL_ALIGN_RIGHT+FL_ALIGN_BOTTOM)},
-  {0}
+  {.text = "left+top", .shortcut_ = 0, .callback_ = align_cb, .user_data_ = (void*)(FL_ALIGN_LEFT + FL_ALIGN_TOP)},
+  {.text = "left+bottom", .shortcut_ = 0, .callback_ = align_cb, .user_data_ = (void*)(FL_ALIGN_LEFT + FL_ALIGN_BOTTOM)},
+  {.text = "right+top", .shortcut_ = 0, .callback_ = align_cb, .user_data_ = (void*)(FL_ALIGN_RIGHT + FL_ALIGN_TOP)},
+  {.text = "right+bottom", .shortcut_ = 0, .callback_ = align_cb, .user_data_ = (void*)(FL_ALIGN_RIGHT + FL_ALIGN_BOTTOM)},
+  {.text = 0}
 };
 
 int main(int argc, char** argv) {

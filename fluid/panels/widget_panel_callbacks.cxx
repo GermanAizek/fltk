@@ -312,44 +312,44 @@ void set_whenmenu(int n) {
 ////////////////////////////////////////////////////////////////
 
 Fl_Menu_Item fontmenu[] = {
-  {"Helvetica"},
-  {"Helvetica bold"},
-  {"Helvetica italic"},
-  {"Helvetica bold italic"},
-  {"Courier"},
-  {"Courier bold"},
-  {"Courier italic"},
-  {"Courier bold italic"},
-  {"Times"},
-  {"Times bold"},
-  {"Times italic"},
-  {"Times bold italic"},
-  {"Symbol"},
-  {"Terminal"},
-  {"Terminal Bold"},
-  {"Zapf Dingbats"},
-  {nullptr}
+  {.text = "Helvetica"},
+  {.text = "Helvetica bold"},
+  {.text = "Helvetica italic"},
+  {.text = "Helvetica bold italic"},
+  {.text = "Courier"},
+  {.text = "Courier bold"},
+  {.text = "Courier italic"},
+  {.text = "Courier bold italic"},
+  {.text = "Times"},
+  {.text = "Times bold"},
+  {.text = "Times italic"},
+  {.text = "Times bold italic"},
+  {.text = "Symbol"},
+  {.text = "Terminal"},
+  {.text = "Terminal Bold"},
+  {.text = "Zapf Dingbats"},
+  {.text = nullptr}
 };
 
 Fl_Menu_Item fontmenu_w_default[] = {
-  {"<default>", 0, nullptr, nullptr, FL_MENU_DIVIDER},
-  {"Helvetica"},
-  {"Helvetica bold"},
-  {"Helvetica italic"},
-  {"Helvetica bold italic"},
-  {"Courier"},
-  {"Courier bold"},
-  {"Courier italic"},
-  {"Courier bold italic"},
-  {"Times"},
-  {"Times bold"},
-  {"Times italic"},
-  {"Times bold italic"},
-  {"Symbol"},
-  {"Terminal"},
-  {"Terminal Bold"},
-  {"Zapf Dingbats"},
-  {nullptr}
+  {.text = "<default>", .shortcut_ = 0, .flags = FL_MENU_DIVIDER, .callback_ = nullptr, .user_data_ = nullptr},
+  {.text = "Helvetica"},
+  {.text = "Helvetica bold"},
+  {.text = "Helvetica italic"},
+  {.text = "Helvetica bold italic"},
+  {.text = "Courier"},
+  {.text = "Courier bold"},
+  {.text = "Courier italic"},
+  {.text = "Courier bold italic"},
+  {.text = "Times"},
+  {.text = "Times bold"},
+  {.text = "Times italic"},
+  {.text = "Times bold italic"},
+  {.text = "Symbol"},
+  {.text = "Terminal"},
+  {.text = "Terminal Bold"},
+  {.text = "Zapf Dingbats"},
+  {.text = nullptr}
 };
 
 // labeltypemenu is defined (non-static) in nodes/Widget_Node.cxx, where it
@@ -390,21 +390,21 @@ void labeltype_cb(Fl_Choice* i, void* v) {
 ////////////////////////////////////////////////////////////////
 
 Fl_Menu_Item colormenu[] = {
-  { "Foreground Color",   0, nullptr, (void*)(fl_intptr_t)FL_FOREGROUND_COLOR,  0, 0, FL_HELVETICA, 11},
-  { "Background Color",   0, nullptr, (void*)(fl_intptr_t)FL_BACKGROUND_COLOR,  0, 0, FL_HELVETICA, 11},
-  { "Background Color 2", 0, nullptr, (void*)(fl_intptr_t)FL_BACKGROUND2_COLOR, 0, 0, FL_HELVETICA, 11},
-  { "Selection Color",    0, nullptr, (void*)(fl_intptr_t)FL_SELECTION_COLOR,   0, 0, FL_HELVETICA, 11},
-  { "Inactive Color",     0, nullptr, (void*)(fl_intptr_t)FL_INACTIVE_COLOR,    FL_MENU_DIVIDER, 0, FL_HELVETICA, 11},
-  { "Black",              0, nullptr, (void*)(fl_intptr_t)FL_BLACK,             0, 0, FL_HELVETICA, 11},
-  { "White",              0, nullptr, (void*)(fl_intptr_t)FL_WHITE,             FL_MENU_DIVIDER, 0, FL_HELVETICA, 11},
-  { "Gray 0",             0, nullptr, (void*)(fl_intptr_t)FL_GRAY0,             0, 0, FL_HELVETICA, 11},
-  { "Dark 3",             0, nullptr, (void*)(fl_intptr_t)FL_DARK3,             0, 0, FL_HELVETICA, 11},
-  { "Dark 2",             0, nullptr, (void*)(fl_intptr_t)FL_DARK2,             0, 0, FL_HELVETICA, 11},
-  { "Dark 1",             0, nullptr, (void*)(fl_intptr_t)FL_DARK1,             0, 0, FL_HELVETICA, 11},
-  { "Light 1",            0, nullptr, (void*)(fl_intptr_t)FL_LIGHT1,            0, 0, FL_HELVETICA, 11},
-  { "Light 2",            0, nullptr, (void*)(fl_intptr_t)FL_LIGHT2,            0, 0, FL_HELVETICA, 11},
-  { "Light 3",            0, nullptr, (void*)(fl_intptr_t)FL_LIGHT3,            0, 0, FL_HELVETICA, 11},
-  { nullptr }
+  { .text = "Foreground Color",   .shortcut_ = 0, .flags = 0, .callback_ = nullptr,  .user_data_ = (void*)(fl_intptr_t)FL_FOREGROUND_COLOR, .labeltype_ = 0, .labelfont_ = FL_HELVETICA, .labelsize_ = 11},
+  { .text = "Background Color",   .shortcut_ = 0, .flags = 0, .callback_ = nullptr,  .user_data_ = (void*)(fl_intptr_t)FL_BACKGROUND_COLOR, .labeltype_ = 0, .labelfont_ = FL_HELVETICA, .labelsize_ = 11},
+  { .text = "Background Color 2", .shortcut_ = 0, .flags = 0, .callback_ = nullptr, .user_data_ = (void*)(fl_intptr_t)FL_BACKGROUND2_COLOR, .labeltype_ = 0, .labelfont_ = FL_HELVETICA, .labelsize_ = 11},
+  { .text = "Selection Color",    .shortcut_ = 0, .flags = 0, .callback_ = nullptr,   .user_data_ = (void*)(fl_intptr_t)FL_SELECTION_COLOR, .labeltype_ = 0, .labelfont_ = FL_HELVETICA, .labelsize_ = 11},
+  { .text = "Inactive Color",     .shortcut_ = 0, .flags = FL_MENU_DIVIDER, .callback_ = nullptr,    .user_data_ = (void*)(fl_intptr_t)FL_INACTIVE_COLOR, .labeltype_ = 0, .labelfont_ = FL_HELVETICA, .labelsize_ = 11},
+  { .text = "Black",              .shortcut_ = 0, .flags = 0, .callback_ = nullptr,             .user_data_ = (void*)(fl_intptr_t)FL_BLACK, .labeltype_ = 0, .labelfont_ = FL_HELVETICA, .labelsize_ = 11},
+  { .text = "White",              .shortcut_ = 0, .flags = FL_MENU_DIVIDER, .callback_ = nullptr,             .user_data_ = (void*)(fl_intptr_t)FL_WHITE, .labeltype_ = 0, .labelfont_ = FL_HELVETICA, .labelsize_ = 11},
+  { .text = "Gray 0",             .shortcut_ = 0, .flags = 0, .callback_ = nullptr,             .user_data_ = (void*)(fl_intptr_t)FL_GRAY0, .labeltype_ = 0, .labelfont_ = FL_HELVETICA, .labelsize_ = 11},
+  { .text = "Dark 3",             .shortcut_ = 0, .flags = 0, .callback_ = nullptr,             .user_data_ = (void*)(fl_intptr_t)FL_DARK3, .labeltype_ = 0, .labelfont_ = FL_HELVETICA, .labelsize_ = 11},
+  { .text = "Dark 2",             .shortcut_ = 0, .flags = 0, .callback_ = nullptr,             .user_data_ = (void*)(fl_intptr_t)FL_DARK2, .labeltype_ = 0, .labelfont_ = FL_HELVETICA, .labelsize_ = 11},
+  { .text = "Dark 1",             .shortcut_ = 0, .flags = 0, .callback_ = nullptr,             .user_data_ = (void*)(fl_intptr_t)FL_DARK1, .labeltype_ = 0, .labelfont_ = FL_HELVETICA, .labelsize_ = 11},
+  { .text = "Light 1",            .shortcut_ = 0, .flags = 0, .callback_ = nullptr,            .user_data_ = (void*)(fl_intptr_t)FL_LIGHT1, .labeltype_ = 0, .labelfont_ = FL_HELVETICA, .labelsize_ = 11},
+  { .text = "Light 2",            .shortcut_ = 0, .flags = 0, .callback_ = nullptr,            .user_data_ = (void*)(fl_intptr_t)FL_LIGHT2, .labeltype_ = 0, .labelfont_ = FL_HELVETICA, .labelsize_ = 11},
+  { .text = "Light 3",            .shortcut_ = 0, .flags = 0, .callback_ = nullptr,            .user_data_ = (void*)(fl_intptr_t)FL_LIGHT3, .labeltype_ = 0, .labelfont_ = FL_HELVETICA, .labelsize_ = 11},
+  { .text = nullptr }
 };
 
 void color_common(Fl_Color c) {
