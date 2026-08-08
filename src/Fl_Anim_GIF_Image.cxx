@@ -130,6 +130,9 @@ private:
   float average_weight;             // weight for color_average (negative: none)
   Fl_Color average_color;           // color for color_average()
   Fl_RGB_Scaling scaling;           // saved scaling method for scale_frame()
+  bool valid;                       // flag if valid data
+  bool desaturate;                  // flag if frames should be desaturated
+  bool optimize_mem;                // Flag to store frames in original dimensions
   int frames_size;                  // number of frames stored in 'frames'
   int loop_count;                   // loop count from file
   int loop;                         // current loop count
@@ -138,9 +141,6 @@ private:
   int canvas_h;                     // height of GIF from header
   int debug_;                       // Flag for debug outputs
   RGBA_Color background_color;      // needed for dispose()
-  bool valid;                       // flag if valid data
-  bool desaturate;                  // flag if frames should be desaturated
-  bool optimize_mem;                // Flag to store frames in original dimensions
 private:
 private:
   void dispose(int frame_);

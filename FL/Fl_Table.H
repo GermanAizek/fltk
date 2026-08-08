@@ -128,6 +128,9 @@ public:
   };
 
 private:
+  std::vector<int> *_colwidths;         // column widths in pixels
+  std::vector<int> *_rowheights;        // row heights in pixels
+
   int _rows, _cols;     // total rows/cols
   int _row_header_w;    // width of row header
   int _col_header_h;    // height of column header
@@ -156,9 +159,6 @@ private:
     TABCELLNAV = 1<<0                   ///> tab cell navigation flag
   };
   unsigned int flags_;
-
-  std::vector<int> *_colwidths;         // column widths in pixels
-  std::vector<int> *_rowheights;        // row heights in pixels
 
   // number of columns and rows == size of corresponding vectors
   int col_size() const;                 // size of the column widths vector

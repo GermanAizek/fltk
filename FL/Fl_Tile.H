@@ -40,7 +40,6 @@ public:
   void init_size_range(int default_min_w = -1, int default_min_h = -1);
 
 protected:
-  int cursor_;                  ///< current cursor index (0..3)
   Fl_Cursor *cursors_;          ///< points at the array of 4 cursors (may be overridden)
 
   /** Returns the cursor for cursor index n.
@@ -56,6 +55,7 @@ protected:
   typedef struct { int minw, minh, maxw, maxh; } Size_Range;
 
   Size_Range *size_range_;
+  int cursor_;                  ///< current cursor index (0..3)
   int size_range_size_, size_range_capacity_;
   int default_min_w_, default_min_h_;
   void request_shrink_l(int old_l, int &new_l, Fl_Rect *final_size);

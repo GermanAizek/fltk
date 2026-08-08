@@ -43,10 +43,10 @@
 */
 class FL_EXPORT Fl_Counter : public Fl_Valuator {
 
+  double lstep_;
   Fl_Font textfont_;
   Fl_Fontsize textsize_;
   Fl_Color textcolor_;
-  double lstep_;
   uchar mouseobj_;
   static void repeat_callback(void *);
   int calc_mouseobj() const;

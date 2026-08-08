@@ -285,12 +285,12 @@ class FL_EXPORT Fl_Tree : public Fl_Group {
   Fl_Tree_Item  *_root;                         // can be null!
   Fl_Tree_Item  *_item_focus;                   // item that has focus box
   Fl_Tree_Item  *_callback_item;                // item invoked during callback (can be NULL)
-  Fl_Tree_Reason _callback_reason;              // reason for the callback
+  Fl_Tree_Item  *_lastselect;                   // last selected item
   Fl_Tree_Prefs  _prefs;                        // all the tree's settings
   int            _scrollbar_size;               // size of scrollbar trough
-  Fl_Tree_Item  *_lastselect;                   // last selected item
-  char           _lastpushed;                   // FL_PUSH occurred on: 0=nothing, 1=open/close, 2=usericon, 3=label
   int            _auto_resize_children;         // if true: resize children when the Fl_Tree container is resized
+  Fl_Tree_Reason _callback_reason;              // reason for the callback
+  char           _lastpushed;                   // FL_PUSH occurred on: 0=nothing, 1=open/close, 2=usericon, 3=label
 
   void           fix_scrollbar_order() const;         // internal: rearrange scrollbars in list of children
 
