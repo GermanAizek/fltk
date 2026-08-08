@@ -70,7 +70,7 @@ class FL_EXPORT Fl_Tree_Item {
   Fl_Color                _labelfgcolor;        // label's fg color
   Fl_Color                _labelbgcolor;        // label's bg color (0xffffffff is 'transparent')
   /// \enum Fl_Tree_Item_Flags
-  enum Fl_Tree_Item_Flags {
+  enum Fl_Tree_Item_Flags : std::uint8_t {
     OPEN                = 1<<0,         ///> item is open
     VISIBLE             = 1<<1,         ///> item is visible
     ACTIVE              = 1<<2,         ///> item is active
@@ -95,7 +95,7 @@ protected:
   void hide_widgets();
   virtual void draw_vertical_connector(int x, int y1, int y2, const Fl_Tree_Prefs &prefs);
   virtual void draw_horizontal_connector(int x1, int x2, int y, const Fl_Tree_Prefs &prefs);
-  void recalc_tree();
+  void recalc_tree() const;
   int calc_item_height(const Fl_Tree_Prefs &prefs) const;
   Fl_Color drawfgcolor() const;
   Fl_Color drawbgcolor() const;
@@ -214,7 +214,7 @@ public:
   int remove_child(Fl_Tree_Item *item);
   int remove_child(const char *new_label);
   void clear_children();
-  void swap_children(int ax, int bx);
+  void swap_children(int ax, int bx) const;
   int swap_children(Fl_Tree_Item *a, Fl_Tree_Item *b);
   const Fl_Tree_Item *find_child_item(const char *name) const;
         Fl_Tree_Item *find_child_item(const char *name);
@@ -241,7 +241,7 @@ public:
   Fl_Tree_Item *insert_above(const Fl_Tree_Prefs &prefs, const char *new_label) const;
   Fl_Tree_Item* deparent(int index);
   int reparent(Fl_Tree_Item *newchild, int index);
-  int move(int to, int from);
+  int move(int to, int from) const;
   int move(Fl_Tree_Item *item, int op=0, int pos=0);
   int move_above(Fl_Tree_Item *item);
   int move_below(Fl_Tree_Item *item);
@@ -252,10 +252,10 @@ public:
   Fl_Tree_Item *next_sibling() const;
   Fl_Tree_Item *prev_sibling() const;
   void update_prev_next(int index);
-  Fl_Tree_Item *next_displayed(Fl_Tree_Prefs &prefs);   // deprecated
-  Fl_Tree_Item *prev_displayed(Fl_Tree_Prefs &prefs);   // deprecated
-  Fl_Tree_Item *next_visible(Fl_Tree_Prefs &prefs);
-  Fl_Tree_Item *prev_visible(Fl_Tree_Prefs &prefs);
+  Fl_Tree_Item *next_displayed(const Fl_Tree_Prefs &prefs);   // deprecated
+  Fl_Tree_Item *prev_displayed(const Fl_Tree_Prefs &prefs);   // deprecated
+  Fl_Tree_Item *next_visible(const Fl_Tree_Prefs &prefs);
+  Fl_Tree_Item *prev_visible(const Fl_Tree_Prefs &prefs);
 
   /// Return the parent for this item. Returns NULL if we are the root.
   Fl_Tree_Item *parent() {

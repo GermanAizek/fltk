@@ -34,7 +34,7 @@ public:
    When opening an Fl_Anim_GIF_Image there are some options
    that can be passed in a `flags` value.
    */
-  enum Flags {
+  enum Flags : std::uint8_t {
     /**
      This flag indicates to the loader that it should not start
      the animation immediately after successful load, which is

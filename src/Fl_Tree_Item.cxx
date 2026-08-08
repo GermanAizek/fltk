@@ -460,7 +460,7 @@ int Fl_Tree_Item::reparent(Fl_Tree_Item *newchild, int pos) {
 ///    - (Other return values reserved for future use)
 /// \see move_above(), move_below(), move_into(), move(Fl_Tree_Item*,int,int)
 ///
-int Fl_Tree_Item::move(int to, int from) {
+int Fl_Tree_Item::move(int to, int from) const {
   return _children.move(to, from);
 }
 
@@ -670,7 +670,7 @@ int Fl_Tree_Item::remove_child(const char *name) {
 /// No range checking is done on either index value.
 /// \param[in] ax,bx the index of the items to swap
 ///
-void Fl_Tree_Item::swap_children(int ax, int bx) {
+void Fl_Tree_Item::swap_children(int ax, int bx) const {
   _children.swap(ax, bx);
 }
 
@@ -1106,7 +1106,7 @@ void Fl_Tree_Item::draw(int X, int &Y, int W, Fl_Tree_Item *itemfocus,
       // Draw child FLTK widget?
       if ( widget() ) {
         if (render)
-          tree()->draw_child(*widget());        // let group handle drawing child
+          Fl_Tree::draw_child(*widget());        // let group handle drawing child
         if ( widget()->label() && render )
           tree()->draw_outside_label(*widget());// label too
         xmax = widget()->x() + widget()->w();   // update max width of widget
@@ -1399,7 +1399,7 @@ void Fl_Tree_Item::update_prev_next(int index) {
 ///          or 0 if there's no more items.
 /// \version 1.3.3
 ///
-Fl_Tree_Item *Fl_Tree_Item::next_visible(Fl_Tree_Prefs &prefs) {
+Fl_Tree_Item *Fl_Tree_Item::next_visible(const Fl_Tree_Prefs &prefs) {
   Fl_Tree_Item *item = this;
   while ( 1 ) {
     item = item->next();
@@ -1411,7 +1411,7 @@ Fl_Tree_Item *Fl_Tree_Item::next_visible(Fl_Tree_Prefs &prefs) {
 
 /// Same as next_visible().
 /// \deprecated in 1.3.3 for confusing name, use next_visible() instead
-Fl_Tree_Item *Fl_Tree_Item::next_displayed(Fl_Tree_Prefs &prefs) {
+Fl_Tree_Item *Fl_Tree_Item::next_displayed(const Fl_Tree_Prefs &prefs) {
   return next_visible(prefs);
 }
 
@@ -1424,7 +1424,7 @@ Fl_Tree_Item *Fl_Tree_Item::next_displayed(Fl_Tree_Prefs &prefs) {
 /// \returns the previous open() visible() item above us,
 ///          or 0 if there's no more items.
 ///
-Fl_Tree_Item *Fl_Tree_Item::prev_visible(Fl_Tree_Prefs &prefs) {
+Fl_Tree_Item *Fl_Tree_Item::prev_visible(const Fl_Tree_Prefs &prefs) {
   Fl_Tree_Item *c = this;
   while ( c ) {
     c = c->prev();                                      // previous item
@@ -1447,7 +1447,7 @@ Fl_Tree_Item *Fl_Tree_Item::prev_visible(Fl_Tree_Prefs &prefs) {
 /// Same as prev_visible().
 /// \deprecated in 1.3.3 for confusing name, use prev_visible()
 ///
-Fl_Tree_Item *Fl_Tree_Item::prev_displayed(Fl_Tree_Prefs &prefs) {
+Fl_Tree_Item *Fl_Tree_Item::prev_displayed(const Fl_Tree_Prefs &prefs) {
   return prev_visible(prefs);
 }
 
@@ -1468,6 +1468,6 @@ int Fl_Tree_Item::is_visible_r() const {
 /// widget's scrollbar visibility and tab sizes.
 /// \version 1.3.3 ABI
 ///
-void Fl_Tree_Item::recalc_tree() {
+void Fl_Tree_Item::recalc_tree() const {
   _tree->recalc_tree();
 }

@@ -269,7 +269,7 @@
 /// \enum Fl_Tree_Reason
 /// The reason the callback was invoked.
 ///
-enum Fl_Tree_Reason {
+enum Fl_Tree_Reason : std::uint8_t {
   FL_TREE_REASON_NONE       = FL_REASON_UNKNOWN,        ///< unknown reason
   FL_TREE_REASON_SELECTED   = FL_REASON_SELECTED,       ///< an item was selected
   FL_TREE_REASON_DESELECTED = FL_REASON_DESELECTED,     ///< an item was de-selected

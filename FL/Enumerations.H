@@ -36,6 +36,8 @@
 
 #include "Fl_Export.H"
 #include "fl_types.h"
+
+#include <cstdint>
 #include <FL/platform_types.h> // for FL_COMMAND and FL_CONTROL
 
 // Doxygen group 'version_numbers' is defined in file FL/fl_config.h
@@ -113,7 +115,7 @@
     \see Fl::event_text(), Fl::event_key(), class Fl::
  */
 // DEV NOTE: Keep this list in sync with FL/names.h
-enum Fl_Event { // events
+enum Fl_Event : std::uint8_t { // events
   /** No event. */
   FL_NO_EVENT           = 0,
 
@@ -361,7 +363,7 @@ enum Fl_Event { // events
 
     \see Fl_Widget::when(), Fl::callback_reason(), Fl_Callback_Reason, Fl_Widget::do_callback()
  */
-enum Fl_When { // Fl_Widget::when():
+enum Fl_When : std::uint8_t { // Fl_Widget::when():
   FL_WHEN_NEVER             =  0, ///< Never call the callback
   FL_WHEN_CHANGED           =  1, ///< Do the callback only when the widget value changes
   FL_WHEN_NOT_CHANGED       =  2, ///< Do the callback whenever the user interacts with the widget
@@ -381,7 +383,7 @@ enum Fl_When { // Fl_Widget::when():
 
     \see Fl::callback_reason(), Fl_Widget::when(), Fl_When
  */
-enum Fl_Callback_Reason {
+enum Fl_Callback_Reason : std::uint8_t {
   FL_REASON_UNKNOWN=0,    ///< unknown or unset reason
   FL_REASON_SELECTED,     ///< an item was selected
   FL_REASON_DESELECTED,   ///< an item was de-selected
@@ -562,7 +564,7 @@ enum Fl_Callback_Reason {
 
     This enum defines the standard box types included with FLTK.
 */
-enum Fl_Boxtype { // boxtypes (if you change these you must also change fl_boxtype.cxx):
+enum Fl_Boxtype : std::uint8_t { // boxtypes (if you change these you must also change fl_boxtype.cxx):
 
   FL_NO_BOX = 0,                ///< nothing is drawn at all, this box is invisible
   FL_FLAT_BOX,                  ///< a flat box
@@ -742,7 +744,7 @@ inline Fl_Boxtype fl_frame(Fl_Boxtype b) {
 
    The following standard label types are included:
 */
-enum Fl_Labeltype {    // labeltypes:
+enum Fl_Labeltype : std::uint8_t {    // labeltypes:
   FL_NORMAL_LABEL = 0, ///< draws the text (0)
   FL_NO_LABEL,         ///< does nothing
   _FL_SHADOW_LABEL,    ///< draws a drop shadow under the text
@@ -1110,7 +1112,7 @@ FL_EXPORT void fl_contrast_function(Fl_Contrast_Function *f);
 /**
   Define the possible modes to calculate fl_contrast().
 */
-enum Fl_Contrast_Mode {
+enum Fl_Contrast_Mode : std::uint8_t {
   FL_CONTRAST_NONE = 0,     ///< always return foreground color
   FL_CONTRAST_LEGACY,       ///< legacy (FLTK 1.3.x) contrast function
   FL_CONTRAST_CIELAB,       ///< new (FLTK 1.4.0) default function
@@ -1190,7 +1192,7 @@ inline Fl_Color fl_color_cube(int r, int g, int b) {
     FLTK as a fallback.
 */
 /* FIXME: We should renumber these, but that will break the ABI */
-enum Fl_Cursor {
+enum Fl_Cursor : std::uint8_t {
   FL_CURSOR_DEFAULT    =  0, /**< the default cursor, usually an arrow: ↖*/ // U+2196
   FL_CURSOR_ARROW      = 35, /**< an arrow pointer: ↖*/ // U+2196
   FL_CURSOR_CROSS      = 66, /**< crosshair: ＋*/ // U+FF0B
@@ -1226,7 +1228,7 @@ enum { // values for "when" passed to Fl::add_fd()
 };
 
 /** visual types and Fl_Gl_Window::mode() (values match Glut) */
-enum Fl_Mode {
+enum Fl_Mode : std::uint16_t {
   FL_RGB        = 0,
   FL_INDEX      = 1,
   FL_SINGLE     = 0,
@@ -1248,7 +1250,7 @@ enum Fl_Mode {
 #define FL_IMAGE_WITH_ALPHA 0x40000000
 
 /** Damage masks */
-enum Fl_Damage {
+enum Fl_Damage : std::uint8_t {
   FL_DAMAGE_CHILD    = 0x01, /**< A child needs to be redrawn. */
   FL_DAMAGE_EXPOSE   = 0x02, /**< The window was exposed. */
   FL_DAMAGE_SCROLL   = 0x04, /**< The Fl_Scroll widget was scrolled. Used by other widgets for other widget specific damages. */
@@ -1272,7 +1274,7 @@ enum Fl_Damage {
   \since 1.4.0
 */
 
-enum Fl_Arrow_Type {
+enum Fl_Arrow_Type : std::uint8_t {
   FL_ARROW_SINGLE = 0x01, ///< Single arrow, e.g. in Fl_Scrollbar
   FL_ARROW_DOUBLE = 0x02, ///< Double arrow, e.g. in Fl_Counter
   FL_ARROW_CHOICE = 0x03, ///< Dropdown box, e.g. in Fl_Choice
@@ -1301,7 +1303,7 @@ enum Fl_Arrow_Type {
   \since 1.4.0
 */
 
-enum Fl_Orientation {
+enum Fl_Orientation : std::uint8_t {
   FL_ORIENT_NONE  = 0x00, ///< GUI element direction is unspecified
   FL_ORIENT_RIGHT = 0x00, ///< GUI element pointing right (  0°)
   FL_ORIENT_NE    = 0x01, ///< GUI element pointing NE    ( 45°)

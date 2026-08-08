@@ -173,7 +173,7 @@ public:
 
   int topline() const ;
   /** For internal use only? */
-  enum Fl_Line_Position { TOP, BOTTOM, MIDDLE };
+  enum Fl_Line_Position : std::uint8_t { TOP, BOTTOM, MIDDLE };
   void lineposition(int line, Fl_Line_Position pos);
   /**
     Scrolls the browser so the top item in the browser

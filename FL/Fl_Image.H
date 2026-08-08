@@ -33,7 +33,7 @@ class Fl_RGB_Image;
 /** \enum Fl_RGB_Scaling
  The scaling algorithm to use for RGB images.
 */
-enum Fl_RGB_Scaling {
+enum Fl_RGB_Scaling : std::uint8_t {
   FL_RGB_SCALING_NEAREST = 0, ///< default RGB image scaling algorithm
   FL_RGB_SCALING_BILINEAR     ///< more accurate, but slower RGB image scaling algorithm
 };

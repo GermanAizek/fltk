@@ -44,7 +44,7 @@
 /// \enum Fl_Tree_Sort
 /// Sort order options for items added to the tree
 ///
-enum Fl_Tree_Sort {
+enum Fl_Tree_Sort : std::uint8_t {
   FL_TREE_SORT_NONE=0,          ///< No sorting; items are added in the order defined (default).
   FL_TREE_SORT_ASCENDING=1,     ///< Add items in ascending sort order.
   FL_TREE_SORT_DESCENDING=2     ///< Add items in descending sort order.
@@ -53,7 +53,7 @@ enum Fl_Tree_Sort {
 /// \enum Fl_Tree_Connector
 /// Defines the style of connection lines between items.
 ///
-enum Fl_Tree_Connector {
+enum Fl_Tree_Connector : std::uint8_t {
   FL_TREE_CONNECTOR_NONE=0,     ///< Use no lines connecting items
   FL_TREE_CONNECTOR_DOTTED=1,   ///< Use dotted lines connecting items (default)
   FL_TREE_CONNECTOR_SOLID=2     ///< Use solid lines connecting items
@@ -62,7 +62,7 @@ enum Fl_Tree_Connector {
 /// \enum Fl_Tree_Select
 /// Tree selection style.
 ///
-enum Fl_Tree_Select {
+enum Fl_Tree_Select : std::uint8_t {
   FL_TREE_SELECT_NONE=0,            ///< Nothing selected when items are clicked
   FL_TREE_SELECT_SINGLE=1,          ///< Single item selected when item is clicked (default)
   FL_TREE_SELECT_MULTI=2,           ///< Multiple items can be selected by clicking
@@ -75,7 +75,7 @@ enum Fl_Tree_Select {
 /// Defines the ways an item can be (re) selected
 /// via item_reselect_mode().
 ///
-enum Fl_Tree_Item_Reselect_Mode {
+enum Fl_Tree_Item_Reselect_Mode : std::uint8_t {
   FL_TREE_SELECTABLE_ONCE=0,    ///< Item can only be selected once (default)
   FL_TREE_SELECTABLE_ALWAYS     ///< Enables FL_TREE_REASON_RESELECTED events for callbacks
 };
@@ -84,7 +84,7 @@ enum Fl_Tree_Item_Reselect_Mode {
 /// Bit flags that control how item's labels and widget()s are drawn in the tree
 /// via item_draw_mode().
 ///
-enum Fl_Tree_Item_Draw_Mode {
+enum Fl_Tree_Item_Draw_Mode : std::uint8_t {
   FL_TREE_ITEM_DRAW_DEFAULT=0,          ///< If widget() defined, draw in place of label,
                                         ///< and widget() tracks item height (default)
   FL_TREE_ITEM_DRAW_LABEL_AND_WIDGET=1, ///< If widget() defined, include label to the left of the widget

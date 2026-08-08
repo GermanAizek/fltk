@@ -1108,7 +1108,7 @@ public:
   /* Internal use only. */
   static unsigned int label_shortcut(const char *t);
   /* Internal use only. */
-  static int test_shortcut(const char*, const bool require_alt = false);
+  static int test_shortcut(const char*, bool require_alt = false);
   /* Internal use only. */
   void _set_fullscreen() {flags_ |= FULLSCREEN;}
   void _clear_fullscreen() {flags_ &= ~FULLSCREEN;}

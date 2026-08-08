@@ -52,7 +52,7 @@ class Fl_Widget;
 
   \sa fl_beep(int)
 */
-enum Fl_Beep {
+enum Fl_Beep : std::uint8_t {
   FL_BEEP_DEFAULT = 0, ///< Default beep.
   FL_BEEP_MESSAGE,     ///< Message beep.
   FL_BEEP_ERROR,       ///< Error beep.

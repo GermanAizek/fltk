@@ -60,7 +60,7 @@ class Project_Writer;
     int fluid::io::Project_Reader::read_project(const char *filename, int merge, Strategy strategy)
  */
 typedef struct Strategy {
-  enum Flags {
+  enum Flags : std::uint8_t {
     AS_FIRST_CHILD = 0x0000,
     AS_LAST_CHILD  = 0x0001,
     AFTER_CURRENT  = 0x0002,
