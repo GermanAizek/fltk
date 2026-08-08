@@ -1392,7 +1392,11 @@ class Fd_Snap_Grid : public Snap_Action {
 protected:
   int nearest_x, nearest_y;
 public:
-  Fd_Snap_Grid() { type = 3; mask = FD_LEFT|FD_TOP|FD_DRAG; }
+  Fd_Snap_Grid() : nearest_x(0), nearest_y(0)
+  {
+    type = 3;
+    mask = FD_LEFT | FD_TOP | FD_DRAG;
+  }
   void check_grid(Snap_Data &d, int left, int grid_x, int right, int top, int grid_y, int bottom) {
     if ((grid_x <= 1) || (grid_y <= 1)) return;
     int suggested_x = d.bx + d.dx;

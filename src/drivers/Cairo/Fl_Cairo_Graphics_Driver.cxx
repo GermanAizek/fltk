@@ -104,18 +104,10 @@ static void draw_image_cb(void *data, int x, int y, int w, uchar *buf) {
 // end of duplicated part
 
 
-Fl_Cairo_Graphics_Driver::Fl_Cairo_Graphics_Driver() : Fl_Graphics_Driver() {
-  cairo_ = NULL;
-  pango_layout_ = NULL;
-  pango_context_ = NULL;
-  dummy_cairo_ = NULL;
-  linestyle_ = FL_SOLID;
-  clip_ = NULL;
+Fl_Cairo_Graphics_Driver::Fl_Cairo_Graphics_Driver() : Fl_Graphics_Driver(), linestyle_(FL_SOLID), needs_commit_tag_(NULL),
+dummy_cairo_(NULL), cairo_(NULL), pango_context_(NULL), pango_layout_(NULL), clip_(NULL), angle(0), wld_scale(1) {
   scale_x = scale_y = 1;
-  wld_scale = 1;
-  angle = 0;
   left_margin = top_margin = 0;
-  needs_commit_tag_ = NULL;
   what = NONE;
 }
 

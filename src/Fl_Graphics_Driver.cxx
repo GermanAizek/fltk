@@ -44,21 +44,10 @@ unsigned Fl_Graphics_Driver::need_pixmap_bg_color = 0;
 extern unsigned fl_cmap[256]; // defined in fl_color.cxx
 
 /** Constructor */
-Fl_Graphics_Driver::Fl_Graphics_Driver()
+Fl_Graphics_Driver::Fl_Graphics_Driver() : scale_(1), fl_clip_state_number(0), font_(0), size_(0), color_(FL_BLACK),
+sptr(0), m(m0), n(0), what(NONE), rstackptr(0), font_descriptor_(NULL), p_size(0), xpoint(NULL)
 {
-  font_ = 0;
-  size_ = 0;
-  color_ = FL_BLACK;
-  sptr=0; rstackptr=0;
   rstack[0] = NULL;
-  fl_clip_state_number=0;
-  m = m0;
-  font_descriptor_ = NULL;
-  scale_ = 1;
-  p_size = 0;
-  xpoint = NULL;
-  what = NONE;
-  n = 0;
 }
 
 /** Destructor */
@@ -799,12 +788,7 @@ Fl_Font_Descriptor::Fl_Font_Descriptor(const char* name, Fl_Fontsize Size) {
   size = Size;
 }
 
-Fl_Scalable_Graphics_Driver::Fl_Scalable_Graphics_Driver() : Fl_Graphics_Driver() {
-  line_style_ = 0;
-  line_width_ = 0;
-  fontsize_ = -1;
-  is_solid_ = true;
-}
+Fl_Scalable_Graphics_Driver::Fl_Scalable_Graphics_Driver() : Fl_Graphics_Driver(), fontsize_(-1), line_style_(0), line_width_(0), is_solid_(true) {}
 
 void Fl_Scalable_Graphics_Driver::rect(int x, int y, int w, int h)
 {

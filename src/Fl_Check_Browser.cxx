@@ -75,12 +75,11 @@ int Fl_Check_Browser::lineno(cb_item *p0) const {
 
 /** The constructor makes an empty browser. */
 Fl_Check_Browser::Fl_Check_Browser(int X, int Y, int W, int H, const char *l)
-  : Fl_Browser_(X, Y, W, H, l) {
+  : Fl_Browser_(X, Y, W, H, l), cached_item(-1) {
   type(FL_SELECT_BROWSER);
   when(FL_WHEN_NEVER);
   first = last = 0;
   nitems_ = nchecked_ = 0;
-  cached_item = -1;
 }
 
 void *Fl_Check_Browser::item_first() const {

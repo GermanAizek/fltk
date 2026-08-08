@@ -104,32 +104,24 @@ Fl_Tree_Item::~Fl_Tree_Item() {
 }
 
 /// Copy constructor.
-Fl_Tree_Item::Fl_Tree_Item(const Fl_Tree_Item *o) {
-  _tree             = o->_tree;
-  _label        = o->label() ? fl_strdup(o->label()) : 0;
-  _labelfont    = o->labelfont();
-  _labelsize    = o->labelsize();
-  _labelfgcolor = o->labelfgcolor();
-  _labelbgcolor = o->labelbgcolor();
-  _widget       = o->widget();
-  _flags        = o->_flags;
-  _xywh[0]      = o->_xywh[0];
-  _xywh[1]      = o->_xywh[1];
-  _xywh[2]      = o->_xywh[2];
-  _xywh[3]      = o->_xywh[3];
+Fl_Tree_Item::Fl_Tree_Item(const Fl_Tree_Item *o)
+  : _tree(o->_tree), _label(o->label() ? fl_strdup(o->label()) : 0), _labelfont(o->labelfont()),
+    _labelsize(o->labelsize()), _labelfgcolor(o->labelfgcolor()), _labelbgcolor(o->labelbgcolor()),
+    _flags(o->_flags), _widget(o->widget()), _usericon(o->usericon()), _userdeicon(nullptr),
+    _parent(o->_parent), _userdata(o->user_data()), _prev_sibling(0), _next_sibling(0)
+{
+  _xywh[0] = o->_xywh[0];
+  _xywh[1] = o->_xywh[1];
+  _xywh[2] = o->_xywh[2];
+  _xywh[3] = o->_xywh[3];
   _collapse_xywh[0] = o->_collapse_xywh[0];
   _collapse_xywh[1] = o->_collapse_xywh[1];
   _collapse_xywh[2] = o->_collapse_xywh[2];
   _collapse_xywh[3] = o->_collapse_xywh[3];
-  _label_xywh[0]    = o->_label_xywh[0];
-  _label_xywh[1]    = o->_label_xywh[1];
-  _label_xywh[2]    = o->_label_xywh[2];
-  _label_xywh[3]    = o->_label_xywh[3];
-  _usericon         = o->usericon();
-  _userdata         = o->user_data();
-  _parent           = o->_parent;
-  _prev_sibling     = 0;                // do not copy ptrs! use update_prev_next()
-  _next_sibling     = 0;                // do not copy ptrs! use update_prev_next()
+  _label_xywh[0] = o->_label_xywh[0];
+  _label_xywh[1] = o->_label_xywh[1];
+  _label_xywh[2] = o->_label_xywh[2];
+  _label_xywh[3] = o->_label_xywh[3];
 }
 
 /// Print the tree as 'ascii art' to stdout.

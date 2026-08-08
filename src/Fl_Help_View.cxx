@@ -75,37 +75,15 @@ class Fl_Help_View::Impl
   friend Fl_Help_View;
   Fl_Help_View &view;
 public:
-  Impl(Fl_Help_View *view) : view(*view)
+  Impl(Fl_Help_View *view) : view(*view), textsize_(12), textfont_(FL_TIMES), linkcolor_(FL_SELECTION_COLOR), textcolor_(FL_FOREGROUND_COLOR), bgcolor_(FL_BACKGROUND_COLOR),
+  value_(nullptr), leftline_(0), topline_(0), hsize_(0), size_(0), defcolor_(FL_FOREGROUND_COLOR), selection_last_(0), selection_first_(0), selected_(false),
+  selection_mode_(Mode::DRAW), tmp_selection_color_(0), selection_text_color_(0), link_((Fl_Help_Func*)0), scrollbar_size_(0)
   {
-    title_[0]     = '\0';
-    defcolor_     = FL_FOREGROUND_COLOR;
-    bgcolor_      = FL_BACKGROUND_COLOR;
-    textcolor_    = FL_FOREGROUND_COLOR;
-    linkcolor_    = FL_SELECTION_COLOR;
-    textfont_     = FL_TIMES;
-    textsize_     = 12;
-    value_        = nullptr;
-
+    title_[0] = '\0';
     blocks_.clear();
-
-    link_         = (Fl_Help_Func *)0;
-
     link_list_.clear();
-
     directory_.clear();
     filename_.clear();
-
-    topline_      = 0;
-    leftline_     = 0;
-    size_         = 0;
-    hsize_        = 0;
-
-    selection_mode_ = Mode::DRAW;
-    selected_ = false;
-    selection_first_ = 0;
-    selection_last_ = 0;
-
-    scrollbar_size_ = 0;
   }
   ~Impl()
   {

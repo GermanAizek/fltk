@@ -21,8 +21,7 @@
 
 
 Fl_Wayland_Image_Surface_Driver::Fl_Wayland_Image_Surface_Driver(int w, int h,
-      int high_res, Fl_Offscreen off) : Fl_Image_Surface_Driver(w, h, high_res, off) {
-  shape_data_ = NULL;
+      int high_res, Fl_Offscreen off) : Fl_Image_Surface_Driver(w, h, high_res, off), shape_data_(NULL) {
   float s = 1;
   int d = 1;
   if (!off) {
