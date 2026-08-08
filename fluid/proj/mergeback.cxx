@@ -563,7 +563,7 @@ int Mergeback::apply_extra_code(int index, long block_end, long block_start, uns
     std::string cb = wp->extra_code(index); cb += "\n";
     uint32_t project_crc = fluid::CRC32::block(cb);
     if (project_crc!=code_crc) {
-      wp->extra_code(index, read_and_unindent_block(block_start, block_end).c_str());
+      wp->extra_code(index, read_and_unindent_block(block_start, block_end));
       return 1;
     }
   }

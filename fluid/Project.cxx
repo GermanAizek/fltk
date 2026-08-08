@@ -304,7 +304,7 @@ void Project::save(SaveOption option) {
       fluid::io::FileChooserPath::ABSOLUTE_PATH,
       "Save Project File As",
       "Can't create project file:\n%s.",
-      c.c_str(),
+      c,
       Fluid.history.latest_project_path(),
       "Fluid Project Files\t*.fl"
     );
