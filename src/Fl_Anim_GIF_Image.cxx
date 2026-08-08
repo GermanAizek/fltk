@@ -85,33 +85,33 @@ class Fl_Anim_GIF_Image::FrameInfo {
       transparent_color_index(-1) {}
     Fl_RGB_Image *rgb;                // full frame image
     Fl_Shared_Image *scalable;        // used for hardware-accelerated scaling
+    double delay;                     // delay (already converted to ms)
     Fl_Color average_color;           // last average color
     float average_weight;             // last average weight
-    bool desaturated;                 // flag if frame is desaturated
-    unsigned short x, y, w, h;        // frame original dimensions
-    double delay;                     // delay (already converted to ms)
     Dispose dispose;                  // disposal method
     int transparent_color_index;      // needed for dispose()
+    unsigned short x, y, w, h;        // frame original dimensions
     RGBA_Color transparent_color;     // needed for dispose()
+    bool desaturated;                 // flag if frame is desaturated
   };
 
   FrameInfo(Fl_Anim_GIF_Image *anim) :
     anim(anim),
-    valid(false),
-    frames_size(0),
     frames(0),
+    offscreen(0),
+    average_weight(-1),
+    average_color(FL_BLACK),
+    scaling((Fl_RGB_Scaling)0),
+    frames_size(0),
     loop_count(1),
     loop(0),
     background_color_index(-1),
     canvas_w(0),
     canvas_h(0),
-    desaturate(false),
-    average_color(FL_BLACK),
-    average_weight(-1),
-    scaling((Fl_RGB_Scaling)0),
     debug_(0),
-    optimize_mem(false),
-    offscreen(0) {}
+    valid(false),
+    desaturate(false),
+    optimize_mem(false) {}
   ~FrameInfo();
   void clear();
   void copy(const FrameInfo& fi);
@@ -124,23 +124,23 @@ class Fl_Anim_GIF_Image::FrameInfo {
   void set_frame(int frame);
 private:
   Fl_Anim_GIF_Image *anim;          // a pointer to the Image (only needed for name())
-  bool valid;                       // flag if valid data
-  int frames_size;                  // number of frames stored in 'frames'
   GifFrame *frames;                 // "vector" for frames
+  uchar *offscreen;                 // internal "offscreen" buffer
+  GifFrame frame;                   // current processed frame
+  float average_weight;             // weight for color_average (negative: none)
+  Fl_Color average_color;           // color for color_average()
+  Fl_RGB_Scaling scaling;           // saved scaling method for scale_frame()
+  int frames_size;                  // number of frames stored in 'frames'
   int loop_count;                   // loop count from file
   int loop;                         // current loop count
   int background_color_index;       // needed for dispose()
-  RGBA_Color background_color;      // needed for dispose()
-  GifFrame frame;                   // current processed frame
   int canvas_w;                     // width of GIF from header
   int canvas_h;                     // height of GIF from header
-  bool desaturate;                  // flag if frames should be desaturated
-  Fl_Color average_color;           // color for color_average()
-  float average_weight;             // weight for color_average (negative: none)
-  Fl_RGB_Scaling scaling;           // saved scaling method for scale_frame()
   int debug_;                       // Flag for debug outputs
+  RGBA_Color background_color;      // needed for dispose()
+  bool valid;                       // flag if valid data
+  bool desaturate;                  // flag if frames should be desaturated
   bool optimize_mem;                // Flag to store frames in original dimensions
-  uchar *offscreen;                 // internal "offscreen" buffer
 private:
 private:
   void dispose(int frame_);

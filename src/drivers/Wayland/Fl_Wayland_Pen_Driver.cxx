@@ -115,30 +115,32 @@ static const State kButtonBits[] = {
 
 struct TabletTool {
   struct zwp_tablet_tool_v2      *wl_tool;
-  enum zwp_tablet_tool_v2_type    type;
   uint64_t                        hardware_serial;
-  int                             pen_id;       // int-sized pen identity
-  Trait                           capabilities; // reported by capability events
-  bool                            is_new;       // true until first proximity_in
-  bool                            in_proximity;
   Fl_Window                      *focus_win;    // toplevel window under the pen
   struct wl_surface              *focus_surface;
-  uint32_t                        serial;
 
   // Per-frame accumulated event data (flushed by tool_cb_frame)
   EventData  ev;
   State      prev_state;          // ev.state committed after last frame
 
   // Per-frame event occurrence flags (reset at end of each frame)
+  State frame_buttons_pressed;    // which BUTTON bits went active this frame
+  State frame_buttons_released;   // which BUTTON bits went inactive this frame
+
+  enum zwp_tablet_tool_v2_type    type;
+  int                             pen_id;       // int-sized pen identity
+  Trait                           capabilities; // reported by capability events
+  uint32_t                        serial;
+
+  struct wl_list link;            // node in g_tool_list
+
+  bool                            is_new;       // true until first proximity_in
+  bool                            in_proximity;
   bool  frame_proximity_in;
   bool  frame_proximity_out;
   bool  frame_down;               // tip touched surface this frame
   bool  frame_up;                 // tip left surface this frame
   bool  frame_motion;             // position changed this frame
-  State frame_buttons_pressed;    // which BUTTON bits went active this frame
-  State frame_buttons_released;   // which BUTTON bits went inactive this frame
-
-  struct wl_list link;            // node in g_tool_list
 };
 
 // Convenience: reset all per-frame flags at the end of frame processing.

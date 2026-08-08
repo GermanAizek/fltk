@@ -1716,29 +1716,29 @@ int Fl_Wayland_Window_Driver::set_cursor(Fl_Cursor c) {
   // Cursor names are the files of directory /usr/share/icons/XXXX/cursors/
   // where XXXX is the name of the current 'cursor theme'.
   static struct cursor_file_struct {
-    Fl_Cursor c;
     const char *fname;
     Fl_Wayland_Screen_Driver::cursor_shapes wld_c;
+    Fl_Cursor c;
   } cursor_file_array[] = {
-    {FL_CURSOR_ARROW,  "left_ptr",            Fl_Wayland_Screen_Driver::arrow },
-    {FL_CURSOR_CROSS,  "cross",               Fl_Wayland_Screen_Driver::cross },
-    {FL_CURSOR_WAIT,   "watch",               Fl_Wayland_Screen_Driver::wait },
-    {FL_CURSOR_INSERT, "xterm",               Fl_Wayland_Screen_Driver::insert },
-    {FL_CURSOR_HAND,   "hand1",               Fl_Wayland_Screen_Driver::hand },
-    {FL_CURSOR_HELP,   "help",                Fl_Wayland_Screen_Driver::help },
-    {FL_CURSOR_MOVE,   "move",                Fl_Wayland_Screen_Driver::move },
-    {FL_CURSOR_N,      "top_side",            Fl_Wayland_Screen_Driver::north },
-    {FL_CURSOR_E,      "right_side",          Fl_Wayland_Screen_Driver::east },
-    {FL_CURSOR_W,      "left_side",           Fl_Wayland_Screen_Driver::west },
-    {FL_CURSOR_S,      "bottom_side",         Fl_Wayland_Screen_Driver::south },
-    {FL_CURSOR_NS,     "sb_v_double_arrow",   Fl_Wayland_Screen_Driver::north_south },
-    {FL_CURSOR_WE,     "sb_h_double_arrow",   Fl_Wayland_Screen_Driver::west_east },
-    {FL_CURSOR_SW,     "bottom_left_corner",  Fl_Wayland_Screen_Driver::south_west },
-    {FL_CURSOR_SE,     "bottom_right_corner", Fl_Wayland_Screen_Driver::south_east },
-    {FL_CURSOR_NE,     "top_right_corner",    Fl_Wayland_Screen_Driver::north_east },
-    {FL_CURSOR_NW,     "top_left_corner",     Fl_Wayland_Screen_Driver::north_west },
-    {FL_CURSOR_NESW,   "fd_double_arrow",     Fl_Wayland_Screen_Driver::nesw },
-    {FL_CURSOR_NWSE,   "bd_double_arrow",     Fl_Wayland_Screen_Driver::nwse }
+    {"left_ptr",            Fl_Wayland_Screen_Driver::arrow,       FL_CURSOR_ARROW  },
+    {"cross",               Fl_Wayland_Screen_Driver::cross,       FL_CURSOR_CROSS  },
+    {"watch",               Fl_Wayland_Screen_Driver::wait,        FL_CURSOR_WAIT   },
+    {"xterm",               Fl_Wayland_Screen_Driver::insert,      FL_CURSOR_INSERT },
+    {"hand1",               Fl_Wayland_Screen_Driver::hand,        FL_CURSOR_HAND   },
+    {"help",                Fl_Wayland_Screen_Driver::help,        FL_CURSOR_HELP   },
+    {"move",                Fl_Wayland_Screen_Driver::move,        FL_CURSOR_MOVE   },
+    {"top_side",            Fl_Wayland_Screen_Driver::north,       FL_CURSOR_N      },
+    {"right_side",          Fl_Wayland_Screen_Driver::east,        FL_CURSOR_E      },
+    {"left_side",           Fl_Wayland_Screen_Driver::west,        FL_CURSOR_W      },
+    {"bottom_side",         Fl_Wayland_Screen_Driver::south,       FL_CURSOR_S      },
+    {"sb_v_double_arrow",   Fl_Wayland_Screen_Driver::north_south, FL_CURSOR_NS     },
+    {"sb_h_double_arrow",   Fl_Wayland_Screen_Driver::west_east,   FL_CURSOR_WE     },
+    {"bottom_left_corner",  Fl_Wayland_Screen_Driver::south_west,  FL_CURSOR_SW     },
+    {"bottom_right_corner", Fl_Wayland_Screen_Driver::south_east,  FL_CURSOR_SE     },
+    {"top_right_corner",    Fl_Wayland_Screen_Driver::north_east,  FL_CURSOR_NE     },
+    {"top_left_corner",     Fl_Wayland_Screen_Driver::north_west,  FL_CURSOR_NW     },
+    {"fd_double_arrow",     Fl_Wayland_Screen_Driver::nesw,        FL_CURSOR_NESW   },
+    {"bd_double_arrow",     Fl_Wayland_Screen_Driver::nwse,        FL_CURSOR_NWSE   }
   };
 
   int found = -1;
