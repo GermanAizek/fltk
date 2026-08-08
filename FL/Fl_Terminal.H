@@ -424,8 +424,6 @@ protected:
   // info for optimized drawing speed.
   //
   class FL_EXPORT CharStyle {
-    uchar       attrib_;           // bold, underline..
-    uchar       charflags_;        // CharFlags (xterm color management)
     Fl_Color    fgcolor_;          // foreground color for text
     Fl_Color    bgcolor_;          // background color for text
     Fl_Color    defaultfgcolor_;   // default fg color used by ESC[0m
@@ -435,6 +433,8 @@ protected:
     int         fontheight_;       // font height (in pixels)
     int         fontdescent_;      // font descent (pixels below font baseline)
     int         charwidth_;        // width of a fixed width ASCII character
+    uchar       attrib_;           // bold, underline..
+    uchar       charflags_;        // CharFlags (xterm color management)
   public:
     CharStyle(bool fontsize_defer);
     uchar attrib(void) const            { return attrib_; }
@@ -539,12 +539,12 @@ protected:
   //
   class FL_EXPORT Utf8Char {
     static const int max_utf8_ = 4; // RFC 3629 paraphrased: In UTF-8, chars are encoded with 1 to 4 octets
+    Fl_Color fgcolor_;              // fltk fg color (supports 8color or 24bit color set w/ESC[37;<r>;<g>;<b>m)
+    Fl_Color bgcolor_;              // fltk bg color (supports 8color or 24bit color set w/ESC[47;<r>;<g>;<b>m)
     char     text_[max_utf8_];      // memory for actual ASCII or UTF-8 byte contents
     uchar    len_;                  // length of bytes in text_[] buffer; 1 for ASCII, >1 for UTF-8
     uchar    attrib_;               // attribute bits for this char (bold, underline..)
     uchar    charflags_;            // CharFlags (xterm colors management)
-    Fl_Color fgcolor_;              // fltk fg color (supports 8color or 24bit color set w/ESC[37;<r>;<g>;<b>m)
-    Fl_Color bgcolor_;              // fltk bg color (supports 8color or 24bit color set w/ESC[47;<r>;<g>;<b>m)
     // Private methods
     void text_utf8_(const char *text, int len);
     Fl_Color attr_color_(Fl_Color col, const Fl_Widget *grp) const;
@@ -744,15 +744,15 @@ private:
     static const int fail      = -1;  // operation failed
     static const int completed = 1;   // multi-step operation completed successfully
   private:
-    char  esc_mode_;                  // escape parsing mode state
-    char  csi_;                       // This is an ESC[.. sequence (Ctrl Seq Introducer)
-    char  buff_[maxbuff];             // escape sequence being parsed
     char *buffp_;                     // parsing ptr into buff[]
     char *buffendp_;                  // end of buff[] (ptr to last valid buff char)
     char *valbuffp_;                  // pointer to first char in buff of integer being parsed
     int   vals_[maxvals];             // value array for parsing #'s in ESC[#;#;#..
     int   vali_;                      // parsing index into vals_[], 0 if none
     int   save_row_, save_col_;       // used by ESC[s/u for save/restore
+    char  buff_[maxbuff];             // escape sequence being parsed
+    char  esc_mode_;                  // escape parsing mode state
+    char  csi_;                       // This is an ESC[.. sequence (Ctrl Seq Introducer)
 
     int append_buff(char c);
     int append_val(void);
@@ -777,9 +777,9 @@ private:
   // Class to manage buffering partial UTF-8 characters between write calls.
   //
   class FL_EXPORT PartialUtf8Buf {
-    char buf_[10];      // buffer partial UTF-8 encoded char
     int  buflen_;       // length of buffered UTF-8 encoded char
     int  clen_;         // final byte length of a UTF-8 char
+    char buf_[10];      // buffer partial UTF-8 encoded char
   public:
     void clear(void) { buflen_ = clen_ = 0; }    // clear the buffer
     PartialUtf8Buf(void) { clear(); }            // Ctor
@@ -841,35 +841,39 @@ public:
    */
   Fl_Scrollbar  *hscrollbar;        // horizontal scrollbar
 private:
-  // Special utf8 symbols
-  const char    *error_char_;       // utf8 string shown for invalid utf8, bad ANSI, etc
-  bool           fontsize_defer_;   // flag defers font calcs until first draw() (issue 837)
-  int            scrollbar_size_;   // local preference for scrollbar size
-  ScrollbarStyle hscrollbar_style_;
   CharStyle     *current_style_;    // current font, attrib, color..
-  OutFlags       oflags_;           // output translation flags (CR_TO_LF, LF_TO_CR, LF_TO_CRLF)
+  char          *tabstops_;         // array of tab stops (0|1)   \__ TODO: This should probably
+  const char    *error_char_;       // utf8 string shown for invalid utf8, bad ANSI, etc
 
   // A ring buffer is used for the terminal's history (hist) and display (disp) buffer.
   //    See README-Fl_Terminal.txt, section "RING BUFFER DESCRIPTION" for diagrams/info.
   //
   // Ring buffer
   RingBuffer     ring_;             // terminal history/display ring buffer
-  Cursor         cursor_;           // terminal cursor (position, color, etc)
-  Margin         margin_;           // terminal margins (top,left,bottom,right)
   Selection      select_;           // mouse selection
   EscapeSeq      escseq;            // Escape sequence parsing (ESC[ xterm/vt100)
-  bool           show_unknown_;     // if true, show unknown chars as '¿' (default off)
-  bool           ansi_;             // if true, parse ansi codes (default on)
-  char          *tabstops_;         // array of tab stops (0|1)   \__ TODO: This should probably
-  int            tabstops_size_;    // size of tabstops[] array   /         be a class "TabStops".
+
+  Cursor         cursor_;           // terminal cursor (position, color, etc)
+  Margin         margin_;           // terminal margins (top,left,bottom,right)
   Fl_Rect        scrn_;             // terminal screen xywh inside box(), margins, and scrollbar
+  PartialUtf8Buf pub_;              // handles Partial Utf8 Buffer (pub)
+
+  ScrollbarStyle hscrollbar_style_;
+  OutFlags       oflags_;           // output translation flags (CR_TO_LF, LF_TO_CR, LF_TO_CRLF)
+  RedrawStyle    redraw_style_;     // NO_REDRAW, RATE_LIMITED, PER_WRITE
+
+  int            scrollbar_size_;   // local preference for scrollbar size
+  int            tabstops_size_;    // size of tabstops[] array   /         be a class "TabStops".
   int            autoscroll_dir_;   // 0=autoscroll timer off, 3=scrolling up, 4=scrolling down
   int            autoscroll_amt_;   // #pixels above or below edge, used for autoscroll speed
-  RedrawStyle    redraw_style_;     // NO_REDRAW, RATE_LIMITED, PER_WRITE
   float          redraw_rate_;      // maximum redraw rate in seconds, default=0.10
+
+  // Special utf8 symbols
+  bool           fontsize_defer_;   // flag defers font calcs until first draw() (issue 837)
+  bool           show_unknown_;     // if true, show unknown chars as '¿' (default off)
+  bool           ansi_;             // if true, parse ansi codes (default on)
   bool           redraw_modified_;  // display modified; used by update_cb() to rate limit redraws
   bool           redraw_timer_;     // if true, redraw timer is running
-  PartialUtf8Buf pub_;              // handles Partial Utf8 Buffer (pub)
 
 protected:
   // Ring buffer management
