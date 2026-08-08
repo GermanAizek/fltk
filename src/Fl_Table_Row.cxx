@@ -56,7 +56,8 @@
 */
 int Fl_Table_Row::row_selected(int row) {
   if (row < 0 || row >= rows()) return 0;
-  return _rowselect[row];
+  if ((size_t)(row / 8) >= _rowselect.size()) return 0;
+  return (_rowselect[row / 8] & (1 << (row % 8))) ? 1 : 0;
 }
 
 // Change row selection type
@@ -64,18 +65,21 @@ void Fl_Table_Row::type(TableRowSelectMode val) {
   _selectmode = val;
   switch ( _selectmode ) {
     case SELECT_NONE: {
-      for (auto &sel : _rowselect) {
-        sel = 0;
-      }
+      std::vector<uint8_t>().swap(_rowselect);
       redraw();
       break;
     }
     case SELECT_SINGLE: {
       int count = 0;
-      for (auto &sel : _rowselect) {
+      for (size_t i = 0; i < _rowselect.size(); i++) {
+        uint8_t &sel = _rowselect[i];
         if (sel) {
-          if (++count > 1) {  // only one allowed
-            sel = 0;
+          for (int bit = 0; bit < 8; bit++) {
+            if (sel & (1 << bit)) {
+              if (++count > 1) {  // only one allowed
+                sel &= ~(1 << bit);
+              }
+            }
           }
         }
       }
@@ -106,35 +110,53 @@ void Fl_Table_Row::type(TableRowSelectMode val) {
 int Fl_Table_Row::select_row(int row, int flag) {
   int ret = 0;
   if ( row < 0 || row >= rows() ) { return(-1); }
+
+  auto get_val = [&](int r) -> int {
+    if ((size_t)(r / 8) >= _rowselect.size()) return 0;
+    return (_rowselect[r / 8] & (1 << (r % 8))) ? 1 : 0;
+  };
+  auto set_val = [&](int r, int v) {
+    if (v) {
+      if ((size_t)(r / 8) >= _rowselect.size()) _rowselect.resize(r / 8 + 1, 0);
+      _rowselect[r / 8] |= (1 << (r % 8));
+    } else {
+      if ((size_t)(r / 8) < _rowselect.size()) _rowselect[r / 8] &= ~(1 << (r % 8));
+    }
+  };
+
   switch ( _selectmode ) {
     case SELECT_NONE:
       return(-1);
 
     case SELECT_SINGLE: {
-      int oldval;
-      for ( int t=0; t<rows(); t++ ) {
-        if ( t == row ) {
-          oldval = _rowselect[row];
-          if ( flag == 2 ) { _rowselect[row] ^= 1; }
-          else             { _rowselect[row] = flag; }
-          if ( oldval != _rowselect[row] ) {
-            redraw_range(row, row, leftcol, rightcol);
-            ret = 1;
+      int oldval = get_val(row);
+      int newval = (flag == 2) ? (oldval ^ 1) : flag;
+      if (newval != oldval) {
+        set_val(row, newval);
+        redraw_range(row, row, leftcol, rightcol);
+        ret = 1;
+      }
+      if (newval) {
+        for (size_t i = 0; i < _rowselect.size(); i++) {
+          if (_rowselect[i]) {
+            for (int bit = 0; bit < 8; bit++) {
+              int t = i * 8 + bit;
+              if (t != row && (_rowselect[i] & (1 << bit))) {
+                _rowselect[i] &= ~(1 << bit);
+                redraw_range(t, t, leftcol, rightcol);
+              }
+            }
           }
-        }
-        else if ( _rowselect[t] ) {
-          _rowselect[t] = 0;
-          redraw_range(t, t, leftcol, rightcol);
         }
       }
       break;
     }
 
     case SELECT_MULTI: {
-      int oldval = _rowselect[row];
-      if ( flag == 2 ) { _rowselect[row] ^= 1; }
-      else             { _rowselect[row] = flag; }
-      if ( _rowselect[row] != oldval ) {                // select state changed?
+      int oldval = get_val(row);
+      int newval = (flag == 2) ? (oldval ^ 1) : flag;
+      if ( newval != oldval ) {
+        set_val(row, newval);
         if ( row >= toprow && row <= botrow ) {         // row visible?
           // Extend partial redraw range
           redraw_range(row, row, leftcol, rightcol);
@@ -159,15 +181,32 @@ void Fl_Table_Row::select_all_rows(int flag) {
     case SELECT_MULTI: {
       char changed = 0;
       if ( flag == 2 ) {
-        for (auto &sel : _rowselect) {
-          sel ^= 1;
+        if (_rowselect.size() * 8 < (size_t)rows()) {
+          _rowselect.resize((rows() + 7) / 8, 0);
         }
-        changed = 1;
+        for (size_t i = 0; i < _rowselect.size(); i++) {
+          _rowselect[i] ^= 0xFF;
+          changed = 1;
+        }
+        if (rows() % 8 != 0 && _rowselect.size() > 0) {
+          _rowselect.back() &= (1 << (rows() % 8)) - 1;
+        }
+      } else if (flag == 1) {
+        if (_rowselect.size() * 8 < (size_t)rows()) {
+          _rowselect.resize((rows() + 7) / 8, 0);
+        }
+        for (size_t i = 0; i < _rowselect.size(); i++) {
+          if (_rowselect[i] != 0xFF) changed = 1;
+          _rowselect[i] = 0xFF;
+        }
+        if (rows() % 8 != 0 && _rowselect.size() > 0) {
+          _rowselect.back() &= (1 << (rows() % 8)) - 1;
+        }
       } else {
-        for (auto &sel : _rowselect) {
-          changed |= (sel != flag) ? 1 : 0;
-          sel = flag;
+        for (size_t i = 0; i < _rowselect.size(); i++) {
+          if (_rowselect[i] != 0) changed = 1;
         }
+        std::vector<uint8_t>().swap(_rowselect);
       }
       if ( changed ) {
         redraw();
@@ -178,10 +217,14 @@ void Fl_Table_Row::select_all_rows(int flag) {
 
 // Set number of rows
 void Fl_Table_Row::rows(int val) {
-  // Note: order of operations below matters, see PR #1187
-  if (val > (int)_rowselect.size()) { _rowselect.resize(val, 0); }  // enlarge
   Fl_Table::rows(val);
-  if (val < (int)_rowselect.size()) { _rowselect.resize(val); }     // shrink
+  size_t needed = (val + 7) / 8;
+  if (needed < _rowselect.size()) {
+    _rowselect.resize(needed);
+  }
+  if (val % 8 != 0 && _rowselect.size() > 0) {
+    _rowselect.back() &= (1 << (val % 8)) - 1;
+  }
 }
 
 // Handle events
