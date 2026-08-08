@@ -132,8 +132,9 @@ void Fl_Widget::draw_label(int X, int Y, int W, int H) const {
     Anybody can call this to force the label to draw anywhere.
  */
 void Fl_Widget::draw_label(int X, int Y, int W, int H, Fl_Align a) const {
+  if (!label_) return;
   if (flags()&SHORTCUT_LABEL) fl_draw_shortcut = 1;
-  Fl_Label l1 = label_;
+  Fl_Label l1 = *label_;
   if (!active_r()) {
     l1.color = fl_inactive((Fl_Color)l1.color);
     if (l1.deimage) l1.image = l1.deimage;

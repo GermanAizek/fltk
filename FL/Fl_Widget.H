@@ -116,7 +116,8 @@ class FL_EXPORT Fl_Widget {
   Fl_Callback* callback_;
   void* user_data_;
   int x_,y_,w_,h_;
-  Fl_Label label_;
+  Fl_Label* label_;
+  void alloc_label();
   unsigned int flags_;
   Fl_Color color_;
   Fl_Color selection_color_;
@@ -424,7 +425,7 @@ public:
       \return label alignment
       \see label(), align(Fl_Align), Fl_Align
    */
-  Fl_Align align() const {return label_.align_;}
+  Fl_Align align() const {return label_ ? label_->align_ : FL_ALIGN_CENTER;}
 
   /** Sets the label alignment.
       This controls how the label is displayed next to or inside the widget.
@@ -433,7 +434,7 @@ public:
       \param[in] alignment new label alignment
       \see align(), Fl_Align
    */
-  void align(Fl_Align alignment) {label_.align_ = alignment;}
+  void align(Fl_Align alignment) {if (!label_) alloc_label(); label_->align_ = alignment;}
 
   /** Gets the box type of the widget.
       \return the current box type
@@ -497,7 +498,7 @@ public:
       \return a pointer to the current label text
       \see label(const char *), copy_label(const char *)
    */
-  const char* label() const {return label_.value;}
+  const char* label() const {return label_ ? label_->value : 0;}
 
   /** Sets the current label pointer.
 
@@ -527,13 +528,13 @@ public:
   /** Shortcut to set the label text and type in one call.
       \see label(const char *), labeltype(Fl_Labeltype)
    */
-  void label(Fl_Labeltype a, const char* b) {label_.type = (uchar)a; label_.value = b;}
+  void label(Fl_Labeltype a, const char* b) {if (!label_) alloc_label(); label_->type = (uchar)a; label_->value = b;}
 
   /** Gets the label type.
       \return the current label type.
       \see Fl_Labeltype
    */
-  Fl_Labeltype labeltype() const {return (Fl_Labeltype)label_.type;}
+  Fl_Labeltype labeltype() const {return label_ ? (Fl_Labeltype)label_->type : FL_NORMAL_LABEL;}
 
   /** Sets the label type.
       The label type identifies the function that draws the label of the widget.
@@ -543,19 +544,19 @@ public:
       \param[in] a new label type
       \see Fl_Labeltype
    */
-  void labeltype(Fl_Labeltype a) {label_.type = (uchar)a;}
+  void labeltype(Fl_Labeltype a) {if (!label_) alloc_label(); label_->type = (uchar)a;}
 
   /** Gets the label color.
       The default color is FL_FOREGROUND_COLOR.
       \return the current label color
    */
-  Fl_Color labelcolor() const {return label_.color;}
+  Fl_Color labelcolor() const {return label_ ? label_->color : FL_FOREGROUND_COLOR;}
 
   /** Sets the label color.
       The default color is FL_FOREGROUND_COLOR.
       \param[in] c the new label color
    */
-  void labelcolor(Fl_Color c) {label_.color=c;}
+  void labelcolor(Fl_Color c) {if (!label_) alloc_label(); label_->color=c;}
 
   /** Gets the font to use.
       Fonts are identified by indexes into a table. The default value
@@ -564,7 +565,7 @@ public:
       \return current font used by the label
       \see Fl_Font
    */
-  Fl_Font labelfont() const {return label_.font;}
+  Fl_Font labelfont() const {return label_ ? label_->font : FL_HELVETICA;}
 
   /** Sets the font to use.
       Fonts are identified by indexes into a table. The default value
@@ -573,29 +574,29 @@ public:
       \param[in] f the new font for the label
       \see Fl_Font
    */
-  void labelfont(Fl_Font f) {label_.font=f;}
+  void labelfont(Fl_Font f) {if (!label_) alloc_label(); label_->font=f;}
 
   /** Gets the font size in pixels.
       The default size is 14 pixels.
       \return the current font size
    */
-  Fl_Fontsize labelsize() const {return label_.size;}
+   Fl_Fontsize labelsize() const {return label_ ? label_->size : 14; /* FL_NORMAL_SIZE is 14 */}
 
   /** Sets the font size in pixels.
       \param[in] pix the new font size
       \see Fl_Fontsize labelsize()
    */
-  void labelsize(Fl_Fontsize pix) {label_.size=pix;}
+  void labelsize(Fl_Fontsize pix) {if (!label_) alloc_label(); label_->size=pix;}
 
   /** Gets the image that is used as part of the widget label when in the active state.
       \return the current image
    */
-  Fl_Image* image() {return label_.image;}
+  Fl_Image* image() {return label_ ? label_->image : 0;}
 
   /** Gets the image that is used as part of the widget label when in the active state.
       \return the current image
    */
-  const Fl_Image* image() const {return label_.image;}
+  const Fl_Image* image() const {return label_ ? label_->image : 0;}
 
   /** Sets the image to use as part of the widget label when in the active state.
 
@@ -653,12 +654,12 @@ public:
   /** Gets the image that is used as part of the widget label when in the inactive state.
       \return the current image for the deactivated widget
    */
-  Fl_Image* deimage() {return label_.deimage;}
+  Fl_Image* deimage() {return label_ ? label_->deimage : 0;}
 
   /** Gets the image that is used as part of the widget label when in the inactive state.
       \return the current image for the deactivated widget
    */
-  const Fl_Image* deimage() const {return label_.deimage;}
+  const Fl_Image* deimage() const {return label_ ? label_->deimage : 0;}
 
   /** Sets the image to use as part of the widget label when in the inactive state.
    \param[in] img the new image for the deactivated widget
@@ -699,32 +700,32 @@ public:
    This value is limited to 0..255.
    \param[in] gap spacing in pixels
    */
-  void label_image_spacing(int gap) { label_.spacing = (uchar)gap; }
+  void label_image_spacing(int gap) { if (!label_) alloc_label(); label_->spacing = (uchar)gap; }
 
   /** Return the gap size between the label and the image.
    \return spacing in pixels
    */
-  int label_image_spacing() const { return label_.spacing; }
+  int label_image_spacing() const { return label_ ? label_->spacing : 0; }
 
   /** Set the spacing between the label and the horizontal edge of the widget.
    \param[in] px gap in pixels
    */
-  void horizontal_label_margin(int px) { label_.h_margin_ = (signed char)px; }
+  void horizontal_label_margin(int px) { if (!label_) alloc_label(); label_->h_margin_ = (signed char)px; }
 
   /** Get the spacing between the label and the horizontal edge of the widget.
    \return px gap in pixels
    */
-  int horizontal_label_margin() const { return label_.h_margin_; }
+  int horizontal_label_margin() const { return label_ ? label_->h_margin_ : 0; }
 
   /** Set the spacing between the label and the vertical edge of the widget.
    \param[in] px gap in pixels
    */
-  void vertical_label_margin(int px) { label_.v_margin_ = (signed char)px; }
+  void vertical_label_margin(int px) { if (!label_) alloc_label(); label_->v_margin_ = (signed char)px; }
 
   /** Get the spacing between the label and the vertical edge of the widget.
    \return px gap in pixels
    */
-  int vertical_label_margin() const { return label_.v_margin_; }
+  int vertical_label_margin() const { return label_ ? label_->v_margin_ : 0; }
 
   /** Gets the current tooltip text.
       \return a pointer to the tooltip text or NULL
@@ -1185,7 +1186,7 @@ public:
       the arguments \p ww and \p hh and word wrapping
       \see fl_measure(const char*, int&, int&, int)
    */
-  void measure_label(int& ww, int& hh) const {label_.measure(ww, hh);}
+  void measure_label(int& ww, int& hh) const {if (label_) label_->measure(ww, hh); else { ww = 0; hh = 0; }}
 
   Fl_Window* window() const ;
   Fl_Window* top_window() const;

@@ -1773,7 +1773,7 @@ void Fl_Widget::redraw_label() {
     // If the label is not inside the widget, compute the location of
     // the label and redraw the window within that bounding box...
     int W = 0, H = 0;
-    label_.measure(W, H);
+    if (label_) label_->measure(W, H);
     W += 5; // Add a little to the size of the label to cover overflow
     H += 5;
 

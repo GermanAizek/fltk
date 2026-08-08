@@ -196,20 +196,29 @@ int Fl_Widget::handle(int) {
 /** Default font size for widgets */
 Fl_Fontsize FL_NORMAL_SIZE = 14;
 
+void Fl_Widget::alloc_label() {
+  label_ = new Fl_Label();
+  label_->value     = 0;
+  label_->image     = 0;
+  label_->deimage   = 0;
+  label_->type      = FL_NORMAL_LABEL;
+  label_->font      = FL_HELVETICA;
+  label_->size      = FL_NORMAL_SIZE;
+  label_->color     = FL_FOREGROUND_COLOR;
+  label_->align_    = FL_ALIGN_CENTER;
+  label_->h_margin_ = label_->v_margin_ = 0;
+  label_->spacing   = 0;
+}
+
 Fl_Widget::Fl_Widget(int X, int Y, int W, int H, const char* L) {
 
   x_ = X; y_ = Y; w_ = W; h_ = H;
 
-  label_.value     = L;
-  label_.image     = 0;
-  label_.deimage   = 0;
-  label_.type      = FL_NORMAL_LABEL;
-  label_.font      = FL_HELVETICA;
-  label_.size      = FL_NORMAL_SIZE;
-  label_.color     = FL_FOREGROUND_COLOR;
-  label_.align_    = FL_ALIGN_CENTER;
-  label_.h_margin_ = label_.v_margin_ = 0;
-  label_.spacing   = 0;
+  label_ = nullptr;
+  if (L) {
+    alloc_label();
+    label_->value = L;
+  }
   tooltip_         = 0;
   callback_        = default_callback;
   user_data_       = 0;
@@ -256,7 +265,8 @@ extern void fl_throw_focus(Fl_Widget*); // in Fl_x.cxx
 */
 Fl_Widget::~Fl_Widget() {
   Fl::clear_widget_pointer(this);
-  if (flags() & COPIED_LABEL) free((void *)(label_.value));
+  if ((flags() & COPIED_LABEL) && label_) free((void *)(label_->value));
+  if (label_) delete label_;
   if (flags() & COPIED_TOOLTIP) free((void *)(tooltip_));
   image(NULL);
   deimage(NULL);
@@ -380,19 +390,20 @@ int Fl_Widget::contains(const Fl_Widget *o) const {
 void Fl_Widget::label(const char *a) {
   if (flags() & COPIED_LABEL) {
     // reassigning a copied label remains the same copied label
-    if (label_.value == a)
+    if (label_ && label_->value == a)
       return;
-    free((void *)(label_.value));
+    if (label_) free((void *)(label_->value));
     clear_flag(COPIED_LABEL);
   }
-  label_.value=a;
+  if (!label_) alloc_label();
+  label_->value=a;
   redraw_label();
 }
 
 
 void Fl_Widget::copy_label(const char *a) {
   // reassigning a copied label remains the same copied label
-  if ((flags() & COPIED_LABEL) && (label_.value == a))
+  if ((flags() & COPIED_LABEL) && label_ && (label_->value == a))
     return;
   if (a) {
     label(fl_strdup(a));
@@ -404,12 +415,13 @@ void Fl_Widget::copy_label(const char *a) {
 
 void Fl_Widget::image(Fl_Image* img) {
   if (image_bound()) {
-    if (label_.image && (label_.image != img)) {
-      label_.image->release();
+    if (label_ && label_->image && (label_->image != img)) {
+      label_->image->release();
     }
     bind_image(0);
   }
-  label_.image = img;
+  if (!label_) alloc_label();
+  label_->image = img;
 }
 
 void Fl_Widget::image(Fl_Image& img) {
@@ -423,12 +435,13 @@ void Fl_Widget::bind_image(Fl_Image* img) {
 
 void Fl_Widget::deimage(Fl_Image* img) {
   if (deimage_bound()) {
-    if (label_.deimage && (label_.deimage != img))  {
-      label_.deimage->release();
+    if (label_ && label_->deimage && (label_->deimage != img))  {
+      label_->deimage->release();
     }
     bind_deimage(0);
   }
-  label_.deimage = img;
+  if (!label_) alloc_label();
+  label_->deimage = img;
 }
 
 void Fl_Widget::deimage(Fl_Image& img) {
