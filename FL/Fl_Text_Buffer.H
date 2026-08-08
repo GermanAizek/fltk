@@ -754,16 +754,6 @@ public:
   int utf8_align(int) const;
 
   /**
-   \brief true if the loaded file has been transcoded to UTF-8.
-   */
-  int input_file_was_transcoded;
-
-  /** This message may be displayed using the fl_alert() function when a file
-   which was not UTF-8 encoded is input.
-   */
-  static const char* file_encoding_warning_message;
-
-  /**
    \brief Pointer to a function called after reading a non UTF-8 encoded file.
 
    This function is called after reading a file if the file content
@@ -773,6 +763,17 @@ public:
    to be informed if file input required transcoding to UTF-8.
    */
   void (*transcoding_warning_action)(Fl_Text_Buffer*);
+
+  /**
+   \brief true if the loaded file has been transcoded to UTF-8.
+   */
+  int input_file_was_transcoded;
+
+  /** This message may be displayed using the fl_alert() function when a file
+   which was not UTF-8 encoded is input.
+   */
+  static const char* file_encoding_warning_message;
+
   bool is_word_separator(int pos) const;
 
 protected:
@@ -853,33 +854,33 @@ protected:
   Fl_Text_Selection mPrimary;     /**< highlighted areas */
   Fl_Text_Selection mSecondary;   /**< highlighted areas */
   Fl_Text_Selection mHighlight;   /**< highlighted areas */
+  char* mBuf;                     /**< allocated memory where the text is stored */
+  Fl_Text_Modify_Cb *mModifyProcs;/**< procedures to call when buffer is
+                                       modified to redisplay contents */
+  void** mCbArgs;                 /**< caller arguments for modifyProcs above */
+  Fl_Text_Predelete_Cb *mPredeleteProcs; /**< procedure to call before text is deleted
+                                       from the buffer; at most one is supported. */
+  void **mPredeleteCbArgs;        /**< caller argument for pre-delete proc above */
+  Fl_Text_Undo_Action* mUndo;     /**< local undo event */
+  Fl_Text_Undo_Action_List* mUndoList; /**< List of undo event */
+  Fl_Text_Undo_Action_List* mRedoList; /**< List of redo event */
   int mLength;                    /**< length of the text in the buffer (the length
                                        of the buffer itself must be calculated:
                                        gapEnd - gapStart + length) */
-  char* mBuf;                     /**< allocated memory where the text is stored */
   int mGapStart;                  /**< points to the first character of the gap */
   int mGapEnd;                    /**< points to the first character after the gap */
   // The hardware tab distance used by all displays for this buffer,
   // and used in computing offsets for rectangular selection operations.
   int mTabDist;                   /**< equiv. number of characters in a tab */
   int mNModifyProcs;              /**< number of modify-redisplay procs attached */
-  Fl_Text_Modify_Cb *mModifyProcs;/**< procedures to call when buffer is
-                                       modified to redisplay contents */
-  void** mCbArgs;                 /**< caller arguments for modifyProcs above */
   int mNPredeleteProcs;           /**< number of pre-delete procs attached */
-  Fl_Text_Predelete_Cb *mPredeleteProcs; /**< procedure to call before text is deleted
-                                       from the buffer; at most one is supported. */
-  void **mPredeleteCbArgs;        /**< caller argument for pre-delete proc above */
   int mCursorPosHint;             /**< hint for reasonable cursor position after
                                        a buffer modification operation */
-  char mCanUndo;                  /**< if this buffer is used for attributes, it must
-                                       not do any undo calls */
   int mPreferredGapSize;          /**< the default allocation for the text gap is 1024
                                        bytes and should only be increased if frequent
                                        and large changes in buffer size are expected */
-  Fl_Text_Undo_Action* mUndo;     /**< local undo event */
-  Fl_Text_Undo_Action_List* mUndoList; /**< List of undo event */
-  Fl_Text_Undo_Action_List* mRedoList; /**< List of redo event */
+  char mCanUndo;                  /**< if this buffer is used for attributes, it must
+                                       not do any undo calls */
 };
 
 #endif

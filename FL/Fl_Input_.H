@@ -137,9 +137,6 @@ class FL_EXPORT Fl_Input_ : public Fl_Widget {
   /** \internal Shortcut key that will fetch focus for this widget. */
   int shortcut_;
 
-  /** \internal This is set if no text but only the cursor needs updating. */
-  uchar erase_cursor_only;
-
   /** \internal The font used for the entire text. */
   Fl_Font textfont_;
 
@@ -151,6 +148,9 @@ class FL_EXPORT Fl_Input_ : public Fl_Widget {
 
   /** \internal color of the text cursor */
   Fl_Color cursor_color_;
+
+  /** \internal This is set if no text but only the cursor needs updating. */
+  uchar erase_cursor_only;
 
   /** \internal Horizontal cursor position in pixels while moving up or down. */
   static double up_down_pos;

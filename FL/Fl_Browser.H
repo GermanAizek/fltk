@@ -88,10 +88,10 @@ class FL_EXPORT Fl_Browser : public Fl_Browser_ {
   FL_BLINE *first;              // the array of lines
   FL_BLINE *last;
   FL_BLINE *cache;
+  const int* column_widths_;
   int cacheline;                // line number of cache
   int lines;                    // Number of lines
   int full_height_;
-  const int* column_widths_;
   char format_char_;            // alternative to @-sign
   char column_char_;            // alternative to tab
 

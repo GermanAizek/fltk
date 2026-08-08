@@ -65,21 +65,6 @@ class Fl_Tree;
 class FL_EXPORT Fl_Tree_Item {
   Fl_Tree                *_tree;                // parent tree
   const char             *_label;               // label (memory managed)
-  Fl_Font                 _labelfont;           // label's font face
-  Fl_Fontsize             _labelsize;           // label's font size
-  Fl_Color                _labelfgcolor;        // label's fg color
-  Fl_Color                _labelbgcolor;        // label's bg color (0xffffffff is 'transparent')
-  /// \enum Fl_Tree_Item_Flags
-  enum Fl_Tree_Item_Flags : std::uint8_t {
-    OPEN                = 1<<0,         ///> item is open
-    VISIBLE             = 1<<1,         ///> item is visible
-    ACTIVE              = 1<<2,         ///> item is active
-    SELECTED            = 1<<3          ///> item is selected
-  };
-  unsigned short _flags;                // misc flags
-  int                     _xywh[4];             // xywh of this widget (if visible)
-  int                     _collapse_xywh[4];    // xywh of collapse icon (if visible)
-  int                     _label_xywh[4];       // xywh of label
   Fl_Widget              *_widget;              // item's label widget (optional)
   Fl_Image               *_usericon;            // item's user-specific icon (optional)
   Fl_Image               *_userdeicon;          // deactivated usericon
@@ -88,6 +73,21 @@ class FL_EXPORT Fl_Tree_Item {
   void                   *_userdata;            // user data that can be associated with an item
   Fl_Tree_Item           *_prev_sibling;        // previous sibling (same level)
   Fl_Tree_Item           *_next_sibling;        // next sibling (same level)
+  Fl_Font                 _labelfont;           // label's font face
+  Fl_Fontsize             _labelsize;           // label's font size
+  Fl_Color                _labelfgcolor;        // label's fg color
+  Fl_Color                _labelbgcolor;        // label's bg color (0xffffffff is 'transparent')
+  int                     _xywh[4];             // xywh of this widget (if visible)
+  int                     _collapse_xywh[4];    // xywh of collapse icon (if visible)
+  int                     _label_xywh[4];       // xywh of label
+  /// \enum Fl_Tree_Item_Flags
+  enum Fl_Tree_Item_Flags : std::uint8_t {
+    OPEN                = 1<<0,         ///> item is open
+    VISIBLE             = 1<<1,         ///> item is visible
+    ACTIVE              = 1<<2,         ///> item is active
+    SELECTED            = 1<<3          ///> item is selected
+  };
+  unsigned short _flags;                // misc flags
   // Protected methods
 protected:
   void _Init(const Fl_Tree_Prefs &prefs, Fl_Tree *tree);

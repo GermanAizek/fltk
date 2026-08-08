@@ -103,6 +103,14 @@ typedef void (Fl_Tree_Item_Draw_Callback)(Fl_Tree_Item*, void*);
 /// instead of trying to accessing tree's preferences settings directly.
 ///
 class FL_EXPORT Fl_Tree_Prefs {
+  Fl_Image *_openimage;                 // the 'open' icon [+]
+  Fl_Image *_closeimage;                // the 'close' icon [-]
+  Fl_Image *_userimage;                 // user's own icon
+  Fl_Image *_opendeimage;               // deactivated 'open' icon
+  Fl_Image *_closedeimage;              // deactivated 'close' icon
+  Fl_Image *_userdeimage;               // deactivated user icon
+  Fl_Tree_Item_Draw_Callback *_itemdrawcallback;        // callback to handle drawing items (0=none)
+  void                       *_itemdrawuserdata;        // data for drawing items (0=none)
   Fl_Font _labelfont;                   // label's font face
   Fl_Fontsize _labelsize;               // label's font size
   int _margintop;                       // --
@@ -118,22 +126,14 @@ class FL_EXPORT Fl_Tree_Prefs {
   Fl_Color _labelfgcolor;               // label's foreground color
   Fl_Color _labelbgcolor;               // label's background color
   Fl_Color _connectorcolor;             // connector dotted line color
-  Fl_Tree_Connector _connectorstyle;    // connector line style
-  Fl_Image *_openimage;                 // the 'open' icon [+]
-  Fl_Image *_closeimage;                // the 'close' icon [-]
-  Fl_Image *_userimage;                 // user's own icon
-  Fl_Image *_opendeimage;               // deactivated 'open' icon
-  Fl_Image *_closedeimage;              // deactivated 'close' icon
-  Fl_Image *_userdeimage;               // deactivated user icon
-  char _showcollapse;                   // 1=show collapse icons, 0=don't
-  char _showroot;                       // show the root item as part of the tree
   Fl_Tree_Sort   _sortorder;            // none, ascening, descending, etc.
   Fl_Boxtype     _selectbox;            // selection box type
+  Fl_Tree_Connector _connectorstyle;    // connector line style
+  char _showcollapse;                   // 1=show collapse icons, 0=don't
+  char _showroot;                       // show the root item as part of the tree
   Fl_Tree_Select _selectmode;           // selection mode
   Fl_Tree_Item_Reselect_Mode _itemreselectmode; // controls item selection callback() behavior
   Fl_Tree_Item_Draw_Mode     _itemdrawmode;     // controls how items draw label + widget()
-  Fl_Tree_Item_Draw_Callback *_itemdrawcallback;        // callback to handle drawing items (0=none)
-  void                       *_itemdrawuserdata;        // data for drawing items (0=none)
 public:
   Fl_Tree_Prefs();
   ~Fl_Tree_Prefs();

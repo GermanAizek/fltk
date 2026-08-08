@@ -36,11 +36,11 @@
 /** The Fl_File_Browser widget displays a list of filenames, optionally with file-specific icons. */
 class FL_EXPORT Fl_File_Browser : public Fl_Browser {
 
-  int           filetype_;
   const char    *directory_;
-  uchar         iconsize_;
   const char    *pattern_;
   const char    *errmsg_;
+  int           filetype_;
+  uchar         iconsize_;
 
   int   full_height() const override;
   int   item_height(void *) const override;

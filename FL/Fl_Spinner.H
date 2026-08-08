@@ -41,7 +41,6 @@ class FL_EXPORT Fl_Spinner : public Fl_Group {
   double        maximum_;               // Maximum value
   double        step_;                  // Amount to add/subtract for up/down
   const char    *format_;               // Format string for input field
-  int           wrap_;                  // wrap around at bounds (1/0)
 
 private:
 
@@ -65,6 +64,7 @@ protected:
   Fl_Repeat_Button
                 up_button_,             // Up button
                 down_button_;           // Down button
+  int           wrap_;                  // wrap around at bounds (1/0)
 
   void draw() override;
 

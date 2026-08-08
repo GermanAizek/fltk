@@ -39,8 +39,8 @@
 class FL_EXPORT Fl_Value_Output : public Fl_Valuator {
   Fl_Font textfont_;
   Fl_Fontsize textsize_;
-  uchar soft_;
   Fl_Color textcolor_;
+  uchar soft_;
 
 protected:
   void draw() override;

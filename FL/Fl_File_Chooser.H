@@ -61,7 +61,6 @@ private:
   char directory_[FL_PATH_MAX];
   char pattern_[FL_PATH_MAX];
   char preview_text_[2048];
-  int type_;
   void favoritesButtonCB();
   void favoritesCB(Fl_Widget *w);
   void fileListCB();
@@ -245,6 +244,7 @@ public:
   static Fl_File_Sort_F *sort;
 private:
   Fl_Widget* ext_group;
+  int type_;
 public:
   Fl_Widget* add_extra(Fl_Widget* gr);
 protected:

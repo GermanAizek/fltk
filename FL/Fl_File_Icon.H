@@ -47,10 +47,10 @@ class FL_EXPORT Fl_File_Icon {                  //// Icon data
   static Fl_File_Icon *first_;  // Pointer to first icon/filetype
   Fl_File_Icon  *next_;         // Pointer to next icon/filetype
   const char    *pattern_;      // Pattern string
+  short         *data_;         // Icon data
   int           type_;          // Match only if directory or file?
   int           num_data_;      // Number of data elements
   int           alloc_data_;    // Number of allocated elements
-  short         *data_;         // Icon data
 
   public:
 

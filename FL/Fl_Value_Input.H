@@ -54,12 +54,12 @@
   \see Fl_Widget::shortcut_label(int)
 */
 class FL_EXPORT Fl_Value_Input : public Fl_Valuator {
+private:
+  char soft_;
 public:
   /* This is the encapsulated Fl_input attribute to which
   this class delegates the value font, color and shortcut */
   Fl_Input input;
-private:
-  char soft_;
   static void input_cb(Fl_Widget*,void*);
   void value_damage() override; // cause damage() due to value() changing
 public:
