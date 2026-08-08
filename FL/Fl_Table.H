@@ -128,8 +128,8 @@ public:
   };
 
 private:
-  std::vector<int> *_colwidths;         // column widths in pixels
-  std::vector<int> *_rowheights;        // row heights in pixels
+  class Fl_Table_Dimensions *_colwidths;         // column widths in pixels
+  class Fl_Table_Dimensions *_rowheights;        // row heights in pixels
 
   int _rows, _cols;     // total rows/cols
   int _row_header_w;    // width of row header
@@ -160,9 +160,7 @@ private:
   };
   unsigned int flags_;
 
-  // number of columns and rows == size of corresponding vectors
-  int col_size() const;                 // size of the column widths vector
-  int row_size() const;                 // size of the row heights vector
+  // memory optimized sizes are tracked by _cols and _rows directly
 
   Fl_Cursor _last_cursor;               // last mouse cursor before changed to 'resize' cursor
 
@@ -676,21 +674,13 @@ public:
     Convenience method to set the height of all rows to the
     same value, in pixels. The screen is redrawn.
   */
-  void row_height_all(int height) {             // set all row/col heights
-    for ( int r=0; r<rows(); r++ ) {
-      row_height(r, height);
-    }
-  }
+  void row_height_all(int height);              // set all row/col heights
 
   /**
     Convenience method to set the width of all columns to the
     same value, in pixels. The screen is redrawn.
   */
-  void col_width_all(int width) {
-    for ( int c=0; c<cols(); c++ ) {
-      col_width(c, width);
-    }
-  }
+  void col_width_all(int width);
 
   void row_position(int row);                   // set/get table's current scroll position
   void col_position(int col);

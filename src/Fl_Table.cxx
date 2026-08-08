@@ -22,7 +22,59 @@
 
 #include <string.h>             // memcpy
 #include <stdio.h>              // fprintf
+#include <algorithm>            // std::min
 
+class Fl_Table_Dimensions {
+  int default_val;
+  std::vector<int*> blocks;
+public:
+  Fl_Table_Dimensions(int def) : default_val(def) {}
+  ~Fl_Table_Dimensions() {
+    for (size_t i=0; i<blocks.size(); i++) if (blocks[i]) delete[] blocks[i];
+  }
+  int get(int index) const {
+    int b = index >> 10;
+    int i = index & 1023;
+    if (b >= 0 && b < (int)blocks.size() && blocks[b]) return blocks[b][i];
+    return default_val;
+  }
+  void set(int index, int val) {
+    if (index < 0) return;
+    int b = index >> 10;
+    int i = index & 1023;
+    if (b >= (int)blocks.size()) {
+      if (val == default_val) return;
+      blocks.resize(b + 1, nullptr);
+    }
+    if (!blocks[b]) {
+      if (val == default_val) return;
+      blocks[b] = new int[1024];
+      for (int k=0; k<1024; k++) blocks[b][k] = default_val;
+    }
+    blocks[b][i] = val;
+  }
+  void set_all(int val) {
+    default_val = val;
+    for (size_t i=0; i<blocks.size(); i++) if (blocks[i]) delete[] blocks[i];
+    blocks.clear();
+  }
+  long scroll_position(int index) const {
+    long pos = 0;
+    int b = 0;
+    while (index > 0 && b < (int)blocks.size()) {
+      int n = std::min(index, 1024);
+      if (blocks[b]) {
+        for (int i=0; i<n; i++) pos += blocks[b][i];
+      } else {
+        pos += (long)n * default_val;
+      }
+      index -= n;
+      b++;
+    }
+    if (index > 0) pos += (long)index * default_val;
+    return pos;
+  }
+};
 
 /** Sets the vertical scroll position so 'row' is at the top,
     and causes the screen to redraw.
@@ -65,38 +117,14 @@ void Fl_Table::col_position(int col) {
   Returns the scroll position (in pixels) of the specified 'row'.
 */
 long Fl_Table::row_scroll_position(int row) const {
-  int startrow = 0;
-  long scroll = 0;
-  // OPTIMIZATION:
-  //     Attempt to use precomputed row scroll position
-  //
-  if ( toprow_scrollpos != -1 && row >= toprow ) {
-    scroll = toprow_scrollpos;
-    startrow = toprow;
-  }
-  for ( int t=startrow; t<row; t++ ) {
-    scroll += row_height(t);
-  }
-  return(scroll);
+  return _rowheights->scroll_position(row);
 }
 
 /**
   Returns the scroll position (in pixels) of the specified column 'col'.
 */
 long Fl_Table::col_scroll_position(int col) const {
-  int startcol = 0;
-  long scroll = 0;
-  // OPTIMIZATION:
-  //     Attempt to use precomputed row scroll position
-  //
-  if ( leftcol_scrollpos != -1 && col >= leftcol ) {
-    scroll = leftcol_scrollpos;
-    startcol = leftcol;
-  }
-  for ( int t=startcol; t<col; t++ ) {
-    scroll += col_width(t);
-  }
-  return(scroll);
+  return _colwidths->scroll_position(col);
 }
 
 /**
@@ -143,8 +171,8 @@ Fl_Table::Fl_Table(int X, int Y, int W, int H, const char *l) : Fl_Group(X,Y,W,H
   _scrollbar_size   = 0;
   flags_            = 0;        // TABCELLNAV off
 
-  _colwidths        = new std::vector<int>;  // column widths in pixels
-  _rowheights       = new std::vector<int>;  // row heights in pixels
+  _colwidths        = new Fl_Table_Dimensions(80);  // column widths in pixels
+  _rowheights       = new Fl_Table_Dimensions(25);  // row heights in pixels
 
   box(FL_THIN_DOWN_FRAME);
 
@@ -185,44 +213,17 @@ Fl_Table::~Fl_Table() {
 
 
 /**
-  Returns the current number of columns.
-
-  This is equivalent to the size of the column widths vector.
-
-  \returns Number of columns.
-*/
-int Fl_Table::col_size() const {
-  return int(_colwidths->size());
-}
-
-/**
-  Returns the current number of rows.
-
-  This is equivalent to the size of the row heights vector.
-
-  \returns Number of rows.
-*/
-int Fl_Table::row_size() const {
-  return int(_rowheights->size());
-}
-
-/**
   Sets the height of the specified row in pixels,
   and the table is redrawn.
   callback() will be invoked with CONTEXT_RC_RESIZE
   if the row's height was actually changed, and when() is FL_WHEN_CHANGED.
 */
 void Fl_Table::row_height(int row, int height) {
-  if ( row < 0 ) return;
-  if ( row < row_size() && (*_rowheights)[row] == height ) {
+  if ( row < 0 || row >= _rows ) return;
+  if ( _rowheights->get(row) == height ) {
     return;             // OPTIMIZATION: no change? avoid redraw
   }
-  // Add row heights, even if none yet
-  int now_size = row_size();
-  if (row >= now_size) {
-    _rowheights->resize(row, height);
-  }
-  (*_rowheights)[row] = height;
+  _rowheights->set(row, height);
   table_resized();
   if ( row <= botrow ) {        // OPTIMIZATION: only redraw if onscreen or above screen
     redraw();
@@ -240,16 +241,11 @@ void Fl_Table::row_height(int row, int height) {
 */
 void Fl_Table::col_width(int col, int width)
 {
-  if ( col < 0 ) return;
-  if ( col < col_size() && (*_colwidths)[col] == width ) {
+  if ( col < 0 || col >= _cols ) return;
+  if ( _colwidths->get(col) == width ) {
     return;                     // OPTIMIZATION: no change? avoid redraw
   }
-  // Add column widths, even if none yet
-  int now_size = col_size();
-  if ( col >= now_size ) {
-    _colwidths->resize(col+1, width);
-  }
-  (*_colwidths)[col] = width;
+  _colwidths->set(col, width);
   table_resized();
   if ( col <= rightcol ) {      // OPTIMIZATION: only redraw if onscreen or to the left
     redraw();
@@ -658,11 +654,7 @@ void Fl_Table::rows(int val) {
   int oldrows = _rows;
   _rows = val;
 
-  int default_h = row_size() > 0 ? _rowheights->back() : 25;
-  int now_size = row_size();
-
-  if (now_size != val)
-    _rowheights->resize(val, default_h);      // enlarge or shrink as needed
+  if (val == 0) _rowheights->set_all(25);
 
   table_resized();
 
@@ -680,11 +672,7 @@ void Fl_Table::rows(int val) {
 void Fl_Table::cols(int val) {
   _cols = val;
 
-  int default_w = col_size() > 0 ? (*_colwidths)[col_size()-1] : 80;
-  int now_size = col_size();
-
-  if (now_size != val)
-    _colwidths->resize(val, default_w);       // enlarge or shrink as needed
+  if (val == 0) _colwidths->set_all(80);
 
   table_resized();
   redraw();
@@ -1396,12 +1384,26 @@ void Fl_Table::draw() {
   Returns the current height of the specified row as a value in pixels.
 */
 int Fl_Table::row_height(int row) const {
-  return((row < 0 || row >= row_size()) ? 0 : (*_rowheights)[row]);
+  if (row < 0 || row >= _rows) return 0;
+  return _rowheights->get(row);
 }
 
 /**
   Returns the current width of the specified column in pixels.
 */
 int Fl_Table::col_width(int col) const {
-  return((col < 0 || col >= col_size()) ? 0 : (*_colwidths)[col]);
+  if (col < 0 || col >= _cols) return 0;
+  return _colwidths->get(col);
+}
+
+void Fl_Table::row_height_all(int height) {
+  _rowheights->set_all(height);
+  table_resized();
+  redraw();
+}
+
+void Fl_Table::col_width_all(int width) {
+  _colwidths->set_all(width);
+  table_resized();
+  redraw();
 }
