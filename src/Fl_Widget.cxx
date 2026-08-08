@@ -212,12 +212,20 @@ void Fl_Widget::alloc_label() {
   clear_flag(SIMPLE_LABEL);
 }
 
+
+void Fl_Widget::alloc_ext() {
+  ext_ = new Fl_Widget_Ext();
+  ext_->callback_ = default_callback;
+  ext_->user_data_ = 0;
+  ext_->selection_color_ = FL_GRAY;
+  ext_->when_ = FL_WHEN_RELEASE;
+}
+
 Fl_Widget::Fl_Widget(int X, int Y, int W, int H, const char* L) {
 
   x_ = X; y_ = Y; w_ = W; h_ = H;
 
-  callback_        = default_callback;
-  user_data_       = 0;
+  ext_             = nullptr;
   type_            = 0;
   flags_           = VISIBLE_FOCUS;
 
@@ -230,8 +238,6 @@ Fl_Widget::Fl_Widget(int X, int Y, int W, int H, const char* L) {
   damage_          = 0;
   box_             = FL_NO_BOX;
   color_           = FL_GRAY;
-  selection_color_ = FL_GRAY;
-  when_            = FL_WHEN_RELEASE;
 
   parent_ = nullptr;
   if (Fl_Group::current()) Fl_Group::current()->add(this);
@@ -272,7 +278,13 @@ Fl_Widget::~Fl_Widget() {
     if (flags() & SIMPLE_LABEL) free((void *)label_);
     else if (label_) free((void *)(label_->value));
   }
-  if (!(flags() & SIMPLE_LABEL) && label_) delete label_;
+  image(NULL);
+  deimage(NULL);
+
+  if (!(flags() & SIMPLE_LABEL) && label_) {
+    delete label_;
+    label_ = NULL;
+  }
   
   if (flags() & COPIED_TOOLTIP) {
     const char *tt = tooltip();
@@ -280,9 +292,6 @@ Fl_Widget::~Fl_Widget() {
     clear_flag(COPIED_TOOLTIP);
   }
   tooltip(0);
-  
-  image(NULL);
-  deimage(NULL);
   // remove from parent group
   if (parent_) parent_->remove(this);
 #ifdef DEBUG_DELETE
@@ -293,9 +302,10 @@ Fl_Widget::~Fl_Widget() {
   parent_ = 0; // Don't throw focus to a parent widget.
   fl_throw_focus(this);
   // remove stale entries from default callback queue (Fl::readqueue())
-  if (callback_ == default_callback) cleanup_readqueue(this);
-  if ( (flags_ & AUTO_DELETE_USER_DATA) && user_data_)
-    delete (Fl_Callback_User_Data*)user_data_;
+  if (callback() == default_callback) cleanup_readqueue(this);
+  if ( (flags_ & AUTO_DELETE_USER_DATA) && user_data())
+    delete (Fl_Callback_User_Data*)user_data();
+  if (ext_) delete ext_;
 }
 
 /**
@@ -505,11 +515,11 @@ void Fl_Widget::bind_deimage(Fl_Image* img) {
  */
 void Fl_Widget::do_callback(Fl_Widget *widget, void *arg, Fl_Callback_Reason reason) {
   Fl::callback_reason_ = reason;
-  if (!callback_) return;
+  if (!callback()) return;
   Fl_Widget_Tracker wp(this);
-  callback_(widget, arg);
+  callback()(widget, arg);
   if (wp.deleted()) return;
-  if (callback_ != default_callback)
+  if (callback() != default_callback)
     clear_changed();
 }
 
@@ -519,10 +529,11 @@ void Fl_Widget::do_callback(Fl_Widget *widget, void *arg, Fl_Callback_Reason rea
  \param[in] v new user data
  */
 void Fl_Widget::user_data(void* v) {
-  if ((flags_ & AUTO_DELETE_USER_DATA) && user_data_)
-    delete (Fl_Callback_User_Data*)user_data_;
+  if ((flags_ & AUTO_DELETE_USER_DATA) && user_data())
+    delete (Fl_Callback_User_Data*)user_data();
   clear_flag(AUTO_DELETE_USER_DATA);
-  user_data_ = v;
+  if (v && !ext_) alloc_ext();
+  if (ext_) ext_->user_data_ = v;
 }
 
 /*

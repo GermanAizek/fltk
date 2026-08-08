@@ -109,22 +109,27 @@ public:
     functions, even if they change the widget's appearance. It is up to the
     user code to call redraw() after these.
  */
+struct Fl_Widget_Ext {
+  Fl_Callback* callback_;
+  void* user_data_;
+  Fl_Color selection_color_;
+  uchar when_;
+};
+
 class FL_EXPORT Fl_Widget {
   friend class Fl_Group;
 
   Fl_Group* parent_;
-  Fl_Callback* callback_;
-  void* user_data_;
-  int x_,y_,w_,h_;
+  short x_,y_,w_,h_;
   Fl_Label* label_;
   void alloc_label();
   unsigned int flags_;
   Fl_Color color_;
-  Fl_Color selection_color_;
   uchar type_;
   uchar damage_;
   uchar box_;
-  uchar when_;
+  Fl_Widget_Ext* ext_;
+  void alloc_ext();
 
   /** unimplemented copy ctor */
   Fl_Widget(const Fl_Widget &);
@@ -476,7 +481,7 @@ public:
       \return the current selection color
       \see selection_color(Fl_Color), color(Fl_Color, Fl_Color)
    */
-  Fl_Color selection_color() const {return selection_color_;}
+  Fl_Color selection_color() const {return ext_ ? ext_->selection_color_ : FL_GRAY;}
 
   /** Sets the selection color.
       The selection color is defined for Forms compatibility and is usually
@@ -486,7 +491,7 @@ public:
       \param[in] a the new selection color
       \see selection_color(), color(Fl_Color, Fl_Color)
    */
-  void selection_color(Fl_Color a) {selection_color_ = a;}
+  void selection_color(Fl_Color a) { if (a != FL_GRAY && !ext_) alloc_ext(); if (ext_) ext_->selection_color_ = a; }
 
   /** Sets the background and selection color of the widget.
 
@@ -495,7 +500,7 @@ public:
       \param[in] sel selection color
       \see color(unsigned), selection_color(unsigned)
    */
-  void color(Fl_Color bg, Fl_Color sel) {color_ = bg; selection_color_ = sel;}
+  void color(Fl_Color bg, Fl_Color sel) {color_ = bg; selection_color(sel);}
 
   /** Gets the current label text.
       \return a pointer to the current label text
@@ -774,7 +779,7 @@ public:
       Each widget has a single callback.
       \return current callback
    */
-  Fl_Callback_p callback() const {return callback_;}
+  Fl_Callback_p callback() const {return ext_ ? ext_->callback_ : default_callback;}
 
   /** Sets the current callback function and data for the widget.
       Each widget has a single callback.
@@ -782,7 +787,8 @@ public:
       \param[in] p user data
    */
   void callback(Fl_Callback* cb, void* p) {
-    callback_ = cb;
+    if (!ext_) alloc_ext();
+    ext_->callback_ = cb;
     user_data(p);
   }
 
@@ -794,7 +800,8 @@ public:
    \param[in] auto_free if set, the widget will free user data when destroyed
    */
   void callback(Fl_Callback* cb, Fl_Callback_User_Data* p, bool auto_free) {
-    callback_ = cb;
+    if (!ext_) alloc_ext();
+    ext_->callback_ = cb;
     user_data(p, auto_free);
   }
 
@@ -802,14 +809,15 @@ public:
       Each widget has a single callback.
       \param[in] cb new callback
    */
-  void callback(Fl_Callback* cb) {callback_ = cb;}
+  void callback(Fl_Callback* cb) { if (!ext_) alloc_ext(); ext_->callback_ = cb; }
 
   /** Sets the current callback function for the widget.
       Each widget has a single callback.
       \param[in] cb new callback
    */
   void callback(Fl_Callback0* cb) {
-    callback_ = (Fl_Callback*)(fl_intptr_t)(cb);
+    if (!ext_) alloc_ext();
+    ext_->callback_ = (Fl_Callback*)(fl_intptr_t)(cb);
   }
 
   /** Sets the current callback function for the widget.
@@ -818,7 +826,8 @@ public:
       \param[in] p user data
    */
   void callback(Fl_Callback1* cb, long p = 0) {
-    callback_ = (Fl_Callback*)(fl_intptr_t)(cb);
+    if (!ext_) alloc_ext();
+    ext_->callback_ = (Fl_Callback*)(fl_intptr_t)(cb);
     user_data((void*)(fl_intptr_t)p);
   }
 
@@ -826,7 +835,7 @@ public:
       Gets the current user data (void *) argument that is passed to the callback function.
       \return user data as a pointer
    */
-  void* user_data() const {return user_data_;}
+  void* user_data() const {return ext_ ? ext_->user_data_ : 0;}
 
   /** \brief Sets the user data for this widget. */
   void user_data(void* v);
@@ -845,7 +854,7 @@ public:
 
     \see user_data()
   */
-  long argument() const {return (long)(fl_intptr_t)user_data_;}
+  long argument() const {return (long)(fl_intptr_t)(ext_ ? ext_->user_data_ : 0);}
 
   /** Sets the current user data (long) argument that is passed to the callback function.
 
@@ -861,7 +870,7 @@ public:
       \return set of flags
       \see when(uchar), Fl_When, do_callback(), Fl::callback_reason()
    */
-  Fl_When when() const {return (Fl_When)when_;}
+  Fl_When when() const {return (Fl_When)(ext_ ? ext_->when_ : FL_WHEN_RELEASE);}
 
   /** Sets the flags used to decide when a callback is called.
 
@@ -900,7 +909,7 @@ public:
       \param[in] i set of flags
       \see Fl_When, do_callback(), Fl::callback_reason()
    */
-  void when(uchar i) {when_ = i;}
+  void when(uchar i) { if (i != FL_WHEN_RELEASE && !ext_) alloc_ext(); if (ext_) ext_->when_ = i; }
 
   /** Returns whether a widget is visible.
       \retval 0 if the widget is not drawn and hence invisible.
@@ -1123,7 +1132,7 @@ public:
     \see callback()
     \see do_callback(Fl_Widget *widget, void *data, Fl_Callback_Reason reason), Fl_Callback_Reason
   */
-  void do_callback(Fl_Callback_Reason reason=FL_REASON_UNKNOWN) {do_callback(this, user_data_, reason);}
+  void do_callback(Fl_Callback_Reason reason=FL_REASON_UNKNOWN) {do_callback(this, user_data(), reason);}
 
   /** Calls the widget callback function with arbitrary arguments.
     \param[in] widget call the callback with \p widget as the first argument

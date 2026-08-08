@@ -811,8 +811,6 @@ void Fl_Group::resize(int X, int Y, int W, int H) {
   int dw = W - w();
   int dh = H - h();
 
-  Fl_Rect* p = bounds(); // save initial sizes and positions
-
   Fl_Widget::resize(X, Y, W, H); // make new xywh values visible for children
 
   // Part 1: no resizable() or both width and height didn't change,
@@ -841,6 +839,8 @@ void Fl_Group::resize(int X, int Y, int W, int H) {
   // Part 2: here we definitely have a resizable() widget, resize children
 
   else if (children()) {
+
+    Fl_Rect* p = bounds(); // save initial sizes and positions
 
     // get changes in size/position from the initial size:
     dx = X - p->x();
