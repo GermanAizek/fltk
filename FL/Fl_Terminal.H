@@ -692,10 +692,10 @@ private:
     Fl_Terminal *terminal_;
     int srow_, scol_, erow_, ecol_;     // selection start/end. NOTE: start *might* be > end
     int push_row_, push_col_;           // global row/col for last FL_PUSH
-    bool push_char_right_;
     Fl_Color selectionbgcolor_;
     Fl_Color selectionfgcolor_;
     int state_ ;                        // 0=none, 1=started, 2=extended, 3=done
+    bool push_char_right_;
     bool is_selection_;                 // false: no selection
   public:
     Selection(Fl_Terminal *terminal);

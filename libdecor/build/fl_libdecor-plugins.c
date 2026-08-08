@@ -42,9 +42,6 @@ enum decoration_type {DECORATION_TYPE_NONE}; /* details are not necessary*/
 
 struct buffer { // identical in libdecor-cairo.c and libdecor-gtk.c
   struct wl_buffer *wl_buffer;
-  bool in_use;
-  bool is_detached;
-
   void *data;
   size_t data_size;
   int width;
@@ -52,6 +49,8 @@ struct buffer { // identical in libdecor-cairo.c and libdecor-gtk.c
   int scale;
   int buffer_width;
   int buffer_height;
+  bool in_use;
+  bool is_detached;
 };
 
 #else // !USE_SYSTEM_LIBDECOR
@@ -144,21 +143,21 @@ enum header_element { HEADER_NONE }; /* details are not needed */
 typedef enum { GTK_STATE_FLAG_NORMAL = 0 } GtkStateFlags;
 
 struct border_component_gtk {
-  enum component type;
   struct wl_surface *wl_surface;
   struct wl_subsurface *wl_subsurface;
   struct buffer *buffer;
-  bool opaque;
   struct wl_list output_list;
-  int scale;
   struct wl_list child_components; /* border_component::link */
   struct wl_list link; /* border_component::child_components */
+  enum component type;
+  int scale;
+  bool opaque;
 };
 
 struct header_element_data {
   const char* name;
-  enum header_element type;
   GtkWidget *widget;
+  enum header_element type;
   GtkStateFlags state;
 };
 
