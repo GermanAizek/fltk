@@ -440,11 +440,11 @@ void Menu_Item_Node::write_static(fluid::io::Code_Writer& f) {
       (q->next && dynamic_cast<Menu_Item_Node*>(q->next)) ? q->next->level : t->level+1;
     while (thislevel > nextlevel) {
       // text, shortcut, callback, user_data, flags, labeltype, labelfont, labelsize, labelcolor
-      f.write_c(" { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 },\n");
+      f.write_c(" { nullptr, 0, 0, nullptr, nullptr, 0, 0, 0, 0 },\n");
       thislevel--;
     }
   }
-  f.write_c(" { nullptr, 0, nullptr, nullptr, 0, 0, 0, 0, 0 }\n};\n");
+  f.write_c(" { nullptr, 0, 0, nullptr, nullptr, 0, 0, 0, 0 }\n};\n");
 
   if (k) {
     // Write menu item variables...
@@ -538,6 +538,9 @@ void Menu_Item_Node::write_item(fluid::io::Code_Writer& f) {
     f.write_c(", 0, ");
   }
 
+  // Write flags
+  f.write_c(" " + std::to_string(flags()) + ",");
+
   // Write callback or nullptr
   if (callback()) {
     if (is_lambda(callback())) {
@@ -566,8 +569,8 @@ void Menu_Item_Node::write_item(fluid::io::Code_Writer& f) {
   else
     f.write_c(" nullptr,");
 
-  // Write flags, labeltype, labelfont, labelsize, and labelcolor
-  f.write_c(" " + std::to_string(flags()) + ", (uchar)" + labeltypes[o->labeltype()] + ", "
+  // Write labeltype, labelfont, labelsize, and labelcolor
+  f.write_c(std::string(" (uchar)") + labeltypes[o->labeltype()] + ", "
            + std::to_string(o->labelfont()) + ", " + std::to_string(o->labelsize()) + ", " + std::to_string(o->labelcolor()) + " ");
   f.write_c("},\n");
 }
