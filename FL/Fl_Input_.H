@@ -101,6 +101,11 @@ class FL_EXPORT Fl_Input_ : public Fl_Widget {
   /** \internal Buffer memory for expanded text. \see expand() */
   char* buffer;
 
+  /** \internal local undo event */
+  Fl_Input_Undo_Action* undo_;
+  Fl_Input_Undo_Action_List* undo_list_;
+  Fl_Input_Undo_Action_List* redo_list_;
+
   /** \internal Size of text in bytes in the \p value_ field. */
   int size_;
 
@@ -146,11 +151,6 @@ class FL_EXPORT Fl_Input_ : public Fl_Widget {
 
   /** \internal color of the text cursor */
   Fl_Color cursor_color_;
-
-  /** \internal local undo event */
-  Fl_Input_Undo_Action* undo_;
-  Fl_Input_Undo_Action_List* undo_list_;
-  Fl_Input_Undo_Action_List* redo_list_;
 
   /** \internal Horizontal cursor position in pixels while moving up or down. */
   static double up_down_pos;

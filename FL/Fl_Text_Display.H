@@ -566,6 +566,33 @@ protected:
   double measure_proportional_character(const char *s, int colNum, int pos) const;
   int wrap_uses_character(int lineEndPos) const;
 
+  Fl_Text_Buffer* mBuffer;      /* Contains text to be displayed */
+  Fl_Text_Buffer* mStyleBuffer; /* Optional parallel buffer containing
+                                 color and font information */
+  int* mLineStarts;             /* Array of the size mNVisibleLines.
+                                   This array only keeps track of lines
+                                   within the display area. Each entry
+                                   contains the starting character offset
+                                   (from the beginning of the text buffer)
+                                   for each /visible/ line.
+                                   If wrap enabled, points to the beginning
+                                   of each wrap. So a long line wrapping
+                                   into 3 separate lines in the display
+                                   will take up 3 separate array entries. */
+  const Style_Table_Entry *mStyleTable; /* Table of fonts and colors for
+                                         coloring/syntax-highlighting */
+  Unfinished_Style_Cb mUnfinishedHighlightCB; /* Callback to parse "unfinished" */
+  /* regions */
+  void* mHighlightCBArg;        /* Arg to unfinishedHighlightCB */
+  Fl_Scrollbar* mHScrollBar;
+  Fl_Scrollbar* mVScrollBar;
+  const char* linenumber_format_;
+
+  mutable double mColumnScale; /* Width in pixels of an average character. This
+                                 value is calculated as needed (lazy eval); it
+                                 needs to be mutable so that it can be calculated
+                                 within a method marked as "const" */
+
   int damage_range1_start, damage_range1_end;
   int damage_range2_start, damage_range2_end;
   int mCursorPos;
@@ -582,9 +609,6 @@ protected:
                                    wraps if line wrapping is enabled. Note that
                                    partial lines at the end of the buffer are
                                    not counted, so you may want to add 1. */
-  Fl_Text_Buffer* mBuffer;      /* Contains text to be displayed */
-  Fl_Text_Buffer* mStyleBuffer; /* Optional parallel buffer containing
-                                 color and font information */
   int mFirstChar, mLastChar;    /* Buffer positions of first and last
                                  displayed character (lastChar points
                                  either to a newline or one character
@@ -592,16 +616,6 @@ protected:
   int mContinuousWrap;          /* Wrap long lines when displaying */
   int mWrapMarginPix;           /* Margin in # of pixels for
                                  wrapping in continuousWrap mode */
-  int* mLineStarts;             /* Array of the size mNVisibleLines.
-                                   This array only keeps track of lines
-                                   within the display area. Each entry
-                                   contains the starting character offset
-                                   (from the beginning of the text buffer)
-                                   for each /visible/ line.
-                                   If wrap enabled, points to the beginning
-                                   of each wrap. So a long line wrapping
-                                   into 3 separate lines in the display
-                                   will take up 3 separate array entries. */
   int mTopLineNum;              /* Line number of top displayed line
                                  of file (first line of file is 1) */
   int mAbsTopLineNum;           /* In continuous wrap mode, the line
@@ -616,13 +630,6 @@ protected:
                                  of file (first line of file is 1) */
   int mHorizOffsetHint;         /* Horizontal scroll pos. in pixels */
   int mNStyles;                 /* Number of entries in styleTable */
-  const Style_Table_Entry *mStyleTable; /* Table of fonts and colors for
-                                         coloring/syntax-highlighting */
-  char mUnfinishedStyle;        /* Style buffer entry which triggers
-                                 on-the-fly reparsing of region */
-  Unfinished_Style_Cb mUnfinishedHighlightCB; /* Callback to parse "unfinished" */
-  /* regions */
-  void* mHighlightCBArg;        /* Arg to unfinishedHighlightCB */
 
   int mMaxsize;
 
@@ -633,18 +640,8 @@ protected:
                                  when resynchronization is suppressed) */
   int mModifyingTabDistance;    /* Whether tab distance is being modified XXX: UNUSED */
 
-  mutable double mColumnScale; /* Width in pixels of an average character. This
-                                 value is calculated as needed (lazy eval); it
-                                 needs to be mutable so that it can be calculated
-                                 within a method marked as "const" */
-
-  bool display_needs_recalc_;  /* Set to true when the display needs
-                                 to be recalculated. */
-
   Fl_Color mCursor_color;
 
-  Fl_Scrollbar* mHScrollBar;
-  Fl_Scrollbar* mVScrollBar;
   int scrollbar_width_;         // size of scrollbar trough (behavior changed in 1.4)
   Fl_Align scrollbar_align_;
   int dragPos, dragType, dragging;
@@ -669,7 +666,11 @@ protected:
   Fl_Color    linenumber_fgcolor_;
   Fl_Color    linenumber_bgcolor_;
   Fl_Align    linenumber_align_;
-  const char* linenumber_format_;
+
+  char mUnfinishedStyle;        /* Style buffer entry which triggers
+                                 on-the-fly reparsing of region */
+  bool display_needs_recalc_;  /* Set to true when the display needs
+                                 to be recalculated. */
 };
 
 #endif

@@ -81,22 +81,22 @@ Keyboard navigation of browser items
   extend a selection or de-selection.
 */
 class FL_EXPORT Fl_Browser_ : public Fl_Group {
+  void* top_;           // which item scrolling position is in
+  void* selection_;     // which is selected (except for FL_MULTI_BROWSER)
+  void *redraw1,*redraw2; // minimal update pointers
+  void* max_width_item; // which item has max_width_
   int position_;        // where user wants it scrolled to
   int real_position_;   // the current vertical scrolling position
   int hposition_;       // where user wants it panned to
   int real_hposition_;  // the current horizontal scrolling position
   int offset_;          // how far down top_ item the real_position is
   int max_width;        // widest object seen so far
-  uchar has_scrollbar_; // which scrollbars are enabled
   Fl_Font textfont_;
   Fl_Fontsize textsize_;
   Fl_Color textcolor_;
-  void* top_;           // which item scrolling position is in
-  void* selection_;     // which is selected (except for FL_MULTI_BROWSER)
-  void *redraw1,*redraw2; // minimal update pointers
-  void* max_width_item; // which item has max_width_
   int scrollbar_size_;  // size of scrollbar trough
   int linespacing_;
+  uchar has_scrollbar_; // which scrollbars are enabled
 
   void update_top();
 
