@@ -69,7 +69,7 @@ private:
 protected:
   int handle(int event) override;
   int find_cell(TableContext context,           // find cell's x/y/w/h given r/c
-                int R, int C, int &X, int &Y, int &W, int &H) {
+                int R, int C, int &X, int &Y, int &W, int &H) override {
     return(Fl_Table::find_cell(context, R, C, X, Y, W, H));
   }
 
@@ -92,10 +92,10 @@ public:
    The destructor for the Fl_Table_Row.
    Destroys the table and its associated widgets.
    */
-  ~Fl_Table_Row() { }
+  ~Fl_Table_Row() override { }
 
   void rows(int val) override; // set number of rows
-  int rows() {                          // get number of rows
+  int rows() const override {  // get number of rows
     return(Fl_Table::rows());
   }
 

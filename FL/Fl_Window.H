@@ -196,7 +196,7 @@ public:
     variables, but you must declare the Fl_Window <I>first</I> so
     that it is destroyed last.
   */
-    virtual ~Fl_Window();
+    ~Fl_Window() override;
 
   int handle(int) override;
 
@@ -485,7 +485,7 @@ public:
     \see virtual void Fl_Window::show()
     \see Fl::args(int, char **)
   */
-  void show(int argc, char **argv);
+  virtual void show(int argc, char **argv);
 
   // Enables synchronous show(), docs in Fl_Window.cxx
   void wait_for_expose() const;
@@ -548,7 +548,7 @@ public:
 
     This method only works for the Fl_Window and Fl_Gl_Window derived classes.
   */
-  void make_current();
+  virtual void make_current();
 
   void cursor(Fl_Cursor);
   void cursor(const Fl_RGB_Image*, int, int);

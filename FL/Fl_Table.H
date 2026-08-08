@@ -247,7 +247,7 @@ protected:
                   int &X, int &Y, int &W, int &H) const;
   void change_cursor(Fl_Cursor newcursor);      // change mouse cursor to some other shape
   TableContext cursor2rowcol(int &R, int &C, ResizeFlag &resizeflag);
-  int find_cell(TableContext context,           // find cell's x/y/w/h given r/c
+  virtual int find_cell(TableContext context,           // find cell's x/y/w/h given r/c
                 int R, int C, int &X, int &Y, int &W, int &H);
   int row_col_clamp(TableContext context, int &R, int &C) const;
   // clamp r/c to known universe
@@ -407,7 +407,7 @@ protected:
 
 public:
   Fl_Table(int X, int Y, int W, int H, const char *l=0);
-  ~Fl_Table();
+  ~Fl_Table() override;
 
   /**
    Clears the table to zero rows (rows(0)), zero columns (cols(0)), and clears
@@ -444,7 +444,7 @@ public:
   /**
    Returns the number of rows in the table.
   */
-  inline int rows() const {
+  virtual inline int rows() const {
     return _rows;
   }
 
@@ -749,7 +749,7 @@ public:
     Resets the internal array of widget sizes and positions.
     \sa Fl_Group::init_sizes()
   */
-  void init_sizes() {
+  void init_sizes() const {
     table->init_sizes();
     table->redraw();
   }
@@ -758,7 +758,7 @@ public:
     The specified widget is removed from its current group (if any)
     and added to the end of Fl_Table's group.
   */
-  void add(Fl_Widget& wgt) {
+  void add(Fl_Widget& wgt) const {
     table->add(wgt);
     if ( table->children() > 2 ) {
       table->show();
@@ -779,7 +779,7 @@ public:
     The specified widget is removed from its current group (if any)
     and inserted into the Fl_Table's group at position 'n'.
   */
-  void insert(Fl_Widget& wgt, int n) {
+  void insert(Fl_Widget& wgt, int n) const {
     table->insert(wgt,n);
   }
 
@@ -788,24 +788,24 @@ public:
     and inserted into Fl_Table's group before widget 'w2'.
     This will append if 'w2' is not in Fl_Table's group.
   */
-  void insert(Fl_Widget& wgt, Fl_Widget* w2) {
+  void insert(Fl_Widget& wgt, Fl_Widget* w2) const {
     table->insert(wgt,w2);
   }
 
   /**
     The specified widget is removed from Fl_Table's group.
   */
-  void remove(Fl_Widget& wgt) {
+  void remove(Fl_Widget& wgt) const {
     table->remove(wgt);
   }
 
   // (doxygen will substitute Fl_Group's docs here)
-  void begin() {
+  void begin() const {
     table->begin();
   }
 
   // (doxygen will substitute Fl_Group's docs here)
-  void end() {
+  void end() const {
     table->end();
     // HACK: Avoid showing Fl_Scroll; seems to erase screen
     //       causing unnecessary flicker, even if its box() is FL_NO_BOX.
