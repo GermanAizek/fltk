@@ -132,15 +132,50 @@ void Fl_Widget::draw_label(int X, int Y, int W, int H) const {
     Anybody can call this to force the label to draw anywhere.
  */
 void Fl_Widget::draw_label(int X, int Y, int W, int H, Fl_Align a) const {
-  if (!label_) return;
+  if (!label_ && !(flags() & SIMPLE_LABEL)) return;
   if (flags()&SHORTCUT_LABEL) fl_draw_shortcut = 1;
-  Fl_Label l1 = *label_;
+  Fl_Label l1;
+  if (flags() & SIMPLE_LABEL) {
+    l1.value = (const char*)label_;
+    l1.image = 0;
+    l1.deimage = 0;
+    l1.type = FL_NORMAL_LABEL;
+    l1.font = FL_HELVETICA;
+    l1.size = 14; /* FL_NORMAL_SIZE */
+    l1.color = FL_FOREGROUND_COLOR;
+    l1.align_ = FL_ALIGN_CENTER;
+    l1.h_margin_ = l1.v_margin_ = 0;
+    l1.spacing = 0;
+  } else {
+    l1 = *label_;
+  }
   if (!active_r()) {
     l1.color = fl_inactive((Fl_Color)l1.color);
     if (l1.deimage) l1.image = l1.deimage;
   }
   l1.draw(X,Y,W,H,a);
   fl_draw_shortcut = 0;
+}
+
+void Fl_Widget::measure_label(int& ww, int& hh) const {
+  if (flags() & SIMPLE_LABEL) {
+    Fl_Label l1;
+    l1.value = (const char*)label_;
+    l1.image = 0;
+    l1.deimage = 0;
+    l1.type = FL_NORMAL_LABEL;
+    l1.font = FL_HELVETICA;
+    l1.size = 14; /* FL_NORMAL_SIZE */
+    l1.color = FL_FOREGROUND_COLOR;
+    l1.align_ = FL_ALIGN_CENTER;
+    l1.h_margin_ = l1.v_margin_ = 0;
+    l1.spacing = 0;
+    l1.measure(ww, hh);
+  } else if (label_) {
+    label_->measure(ww, hh);
+  } else {
+    ww = 0; hh = 0;
+  }
 }
 
 // include these vars here so they can be referenced without including

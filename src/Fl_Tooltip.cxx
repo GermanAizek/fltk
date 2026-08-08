@@ -399,15 +399,39 @@ void Fl_Tooltip::set_enter_exit_once_() {
   \param[in] text New tooltip text (no copy is made)
   \see copy_tooltip(const char*), tooltip()
 */
+#include <unordered_map>
+#include <mutex>
+
+static std::mutex tooltip_mutex;
+static std::unordered_map<const Fl_Widget*, const char*>& tooltip_map() {
+  static std::unordered_map<const Fl_Widget*, const char*> map;
+  return map;
+}
+
 void Fl_Widget::tooltip(const char *text) {
   Fl_Tooltip::set_enter_exit_once_();
+  std::lock_guard<std::mutex> lock(tooltip_mutex);
+  auto& map = tooltip_map();
+  auto it = map.find(this);
+  
   if (flags() & COPIED_TOOLTIP) {
-    // reassigning a copied tooltip remains the same copied tooltip
-    if (tooltip_ == text) return;
-    free((void*)(tooltip_));            // free maintained copy
-    clear_flag(COPIED_TOOLTIP);         // disable copy flag (WE don't make copies)
+    if (it != map.end() && it->second == text) return;
+    if (it != map.end()) free((void*)(it->second));
+    clear_flag(COPIED_TOOLTIP);
   }
-  tooltip_ = text;
+  
+  if (text) {
+    map[this] = text;
+  } else {
+    if (it != map.end()) map.erase(it);
+  }
+}
+
+const char *Fl_Widget::tooltip() const {
+  std::lock_guard<std::mutex> lock(tooltip_mutex);
+  auto& map = tooltip_map();
+  auto it = map.find(this);
+  return (it != map.end()) ? it->second : 0;
 }
 
 /**
@@ -427,12 +451,18 @@ void Fl_Widget::tooltip(const char *text) {
 */
 void Fl_Widget::copy_tooltip(const char *text) {
   Fl_Tooltip::set_enter_exit_once_();
-  if (flags() & COPIED_TOOLTIP) free((void *)(tooltip_));
+  std::lock_guard<std::mutex> lock(tooltip_mutex);
+  auto& map = tooltip_map();
+  auto it = map.find(this);
+  
+  if (flags() & COPIED_TOOLTIP) {
+    if (it != map.end()) free((void *)(it->second));
+  }
   if (text) {
     set_flag(COPIED_TOOLTIP);
-    tooltip_ = fl_strdup(text);
+    map[this] = fl_strdup(text);
   } else {
     clear_flag(COPIED_TOOLTIP);
-    tooltip_ = (char *)0;
+    if (it != map.end()) map.erase(it);
   }
 }
