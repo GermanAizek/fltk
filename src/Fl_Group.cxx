@@ -601,7 +601,7 @@ void Fl_Group::remove(int index) {
   because this doesn't need a child lookup in the group's table of children.
   This can be much faster, if there are lots of children.
 */
-void Fl_Group::remove(Fl_Widget &o) {
+void Fl_Group::remove(const Fl_Widget &o) {
   if (!children()) return;
   int i = find(o);
   if (i < children())

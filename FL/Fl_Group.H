@@ -136,9 +136,9 @@ public:
     This does insert(w, find(before)).  This will append the
     widget if \p before is not in the group.
   */
-  void insert(Fl_Widget& o, Fl_Widget* before) {insert(o,find(before));}
+  void insert(Fl_Widget& o, const Fl_Widget* before) {insert(o,find(before));}
   void remove(int index);
-  void remove(Fl_Widget&);
+  void remove(const Fl_Widget&);
   /**
     Removes the widget \p o from the group.
     \sa void remove(Fl_Widget&)

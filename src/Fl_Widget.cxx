@@ -166,7 +166,7 @@ Fl_Widget *Fl::readqueue() {
     doesn't have an own callback.
     Note: There's no need to have this in the Fl:: namespace.
 */
-static void cleanup_readqueue(Fl_Widget *w) {
+static void cleanup_readqueue(const Fl_Widget *w) {
 
   if (obj_tail==obj_head) return;
 

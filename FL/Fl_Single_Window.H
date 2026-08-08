@@ -33,7 +33,7 @@ class FL_EXPORT Fl_Single_Window : public Fl_Window {
 public:
   void show() override;
   /** Same as Fl_Window::show(int argc, char **argv) */
-  void show(int argc, char **argv) { Fl_Window::show(argc, argv);}
+  void show(int argc, char **argv) override { Fl_Window::show(argc, argv);}
 
    /**
     Creates a new Fl_Single_Window widget using the given
@@ -50,7 +50,7 @@ public:
   /**
     Same as Fl_Window::make_current()
   */
-  void make_current() { Fl_Window::make_current(); }
+  void make_current() override { Fl_Window::make_current(); }
 
   /**
     Same as Fl_Window::flush()

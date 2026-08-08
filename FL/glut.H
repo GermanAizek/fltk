@@ -60,7 +60,7 @@ protected:
 public: // so the inline functions work
   int number;
   int menu[3];
-  void make_current();
+  void make_current() override;
   void (*display)();
   void (*overlaydisplay)();
   void (*reshape)(int w, int h);

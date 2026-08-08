@@ -79,7 +79,7 @@ protected:
 public:
   void show() override;
   /** Same as Fl_Window::show(int a, char **b) */
-  void show(int a, char **b) {Fl_Window::show(a,b);}
+  void show(int a, char **b) override { Fl_Window::show(a,b);}
   void flush() override;
   void hide() override;
   void resize(int,int,int,int) override;
@@ -202,7 +202,7 @@ public:
   */
   GLContext context() const {return context_;}
   void context(GLContext, int destroy_flag = 0);
-  void make_current();
+  void make_current() override;
   void swap_buffers() const;
   void swap_interval(int) const;
   int swap_interval() const;

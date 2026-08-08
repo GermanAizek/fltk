@@ -704,7 +704,7 @@ public:
   /** Return the gap size between the label and the image.
    \return spacing in pixels
    */
-  int label_image_spacing() { return label_.spacing; }
+  int label_image_spacing() const { return label_.spacing; }
 
   /** Set the spacing between the label and the horizontal edge of the widget.
    \param[in] px gap in pixels
@@ -714,7 +714,7 @@ public:
   /** Get the spacing between the label and the horizontal edge of the widget.
    \return px gap in pixels
    */
-  int horizontal_label_margin() { return label_.h_margin_; }
+  int horizontal_label_margin() const { return label_.h_margin_; }
 
   /** Set the spacing between the label and the vertical edge of the widget.
    \param[in] px gap in pixels
@@ -724,7 +724,7 @@ public:
   /** Get the spacing between the label and the vertical edge of the widget.
    \return px gap in pixels
    */
-  int vertical_label_margin() { return label_.v_margin_; }
+  int vertical_label_margin() const { return label_.v_margin_; }
 
   /** Gets the current tooltip text.
       \return a pointer to the tooltip text or NULL
@@ -1247,7 +1247,7 @@ public:
 
   /** Returns non zero if MAC_USE_ACCENTS_MENU flag is set, 0 otherwise.
    */
-  int use_accents_menu() { return flags() & MAC_USE_ACCENTS_MENU; }
+  int use_accents_menu() const { return flags() & MAC_USE_ACCENTS_MENU; }
 
   /** Sets whether the widget's label uses '&' to indicate shortcuts.
    By default, all objects of classes Fl_Menu_ (and derivatives), Fl_Button (and derivatives),
