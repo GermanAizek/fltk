@@ -403,8 +403,8 @@ void Fl_Tooltip::set_enter_exit_once_() {
 
 static std::mutex tooltip_mutex;
 static std::unordered_map<const Fl_Widget*, const char*>& tooltip_map() {
-  static std::unordered_map<const Fl_Widget*, const char*>* map = new std::unordered_map<const Fl_Widget*, const char*>();
-  return *map;
+  static std::unordered_map<const Fl_Widget*, const char*> map;
+  return map;
 }
 
 void Fl_Widget::tooltip(const char *text) {

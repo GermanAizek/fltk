@@ -537,8 +537,8 @@ public:
       \see label(const char *), labeltype(Fl_Labeltype)
    */
   void label(Fl_Labeltype a, const char* b) {
-    if ((flags_ & SIMPLE_LABEL) || !label_) alloc_label();
-    label_->type = (uchar)a; label_->value = b;
+    label(b);
+    labeltype(a);
   }
 
   /** Gets the label type.
