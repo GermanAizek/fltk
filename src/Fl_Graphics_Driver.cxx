@@ -52,7 +52,7 @@ sptr(0), m(m0), n(0), what(NONE), rstackptr(0), font_descriptor_(NULL), p_size(0
 
 /** Destructor */
 Fl_Graphics_Driver::~Fl_Graphics_Driver() {
-  if (xpoint) free(xpoint);
+  free(xpoint);
 }
 
 
