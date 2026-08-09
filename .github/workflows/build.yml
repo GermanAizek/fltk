@@ -340,3 +340,70 @@ jobs:
           cmake --build build
 
           ./build/bin/test/unittests --core
+
+  build-sanitizers:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [address, undefined, memory, thread]
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        submodules: recursive
+
+    - name: install prerequisites
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y \
+        libjpeg-dev \
+        libasound2-dev \
+        libglew-dev \
+        libglu1-mesa-dev \
+        libcairo2-dev \
+        libx11-dev \
+        libxcursor-dev \
+        libxft-dev \
+        libxinerama-dev \
+        ninja-build \
+        clang
+
+    - name: Create Build Environment
+      run: cmake -E make_directory ${{github.workspace}}/build
+
+    - name: Configure CMake
+      shell: bash
+      working-directory: ${{github.workspace}}/build
+      env:
+        CC: clang
+        CXX: clang++
+      run: |
+        cmake $GITHUB_WORKSPACE \
+        -G Ninja \
+        -D CMAKE_BUILD_TYPE=Debug \
+        -D CMAKE_CXX_STANDARD=11 \
+        -D CMAKE_CXX_EXTENSIONS=OFF \
+        -D CMAKE_C_FLAGS_INIT="-Wall -Wunused -fsanitize=${{ matrix.sanitizer }} -fno-omit-frame-pointer" \
+        -D CMAKE_CXX_FLAGS_INIT="-Wall -Wunused -Wsuggest-override -fsanitize=${{ matrix.sanitizer }} -fno-omit-frame-pointer" \
+        -D CMAKE_EXE_LINKER_FLAGS_INIT="-fsanitize=${{ matrix.sanitizer }}" \
+        -D CMAKE_SHARED_LINKER_FLAGS_INIT="-fsanitize=${{ matrix.sanitizer }}" \
+        -D CMAKE_MODULE_LINKER_FLAGS_INIT="-fsanitize=${{ matrix.sanitizer }}" \
+        -D FLTK_USE_SYSTEM_LIBJPEG=OFF \
+        -D FLTK_USE_SYSTEM_LIBPNG=OFF \
+        -D FLTK_USE_SYSTEM_ZLIB=OFF \
+        -D FLTK_BACKEND_WAYLAND=OFF \
+        -D FLTK_BUILD_SHARED_LIBS:BOOL=OFF \
+        -D FLTK_BUILD_FORMS=ON \
+        -D FLTK_OPTION_CAIRO_WINDOW=OFF
+
+    - name: Build
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: cmake --build .
+
+    - name: Unittest
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      env:
+        ASAN_OPTIONS: "detect_leaks=0"
+      run: ./bin/test/unittests --core
