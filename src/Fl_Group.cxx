@@ -24,6 +24,8 @@
 #include "Fl_Window_Driver.H"
 #include <FL/Fl_Rect.H>
 #include <FL/fl_draw.H>
+#include <stdlib.h>
+#include <string.h>
 
 Fl_Group* Fl_Group::current_;
 
@@ -37,7 +39,7 @@ Fl_Group* Fl_Group::current_;
         internal std::vector.
 */
 Fl_Widget*const* Fl_Group::array() const {
-  return child_.data();
+  return array_;
 }
 
 /**
@@ -309,9 +311,9 @@ int Fl_Group::navigation(int key) const {
   int i;
   for (i = 0; ; i++) {
     if (i >= children()) return 0;
-    if (child_[i]->contains(Fl::focus())) break;
+    if (array_[i]->contains(Fl::focus())) break;
   }
-  Fl_Widget *previous = child_[i];
+  Fl_Widget *previous = array_[i];
 
   for (;;) {
     switch (key) {
@@ -334,7 +336,7 @@ int Fl_Group::navigation(int key) const {
     default:
       return 0;
     }
-    Fl_Widget* o = child_[i];
+    Fl_Widget* o = array_[i];
     if (o == previous) return 0;
     switch (key) {
     case FL_Down:
@@ -355,7 +357,9 @@ Fl_Group::Fl_Group(int X, int Y, int W, int H, const char *L)
   savedfocus_ = 0;
   resizable_ = this;
   bounds_ = 0; // this is allocated when first resize() is done
-  sizes_ = 0;  // see bounds_ (FLTK 1.3 compatibility)
+  array_ = 0;
+  children_ = 0;
+  capacity_ = 0;
 
   // Subclasses may want to construct child objects as part of their
   // constructor, so make sure they are add()'d to this object.
@@ -435,6 +439,7 @@ Fl_Group::~Fl_Group() {
   if (current_ == this)
     end();
   clear();
+  if (array_) free(array_);
 }
 
 /**
@@ -513,12 +518,12 @@ void Fl_Group::insert(Fl_Widget &o, int index) {
 
       if (index > n) { // target > current position: move "up" and all other children "down"
         for (int j = n; j < index; j++)
-          child_[j] = child_[j + 1];
+          array_[j] = array_[j + 1];
       } else { // n > index: move "down" and all other children "up"
         for (int j = n; j > index; j--)
-          child_[j] = child_[j - 1];
+          array_[j] = array_[j - 1];
       }
-      child_[index] = &o;
+      array_[index] = &o;
       init_sizes();
       return;
     }
@@ -527,10 +532,16 @@ void Fl_Group::insert(Fl_Widget &o, int index) {
 
   index = on_insert(&o, index);
   if (index == -1) return;
+  if (children_ == capacity_) {
+    capacity_ = capacity_ ? capacity_ * 2 : 4;
+    array_ = (Fl_Widget**)realloc(array_, capacity_ * sizeof(Fl_Widget*));
+  }
   if (index >= children()) {              // append
-    child_.push_back(&o);
+    array_[children_++] = &o;
   } else {                                // insert
-    child_.insert(child_.begin() + index, &o);
+    memmove(array_ + index + 1, array_ + index, (children_ - index) * sizeof(Fl_Widget*));
+    array_[index] = &o;
+    children_++;
   }
   o.parent_ = this;
   init_sizes();
@@ -582,9 +593,10 @@ void Fl_Group::remove(int index) {
   }
 
   if (index == children() - 1) {
-    child_.pop_back();
+    children_--;
   } else {
-    child_.erase(child_.begin() + index); // remove the widget from the group
+    memmove(array_ + index, array_ + index + 1, (children_ - index - 1) * sizeof(Fl_Widget*));
+    children_--;
   }
   init_sizes();
 }
@@ -675,8 +687,6 @@ int Fl_Group::delete_child(int index) {
 void Fl_Group::init_sizes() {
   delete[] bounds_;
   bounds_ = 0;
-  delete[] sizes_;      // FLTK 1.3 compatibility
-  sizes_ = 0;           // FLTK 1.3 compatibility
 }
 
 /**
@@ -751,46 +761,6 @@ Fl_Rect* Fl_Group::bounds() {
     }
   }
   return bounds_;
-}
-
-/** Returns the internal array of widget sizes and positions.
-
-  For backward compatibility with FLTK versions before 1.4.
-
-  The sizes() array stores the initial positions of widgets as
-  (left, right, top, bottom) quads. The first quad is the group, the
-  second is the resizable (clipped to the group), and the rest are the
-  children. If the group and/or the resizable() is a Fl_Window, then
-  the first (left) and third (top) entries of their respective quads
-  (x,y) are zero.
-
-  \deprecated Deprecated since 1.4.0. Please use bounds() instead.
-
-  \note This method will be removed in a future FLTK version (1.5.0 or higher).
-
-  \returns      Array of int's with widget positions and sizes. The returned
-                array is only valid until init_sizes() is called or widgets
-                are added to or removed from the group.
-
-  \note Since FLTK 1.4.0 the returned array is a \b read-only and re-ordered
-        copy of the internal bounds() array. Do not change its contents.
-        If you need to rearrange children in a group, do so by resizing
-        the children and call init_sizes().
-
-  \see bounds()
-*/
-int* Fl_Group::sizes() {
-  if (sizes_) return sizes_;
-  // allocate new sizes_ array and copy bounds_ over to sizes_
-  int* pi = sizes_ = new int[4*(children() + 2)];
-  Fl_Rect *rb = bounds();
-  for (int i = 0; i < children() + 2; i++, rb++) {
-    *pi++ = rb->x();
-    *pi++ = rb->r();
-    *pi++ = rb->y();
-    *pi++ = rb->b();
-  }
-  return sizes_;
 }
 
 /**

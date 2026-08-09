@@ -23,8 +23,6 @@
 
 #include "Fl_Widget.H"
 
-#include <vector>
-
 // Don't #include Fl_Rect.H because this would introduce lots
 // of unnecessary dependencies on Fl_Rect.H
 class Fl_Rect;
@@ -58,11 +56,12 @@ class Fl_Rect;
 */
 class FL_EXPORT Fl_Group : public Fl_Widget {
 
-  std::vector<Fl_Widget *>child_; // vector of children
+  Fl_Widget **array_; // array of children
+  uint32_t children_;
+  uint32_t capacity_;
   Fl_Widget* savedfocus_;
   Fl_Widget* resizable_;
   Fl_Rect *bounds_; // remembered initial sizes of children
-  int *sizes_; // remembered initial sizes of children (FLTK 1.3 compat.)
 
   int navigation(int) const;
   static Fl_Group *current_;
@@ -78,7 +77,6 @@ protected:
   void draw_outside_label(const Fl_Widget& widget) const ;
   static void update_child(Fl_Widget& widget);
   Fl_Rect *bounds();
-  int  *sizes(); // FLTK 1.3 compatibility
   virtual int on_insert(Fl_Widget*, int);
   virtual int on_move(int, int);
   virtual void on_remove(int);
@@ -94,7 +92,7 @@ public:
   /**
     Returns how many child widgets the group has.
   */
-  int children() const { return (int)child_.size(); }
+  int children() const { return (int)children_; }
 
   /**
     Returns the n'th child.
@@ -108,7 +106,7 @@ public:
   */
   Fl_Widget *child(int n) const {
     if (n < 0 || n > children() - 1) return nullptr;
-    return child_[n];
+    return array_[n];
   }
 
   int find(const Fl_Widget*) const;
