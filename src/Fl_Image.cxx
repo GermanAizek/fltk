@@ -527,18 +527,59 @@ Fl_RGB_Image *Fl_RGB_Image::copy_nearest_neighbor_(int W, int H) const {
   ymod   = data_h() % H;
   ystep  = data_h() / H;
 
-    // Scale the image using a nearest-neighbor algorithm...
+  // Precompute X offsets to allow compiler auto-vectorization of the inner loop
+  int *x_offset = new int[W];
+  for (int dx = 0, err = W, current_x = 0; dx < W; dx++) {
+    x_offset[dx] = current_x * d();
+    current_x += (data_w() / W);
+    err -= xmod;
+    if (err <= 0) {
+      err += W;
+      current_x++;
+    }
+  }
+
+  // Scale the image using a nearest-neighbor algorithm...
   for (dy = H, sy = 0, yerr = H, new_ptr = new_array; dy > 0; dy --) {
-    for (dx = W, xerr = W, old_ptr = array + ((long)sy) * line_d; dx > 0; dx --) {
-      for (c = 0; c < d(); c ++) {
-        *new_ptr++ = old_ptr[c];
-      }
-      old_ptr += xstep;
-      xerr    -= xmod;
-      if (xerr <= 0) {
-        xerr    += W;
-        old_ptr += d();
-      }
+    const uchar* line_ptr = array + ((long)sy) * line_d;
+    switch (d()) {
+      case 1:
+        for (int dx = 0; dx < W; dx++) {
+          *new_ptr++ = line_ptr[x_offset[dx]];
+        }
+        break;
+      case 2:
+        for (int dx = 0; dx < W; dx++) {
+          const uchar* old_ptr = line_ptr + x_offset[dx];
+          *new_ptr++ = old_ptr[0];
+          *new_ptr++ = old_ptr[1];
+        }
+        break;
+      case 3:
+        for (int dx = 0; dx < W; dx++) {
+          const uchar* old_ptr = line_ptr + x_offset[dx];
+          *new_ptr++ = old_ptr[0];
+          *new_ptr++ = old_ptr[1];
+          *new_ptr++ = old_ptr[2];
+        }
+        break;
+      case 4:
+        for (int dx = 0; dx < W; dx++) {
+          const uchar* old_ptr = line_ptr + x_offset[dx];
+          *new_ptr++ = old_ptr[0];
+          *new_ptr++ = old_ptr[1];
+          *new_ptr++ = old_ptr[2];
+          *new_ptr++ = old_ptr[3];
+        }
+        break;
+      default:
+        for (int dx = 0; dx < W; dx++) {
+          const uchar* old_ptr = line_ptr + x_offset[dx];
+          for (c = 0; c < d(); c++) {
+            *new_ptr++ = old_ptr[c];
+          }
+        }
+        break;
     }
     sy   += ystep;
     yerr -= ymod;
@@ -547,6 +588,8 @@ Fl_RGB_Image *Fl_RGB_Image::copy_nearest_neighbor_(int W, int H) const {
       sy ++;
     }
   }
+  
+  delete[] x_offset;
   return new_image;
 }
 
@@ -690,33 +733,33 @@ Fl_RGB_Image *Fl_RGB_Image::copy_scale_down_2h_() const {
     switch (D) {
       case 1:
         for (int x=0; x<W; ++x) {
-          *dst++ = ((uchar) ( ( ((unsigned)src[0]) + ((unsigned)src[1]) ) >> 1 ));
-          src += 2;
+          dst[x] = (uchar)( ( (unsigned)src[x*2 + 0] + (unsigned)src[x*2 + 1] ) >> 1 );
         }
+        dst += W;
         break;
       case 2:
         for (int x=0; x<W; ++x) {
-          *dst++ = ((uchar) ( ( ((unsigned)src[0]) + ((unsigned)src[2]) ) >> 1 ));
-          *dst++ = ((uchar) ( ( ((unsigned)src[1]) + ((unsigned)src[3]) ) >> 1 ));
-          src += 4;
+          dst[x*2 + 0] = (uchar)( ( (unsigned)src[x*4 + 0] + (unsigned)src[x*4 + 2] ) >> 1 );
+          dst[x*2 + 1] = (uchar)( ( (unsigned)src[x*4 + 1] + (unsigned)src[x*4 + 3] ) >> 1 );
         }
+        dst += W * 2;
         break;
       case 3:
         for (int x=0; x<W; ++x) {
-          *dst++ = ((uchar) ( ( ((unsigned)src[0]) + ((unsigned)src[3]) ) >> 1 ));
-          *dst++ = ((uchar) ( ( ((unsigned)src[1]) + ((unsigned)src[4]) ) >> 1 ));
-          *dst++ = ((uchar) ( ( ((unsigned)src[2]) + ((unsigned)src[5]) ) >> 1 ));
-          src += 6;
+          dst[x*3 + 0] = (uchar)( ( (unsigned)src[x*6 + 0] + (unsigned)src[x*6 + 3] ) >> 1 );
+          dst[x*3 + 1] = (uchar)( ( (unsigned)src[x*6 + 1] + (unsigned)src[x*6 + 4] ) >> 1 );
+          dst[x*3 + 2] = (uchar)( ( (unsigned)src[x*6 + 2] + (unsigned)src[x*6 + 5] ) >> 1 );
         }
+        dst += W * 3;
         break;
       case 4:
         for (int x=0; x<W; ++x) {
-          *dst++ = ((uchar) ( ( ((unsigned)src[0]) + ((unsigned)src[4]) ) >> 1 ));
-          *dst++ = ((uchar) ( ( ((unsigned)src[1]) + ((unsigned)src[5]) ) >> 1 ));
-          *dst++ = ((uchar) ( ( ((unsigned)src[2]) + ((unsigned)src[6]) ) >> 1 ));
-          *dst++ = ((uchar) ( ( ((unsigned)src[3]) + ((unsigned)src[7]) ) >> 1 ));
-          src += 8;
+          dst[x*4 + 0] = (uchar)( ( (unsigned)src[x*8 + 0] + (unsigned)src[x*8 + 4] ) >> 1 );
+          dst[x*4 + 1] = (uchar)( ( (unsigned)src[x*8 + 1] + (unsigned)src[x*8 + 5] ) >> 1 );
+          dst[x*4 + 2] = (uchar)( ( (unsigned)src[x*8 + 2] + (unsigned)src[x*8 + 6] ) >> 1 );
+          dst[x*4 + 3] = (uchar)( ( (unsigned)src[x*8 + 3] + (unsigned)src[x*8 + 7] ) >> 1 );
         }
+        dst += W * 4;
         break;
     }
   }

@@ -191,22 +191,39 @@ Fl_Image *Fl_Pixmap::copy(int W, int H) const {
     }
   }
 
+  // Precompute X offsets
+  int *x_offset = new int[W];
+  for (int dx = 0, err = W, current_x = 0; dx < W; dx++) {
+    x_offset[dx] = current_x * chars_per_pixel;
+    current_x += (data_w() / W);
+    err -= xmod;
+    if (err <= 0) {
+      err += W;
+      current_x++;
+    }
+  }
+
   // Scale the image using a nearest-neighbor algorithm...
   for (dy = H, sy = 0, yerr = H; dy > 0; dy --, new_row ++) {
     *new_row = new char[chars_per_line];
     new_ptr  = *new_row;
+    
+    const char *line_ptr = data()[sy + ncolors + 1];
 
-    for (dx = W, xerr = W, old_ptr = data()[sy + ncolors + 1];
-         dx > 0;
-         dx --) {
-      for (c = 0; c < chars_per_pixel; c ++) *new_ptr++ = old_ptr[c];
-
-      old_ptr += xstep;
-      xerr    -= xmod;
-
-      if (xerr <= 0) {
-        xerr    += W;
-        old_ptr += chars_per_pixel;
+    if (chars_per_pixel == 1) {
+      for (int dx = 0; dx < W; dx++) {
+        *new_ptr++ = line_ptr[x_offset[dx]];
+      }
+    } else if (chars_per_pixel == 2) {
+      for (int dx = 0; dx < W; dx++) {
+        const char *old_ptr = line_ptr + x_offset[dx];
+        *new_ptr++ = old_ptr[0];
+        *new_ptr++ = old_ptr[1];
+      }
+    } else {
+      for (int dx = 0; dx < W; dx++) {
+        const char *old_ptr = line_ptr + x_offset[dx];
+        for (c = 0; c < chars_per_pixel; c++) *new_ptr++ = old_ptr[c];
       }
     }
 
@@ -222,6 +239,7 @@ Fl_Image *Fl_Pixmap::copy(int W, int H) const {
   new_image = new Fl_Pixmap((char*const*)new_data);
   new_image->alloc_data = 1;
 
+  delete[] x_offset;
   return new_image;
 }
 

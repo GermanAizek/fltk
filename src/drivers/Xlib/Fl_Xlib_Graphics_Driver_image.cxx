@@ -78,61 +78,25 @@ static int ri,gi,bi;    // saved error-diffusion value
 // 8-bit converter with error diffusion
 
 static void color8_converter(const uchar *from, uchar *to, int w, int delta) {
-  int r=ri, g=gi, b=bi;
-  int d, td;
-  if (dir) {
-    dir = 0;
-    from = from+(w-1)*delta;
-    to = to+(w-1);
-    d = -delta;
-    td = -1;
-  } else {
-    dir = 1;
-    d = delta;
-    td = 1;
-  }
-  for (; w--; from += d, to += td) {
-    r += from[0]; if (r < 0) r = 0; else if (r>255) r = 255;
-    g += from[1]; if (g < 0) g = 0; else if (g>255) g = 255;
-    b += from[2]; if (b < 0) b = 0; else if (b>255) b = 255;
+  for (; w--; from += delta, to++) {
+    int r = from[0];
+    int g = from[1];
+    int b = from[2];
     Fl_Color i = fl_color_cube(r*FL_NUM_RED/256,g*FL_NUM_GREEN/256,b*FL_NUM_BLUE/256);
     Fl_XColor& xmap = fl_xmap[0][i];
     if (!xmap.mapped) {if (!fl_redmask) fl_xpixel(r,g,b); else fl_xpixel(i);}
-    r -= xmap.r;
-    g -= xmap.g;
-    b -= xmap.b;
     *to = uchar(xmap.pixel);
   }
-  ri = r; gi = g; bi = b;
 }
 
 static void mono8_converter(const uchar *from, uchar *to, int w, int delta) {
-  int r=ri, g=gi, b=bi;
-  int d, td;
-  if (dir) {
-    dir = 0;
-    from = from+(w-1)*delta;
-    to = to+(w-1);
-    d = -delta;
-    td = -1;
-  } else {
-    dir = 1;
-    d = delta;
-    td = 1;
-  }
-  for (; w--; from += d, to += td) {
-    r += from[0]; if (r < 0) r = 0; else if (r>255) r = 255;
-    g += from[0]; if (g < 0) g = 0; else if (g>255) g = 255;
-    b += from[0]; if (b < 0) b = 0; else if (b>255) b = 255;
-    Fl_Color i = fl_color_cube(r*FL_NUM_RED/256,g*FL_NUM_GREEN/256,b*FL_NUM_BLUE/256);
+  for (; w--; from += delta, to++) {
+    int r = from[0];
+    Fl_Color i = fl_color_cube(r*FL_NUM_RED/256,r*FL_NUM_GREEN/256,r*FL_NUM_BLUE/256);
     Fl_XColor& xmap = fl_xmap[0][i];
-    if (!xmap.mapped) {if (!fl_redmask) fl_xpixel(r,g,b); else fl_xpixel(i);}
-    r -= xmap.r;
-    g -= xmap.g;
-    b -= xmap.b;
+    if (!xmap.mapped) {if (!fl_redmask) fl_xpixel(r,r,r); else fl_xpixel(i);}
     *to = uchar(xmap.pixel);
   }
-  ri = r; gi = g; bi = b;
 }
 
 #  endif
@@ -154,106 +118,45 @@ static void mono8_converter(const uchar *from, uchar *to, int w, int delta) {
 
 static void color16_converter(const uchar *from, uchar *to, int w, int delta) {
   OUTTYPE *t = (OUTTYPE *)to;
-  int d, td;
-  if (dir) {
-    dir = 0;
-    from = from+(w-1)*delta;
-    t = t+(w-1)*OUTSIZE;
-    d = -delta;
-    td = -OUTSIZE;
-  } else {
-    dir = 1;
-    d = delta;
-    td = OUTSIZE;
-  }
-  int r=ri, g=gi, b=bi;
-  for (; w--; from += d, t += td) {
-    r = (r&~fl_redmask)  +from[0]; if (r>255) r = 255;
-    g = (g&~fl_greenmask)+from[1]; if (g>255) g = 255;
-    b = (b&~fl_bluemask) +from[2]; if (b>255) b = 255;
+  for (; w--; from += delta, t += OUTSIZE) {
+    int r = from[0], g = from[1], b = from[2];
     OUTASSIGN((
       ((r&fl_redmask)<<fl_redshift)+
       ((g&fl_greenmask)<<fl_greenshift)+
       ((b&fl_bluemask)<<fl_blueshift)
       ) >> fl_extrashift);
   }
-  ri = r; gi = g; bi = b;
 }
 
 static void mono16_converter(const uchar *from,uchar *to,int w, int delta) {
   OUTTYPE *t = (OUTTYPE *)to;
-  int d, td;
-  if (dir) {
-    dir = 0;
-    from = from+(w-1)*delta;
-    t = t+(w-1)*OUTSIZE;
-    d = -delta;
-    td = -OUTSIZE;
-  } else {
-    dir = 1;
-    d = delta;
-    td = OUTSIZE;
-  }
   uchar mask = fl_redmask & fl_greenmask & fl_bluemask;
-  int r=ri;
-  for (; w--; from += d, t += td) {
-    r = (r&~mask) + *from; if (r > 255) r = 255;
-    uchar m = r&mask;
+  for (; w--; from += delta, t += OUTSIZE) {
+    uchar m = from[0]&mask;
     OUTASSIGN((
       (m<<fl_redshift)+
       (m<<fl_greenshift)+
       (m<<fl_blueshift)
       ) >> fl_extrashift);
   }
-  ri = r;
 }
 
 // special-case the 5r6g5b layout used by XFree86:
 
 static void c565_converter(const uchar *from, uchar *to, int w, int delta) {
   OUTTYPE *t = (OUTTYPE *)to;
-  int d, td;
-  if (dir) {
-    dir = 0;
-    from = from+(w-1)*delta;
-    t = t+(w-1)*OUTSIZE;
-    d = -delta;
-    td = -OUTSIZE;
-  } else {
-    dir = 1;
-    d = delta;
-    td = OUTSIZE;
-  }
-  int r=ri, g=gi, b=bi;
-  for (; w--; from += d, t += td) {
-    r = (r&7)+from[0]; if (r>255) r = 255;
-    g = (g&3)+from[1]; if (g>255) g = 255;
-    b = (b&7)+from[2]; if (b>255) b = 255;
+  for (; w--; from += delta, t += OUTSIZE) {
+    int r = from[0], g = from[1], b = from[2];
     OUTASSIGN(((r&0xf8)<<8) + ((g&0xfc)<<3) + (b>>3));
   }
-  ri = r; gi = g; bi = b;
 }
 
 static void m565_converter(const uchar *from,uchar *to,int w, int delta) {
   OUTTYPE *t = (OUTTYPE *)to;
-  int d, td;
-  if (dir) {
-    dir = 0;
-    from = from+(w-1)*delta;
-    t = t+(w-1)*OUTSIZE;
-    d = -delta;
-    td = -OUTSIZE;
-  } else {
-    dir = 1;
-    d = delta;
-    td = OUTSIZE;
-  }
-  int r=ri;
-  for (; w--; from += d, t += td) {
-    r = (r&7) + *from; if (r > 255) r = 255;
+  for (; w--; from += delta, t += OUTSIZE) {
+    int r = from[0];
     OUTASSIGN((r>>3) * 0x841);
   }
-  ri = r;
 }
 
 ////////////////////////////////////////////////////////////////
