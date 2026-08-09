@@ -121,7 +121,7 @@ public:
 
 class Fl_WinAPI_Plugin : public Fl_Plugin {
 public:
-  Fl_WinAPI_Plugin(const char *pluginName)  : Fl_Plugin(klass(), pluginName) { }
+  Fl_WinAPI_Plugin(const char *pluginName)  : Fl_Plugin("winapi.fltk.org", pluginName) { }
   virtual const char *klass() { return "winapi.fltk.org"; }
   virtual const char *name() = 0;
   virtual void invalidate(Fl_Window*) = 0;

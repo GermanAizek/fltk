@@ -175,7 +175,7 @@ struct wld_window {
 
 class Fl_Wayland_Plugin : public Fl_Plugin {
 public:
-  Fl_Wayland_Plugin(const char *pluginName)  : Fl_Plugin(klass(), pluginName) { }
+  Fl_Wayland_Plugin(const char *pluginName)  : Fl_Plugin("wayland.fltk.org", pluginName) { }
   virtual const char *klass() { return "wayland.fltk.org"; }
   virtual const char *name() = 0;
   virtual void do_swap(Fl_Window*) = 0;

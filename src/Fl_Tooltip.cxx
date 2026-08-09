@@ -401,15 +401,19 @@ void Fl_Tooltip::set_enter_exit_once_() {
 #include <unordered_map>
 #include <mutex>
 
-static std::mutex tooltip_mutex;
+static std::mutex& get_tooltip_mutex() {
+  static auto* m = new std::mutex();
+  return *m;
+}
+
 static std::unordered_map<const Fl_Widget*, const char*>& tooltip_map() {
-  static std::unordered_map<const Fl_Widget*, const char*> map;
-  return map;
+  static auto* map = new std::unordered_map<const Fl_Widget*, const char*>();
+  return *map;
 }
 
 void Fl_Widget::tooltip(const char *text) {
   Fl_Tooltip::set_enter_exit_once_();
-  std::lock_guard<std::mutex> lock(tooltip_mutex);
+  std::lock_guard<std::mutex> lock(get_tooltip_mutex());
   auto& map = tooltip_map();
   auto it = map.find(this);
   
@@ -427,7 +431,7 @@ void Fl_Widget::tooltip(const char *text) {
 }
 
 const char *Fl_Widget::tooltip() const {
-  std::lock_guard<std::mutex> lock(tooltip_mutex);
+  std::lock_guard<std::mutex> lock(get_tooltip_mutex());
   auto& map = tooltip_map();
   auto it = map.find(this);
   return (it != map.end()) ? it->second : 0;
@@ -450,7 +454,7 @@ const char *Fl_Widget::tooltip() const {
 */
 void Fl_Widget::copy_tooltip(const char *text) {
   Fl_Tooltip::set_enter_exit_once_();
-  std::lock_guard<std::mutex> lock(tooltip_mutex);
+  std::lock_guard<std::mutex> lock(get_tooltip_mutex());
   auto& map = tooltip_map();
   auto it = map.find(this);
   

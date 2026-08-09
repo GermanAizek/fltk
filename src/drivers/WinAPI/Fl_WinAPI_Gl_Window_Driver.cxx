@@ -456,7 +456,7 @@ void Fl_WinAPI_Gl_Window_Driver::switch_back() {
 
 class Fl_WinAPI_Gl_Plugin : public Fl_WinAPI_Plugin {
 public:
-  Fl_WinAPI_Gl_Plugin() : Fl_WinAPI_Plugin(name()) { }
+  Fl_WinAPI_Gl_Plugin() : Fl_WinAPI_Plugin("gl.winapi.fltk.org") { }
   const char *name() override { return "gl.winapi.fltk.org"; }
   void invalidate(Fl_Window *w) override {
     w->as_gl_window()->valid(0);

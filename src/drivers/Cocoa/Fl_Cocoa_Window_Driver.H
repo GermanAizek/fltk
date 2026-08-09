@@ -159,7 +159,7 @@ public:
 
 class Fl_Cocoa_Plugin : public Fl_Plugin {
 public:
-  Fl_Cocoa_Plugin(const char *pluginName)  : Fl_Plugin(klass(), pluginName) { }
+  Fl_Cocoa_Plugin(const char *pluginName)  : Fl_Plugin("fltk:cocoa", pluginName) { }
   virtual const char *klass() { return "fltk:cocoa"; }
   virtual const char *name() = 0;
   virtual void resize(Fl_Gl_Window *glw, int x, int y, int w, int h) = 0;
