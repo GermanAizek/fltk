@@ -45,7 +45,9 @@ else()
     message(STATUS "Warning: fluid not found on the build system!")
   endif()
   # Note: this *may* assign "FLTK_FLUID_HOST-NOTFOUND"
-  set(FLTK_FLUID_EXECUTABLE "${FLTK_FLUID_HOST}")
+  if(NOT FLTK_FLUID_EXECUTABLE)
+    set(FLTK_FLUID_EXECUTABLE "${FLTK_FLUID_HOST}")
+  endif()
   set(FLUID_EXPORT "")                     # don't export fluid
 endif(FLTK_BUILD_FLUID AND NOT CMAKE_CROSSCOMPILING)
 

@@ -236,7 +236,9 @@ endif()
 # build fluid (optional)
 #######################################################################
 
-set(FLTK_FLUID_EXECUTABLE "")
+if(NOT DEFINED FLTK_FLUID_EXECUTABLE)
+  set(FLTK_FLUID_EXECUTABLE "")
+endif()
 
 if(FLTK_BUILD_FLUID)
   add_subdirectory(fluid)

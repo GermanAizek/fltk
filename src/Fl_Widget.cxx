@@ -21,6 +21,40 @@
 #include <FL/fl_string_functions.h>
 #include <stdlib.h>
 #include "flstring.h"
+#include <unordered_map>
+#include <mutex>
+#include <string>
+
+static std::unordered_map<std::string, std::pair<char*, int>> fl_string_pool;
+static std::mutex fl_string_pool_mutex;
+
+static const char* fl_get_pooled_string(const char* s) {
+    if (!s) return 0;
+    std::lock_guard<std::mutex> lock(fl_string_pool_mutex);
+    auto it = fl_string_pool.find(s);
+    if (it != fl_string_pool.end()) {
+        it->second.second++;
+        return it->second.first;
+    }
+    char* dup = fl_strdup(s);
+    fl_string_pool[s] = std::make_pair(dup, 1);
+    return dup;
+}
+
+static void fl_release_pooled_string(const char* s) {
+    if (!s) return;
+    std::lock_guard<std::mutex> lock(fl_string_pool_mutex);
+    auto it = fl_string_pool.find(s);
+    if (it != fl_string_pool.end()) {
+        it->second.second--;
+        if (it->second.second <= 0) {
+            free(it->second.first);
+            fl_string_pool.erase(it);
+        }
+    } else {
+        free((void*)s);
+    }
+}
 
 /*
  The Fl_Widget::type_ property is primarily used as a subtype field to further
@@ -275,8 +309,8 @@ extern void fl_throw_focus(Fl_Widget*); // in Fl_x.cxx
 Fl_Widget::~Fl_Widget() {
   Fl::clear_widget_pointer(this);
   if (flags() & COPIED_LABEL) {
-    if (flags() & SIMPLE_LABEL) free((void *)label_);
-    else if (label_) free((void *)(label_->value));
+    if (flags() & SIMPLE_LABEL) fl_release_pooled_string((const char *)label_);
+    else if (label_) fl_release_pooled_string((const char *)(label_->value));
   }
   image(NULL);
   deimage(NULL);
@@ -415,7 +449,7 @@ void Fl_Widget::label(const char *a) {
     const char *old = (flags() & SIMPLE_LABEL) ? (const char*)label_ : (label_ ? label_->value : 0);
     // reassigning a copied label remains the same copied label
     if (old == a) return;
-    if (old) free((void *)old);
+    if (old) fl_release_pooled_string(old);
     clear_flag(COPIED_LABEL);
   }
   if (flags() & SIMPLE_LABEL) {
@@ -437,7 +471,7 @@ void Fl_Widget::copy_label(const char *a) {
     if (old == a) return;
   }
   if (a) {
-    label(fl_strdup(a));
+    label(fl_get_pooled_string(a));
     set_flag(COPIED_LABEL);
   } else {
     label(0);

@@ -548,6 +548,24 @@ void Fl_Group::insert(Fl_Widget &o, int index) {
 }
 
 /**
+  Reduces the internal array capacity to exactly match the number of children.
+  This frees unused memory but forces a reallocation if new children are added.
+  \see children()
+*/
+void Fl_Group::shrink_to_fit() {
+  if (capacity_ > children_) {
+    if (children_ == 0) {
+      if (array_) free(array_);
+      array_ = 0;
+      capacity_ = 0;
+    } else {
+      capacity_ = children_;
+      array_ = (Fl_Widget**)realloc(array_, capacity_ * sizeof(Fl_Widget*));
+    }
+  }
+}
+
+/**
   The widget is removed from its current group (if any) and then added
   to the end of this group.
 */

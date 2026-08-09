@@ -95,6 +95,13 @@ public:
   int children() const { return (int)children_; }
 
   /**
+    Reduces the internal array capacity to exactly match the number of children.
+    This frees unused memory but forces a reallocation if new children are added.
+    \see children()
+  */
+  void shrink_to_fit();
+
+  /**
     Returns the n'th child.
 
     Returns \c nullptr if \c n is out of range (since FLTK 1.4.0).
