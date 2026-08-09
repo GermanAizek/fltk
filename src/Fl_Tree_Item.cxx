@@ -28,7 +28,7 @@
 /////////////////////////////////////////////////////////////////////////// 80 /
 
 // Was the last event inside the specified xywh?
-static int event_inside(const int xywh[4]) {
+static int event_inside(const short xywh[4]) {
   return(Fl::event_inside(xywh[0],xywh[1],xywh[2],xywh[3]));
 }
 
@@ -986,11 +986,11 @@ void Fl_Tree_Item::draw(int X, int &Y, int W, Fl_Tree_Item *itemfocus,
   //
   int item_y_center = (Y+(H/2))|1;      // |1: force alignment w/dot pattern
   _collapse_xywh[2] = prefs.openicon_w();
-  int &icon_w = _collapse_xywh[2];
+  short &icon_w = _collapse_xywh[2];
   _collapse_xywh[0] = X + (icon_w + prefs.connectorwidth())/2 - 3;
-  int &icon_x = _collapse_xywh[0];
+  short &icon_x = _collapse_xywh[0];
   _collapse_xywh[1] = item_y_center - prefs.openicon_h()/2;
-  int &icon_y = _collapse_xywh[1];
+  short &icon_y = _collapse_xywh[1];
   _collapse_xywh[3] = prefs.openicon_h();
 
   // Horizontal connector values

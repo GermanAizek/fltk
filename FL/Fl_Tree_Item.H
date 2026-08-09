@@ -77,9 +77,9 @@ class FL_EXPORT Fl_Tree_Item {
   Fl_Fontsize             _labelsize;           // label's font size
   Fl_Color                _labelfgcolor;        // label's fg color
   Fl_Color                _labelbgcolor;        // label's bg color (0xffffffff is 'transparent')
-  int                     _xywh[4];             // xywh of this widget (if visible)
-  int                     _collapse_xywh[4];    // xywh of collapse icon (if visible)
-  int                     _label_xywh[4];       // xywh of label
+  short                   _xywh[4];             // xywh of this widget (if visible)
+  short                   _collapse_xywh[4];    // xywh of collapse icon (if visible)
+  short                   _label_xywh[4];       // xywh of label
   /// \enum Fl_Tree_Item_Flags
   enum Fl_Tree_Item_Flags : std::uint8_t {
     OPEN                = 1<<0,         ///> item is open
