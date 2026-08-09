@@ -45,6 +45,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <time.h>
+#include <atomic>
 
 class Fl_File_Icon;
 class Fl_File_Browser;
@@ -70,8 +71,8 @@ public:
   static Fl_Awake_Handler *awake_ring_;
   static void **awake_data_;
   static int awake_ring_size_;
-  static int awake_ring_head_;
-  static int awake_ring_tail_;
+  static std::atomic<int> awake_ring_head_;
+  static std::atomic<int> awake_ring_tail_;
   static int push_awake_handler(Fl_Awake_Handler, void*, bool once);
   static int pop_awake_handler(Fl_Awake_Handler&, void*&);
   static bool awake_ring_empty();

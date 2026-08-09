@@ -226,8 +226,8 @@ void Fl_Shared_Image::release() {
 #endif
 
   if (refcount_ <= 0) return; // assert(refcount_>0);
-  refcount_ --;
-  if (refcount_ > 0) return;
+  int prev_refcount = refcount_.fetch_sub(1);
+  if (prev_refcount > 1) return;
 
   // If this image is not the original, find the original image and make sure
   // to delete its reference counter as well at the end of this method.

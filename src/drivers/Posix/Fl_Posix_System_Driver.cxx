@@ -322,7 +322,7 @@ int Fl_Posix_System_Driver::close_fd(int fd) { return close(fd); }
 #  include <fcntl.h>
 #  include <pthread.h>
 #  include <sys/ioctl.h>
-#  include <mutex> // for std::mutex (since C++11)
+#  include <atomic> // for std::atomic (since C++11)
 
 // Pipe for thread messaging via Fl::awake()...
 static int thread_filedes[2];
@@ -372,20 +372,16 @@ static void unlock_function_rec() {
 
 // -- Start of "awake" implementation --
 static void* thread_message_ = nullptr;
-static std::mutex pipe_mutex;
+static std::atomic<int> pipe_pending{0};
 
 void Fl_Posix_System_Driver::awake(void* msg) {
   thread_message_ = msg;
   if (thread_filedes[1]) {
-    pipe_mutex.lock();
-    int avail = 0;
-    ioctl(thread_filedes[0], FIONREAD, &avail);
-    if (avail == 0) {
-      // Only write to the pipe if there is no data wainting to avoid overflow.
+    if (pipe_pending.exchange(1) == 0) {
+      // Only write to the pipe if there is no data waiting to avoid overflow.
       char dummy = 0;
       if (write(thread_filedes[1], &dummy, 1)==0) { /* ignore */ }
     }
-    pipe_mutex.unlock();
   }
 }
 
@@ -397,10 +393,9 @@ void* Fl_Posix_System_Driver::thread_message() {
 
 static void thread_awake_cb(int fd, void*) {
   if (thread_filedes[1]) {
-    pipe_mutex.lock();
     char dummy = 0;
+    pipe_pending.store(0);
     if (read(fd, &dummy, 1)==0) { /* This should never happen */ }
-    pipe_mutex.unlock();
   }
   Fl_Awake_Handler func;
   void *data;

@@ -21,6 +21,7 @@
 #  define Fl_Shared_Image_H
 
 #  include "Fl_Image.H"
+#  include <atomic>
 
 #undef SHIM_DEBUG
 
@@ -109,7 +110,7 @@ protected:
 
   const char    *name_;                 // Name of image file
   int           original_;              // Original image?
-  int           refcount_;              // Number of times this image has been used
+  std::atomic<int> refcount_;           // Number of times this image has been used
   Fl_Image      *image_;                // The image that is shared
   int           alloc_image_;           // Was the image allocated?
 

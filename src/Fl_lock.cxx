@@ -70,8 +70,8 @@ static constexpr int AWAKE_RING_SIZE = 1024;
 Fl_Awake_Handler *Fl_System_Driver::awake_ring_ = nullptr;
 void **Fl_System_Driver::awake_data_ = nullptr;
 int Fl_System_Driver::awake_ring_size_ = 0;
-int Fl_System_Driver::awake_ring_head_ = 0;
-int Fl_System_Driver::awake_ring_tail_ = 0;
+std::atomic<int> Fl_System_Driver::awake_ring_head_{0};
+std::atomic<int> Fl_System_Driver::awake_ring_tail_{0};
 
 #endif
 
@@ -103,7 +103,8 @@ int Fl_System_Driver::push_awake_handler(Fl_Awake_Handler func, void *data, bool
     awake_ring_ = (Fl_Awake_Handler*)malloc(awake_ring_size_*sizeof(Fl_Awake_Handler));
     awake_data_ = (void**)malloc(awake_ring_size_*sizeof(void*));
     // explicitly initialize the head and tail indices
-    awake_ring_head_= awake_ring_tail_ = 0;
+    awake_ring_head_ = 0;
+    awake_ring_tail_ = 0;
   }
 
   // If we want to add the handler only once, go through the list of existing
@@ -175,10 +176,7 @@ int Fl_System_Driver::pop_awake_handler(Fl_Awake_Handler &func, void *&data)
  \internal Used in the main event loop when an Awake message is received.
  */
 bool Fl_System_Driver::awake_ring_empty() {
-  Fl::system_driver()->lock_ring();
-  bool retval = (awake_ring_head_ == awake_ring_tail_);
-  Fl::system_driver()->unlock_ring();
-  return retval;
+  return (awake_ring_head_ == awake_ring_tail_);
 }
 
 /**
