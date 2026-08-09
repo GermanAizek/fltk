@@ -321,11 +321,12 @@ jobs:
         run: |
           if [ "${{ matrix.os.name }}" = "freebsd" ]; then
             sudo env IGNORE_OSVERSION=yes pkg update
-            sudo env IGNORE_OSVERSION=yes pkg install -y git cmake ninja pkgconf libX11 libXext libXft libXinerama libXcursor libXfixes libXrender
+            sudo env IGNORE_OSVERSION=yes pkg install -y git cmake ninja pkgconf libX11 libXext libXft libXinerama libXcursor libXfixes libXrender mesa-libs libGLU
           elif [ "${{ matrix.os.name }}" = "openbsd" ]; then
             sudo pkg_add -I git cmake ninja
           elif [ "${{ matrix.os.name }}" = "netbsd" ]; then
-            sudo pkgin -y install git cmake ninja pkgconf libX11 libXext libXft libXinerama libXcursor libXfixes libXrender
+            sudo pkgin -y update
+            sudo pkgin -y install git cmake ninja pkgconf libXft libXcursor libXrender
           fi
 
           cmake -B build -G Ninja \

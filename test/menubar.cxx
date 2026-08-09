@@ -246,9 +246,9 @@ Fl_Menu_Item pulldown[] = {
 
 #ifdef HAS_MAC_APP_MENU
 Fl_Menu_Item menu_location[] = {
-  {"Fl_Menu_Bar",       0, 0, 0, FL_MENU_VALUE},
-  {"Fl_Sys_Menu_Bar",   },
-  {0}
+  {.text = "Fl_Menu_Bar", .shortcut_ = 0, .flags = FL_MENU_VALUE, .callback_ = 0, .user_data_ = 0},
+  {.text = "Fl_Sys_Menu_Bar"},
+  {.text = 0}
 };
 
 Fl_Sys_Menu_Bar* smenubar;
@@ -370,10 +370,10 @@ int main(int argc, char **argv) {
   Fl_Sys_Menu_Bar::about(about_cb, NULL);
 #ifdef HAS_MAC_APP_MENU
   Fl_Menu_Item custom[] = {
-    {"Preferences…",  0, test_cb, NULL, FL_MENU_DIVIDER},
-    {"Radio1",        0, test_cb, NULL, FL_MENU_RADIO | FL_MENU_VALUE},
-    {"Radio2",        0, test_cb, NULL, FL_MENU_RADIO | FL_MENU_DIVIDER},
-    {0}
+    {.text = "Preferences…",  .shortcut_ = 0, .flags = FL_MENU_DIVIDER, .callback_ = test_cb, .user_data_ = NULL},
+    {.text = "Radio1",        .shortcut_ = 0, .flags = FL_MENU_RADIO | FL_MENU_VALUE, .callback_ = test_cb, .user_data_ = NULL},
+    {.text = "Radio2",        .shortcut_ = 0, .flags = FL_MENU_RADIO | FL_MENU_DIVIDER, .callback_ = test_cb, .user_data_ = NULL},
+    {.text = 0}
   };
   Fl_Mac_App_Menu::custom_application_menu_items(custom);
   //Fl_Sys_Menu_Bar::window_menu_style(Fl_Sys_Menu_Bar::no_window_menu);
