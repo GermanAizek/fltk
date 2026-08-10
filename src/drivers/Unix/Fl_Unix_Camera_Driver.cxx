@@ -20,7 +20,22 @@
 #include <sys/time.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
+
+#if defined(__linux__)
 #include <linux/videodev2.h>
+#define USE_V4L2 1
+#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
+/* On BSD systems, webcamd/cuse provides V4L2 compatibility */
+#if __has_include(<sys/videoio.h>)
+#include <sys/videoio.h>
+#elif __has_include(<linux/videodev2.h>)
+#include <linux/videodev2.h>
+#else
+/* Fallback: attempt to include sys/videoio.h anyway if __has_include fails */
+#include <sys/videoio.h>
+#endif
+#define USE_V4L2 1
+#endif
 
 Fl_Camera_Driver* Fl_Camera_Driver::new_camera_driver(Fl_Camera *widget) {
   return new Fl_Unix_Camera_Driver(widget);
@@ -33,6 +48,8 @@ Fl_Unix_Camera_Driver::Fl_Unix_Camera_Driver(Fl_Camera *widget)
 Fl_Unix_Camera_Driver::~Fl_Unix_Camera_Driver() {
   stop();
 }
+
+#if USE_V4L2
 
 static int xioctl(int fh, unsigned long int request, void *arg) {
   int r;
@@ -234,3 +251,17 @@ void Fl_Unix_Camera_Driver::stop() {
 Fl_RGB_Image* Fl_Unix_Camera_Driver::get_frame() {
   return frame_image_;
 }
+
+#else // !USE_V4L2
+
+int Fl_Unix_Camera_Driver::init_device() { return 0; }
+void Fl_Unix_Camera_Driver::uninit_device() {}
+int Fl_Unix_Camera_Driver::start_capturing() { return 0; }
+void Fl_Unix_Camera_Driver::stop_capturing() {}
+void Fl_Unix_Camera_Driver::process_frame() {}
+void* Fl_Unix_Camera_Driver::capture_thread(void*) { return 0; }
+int Fl_Unix_Camera_Driver::start() { return 0; }
+void Fl_Unix_Camera_Driver::stop() {}
+Fl_RGB_Image* Fl_Unix_Camera_Driver::get_frame() { return 0; }
+
+#endif // USE_V4L2
