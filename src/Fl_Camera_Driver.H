@@ -31,10 +31,17 @@ protected:
   Fl_RGB_Image *frame_image_;
   int width_;
   int height_;
+  char *device_name_;
 
 public:
-  Fl_Camera_Driver(Fl_Camera *widget) : widget_(widget), frame_image_(0), width_(0), height_(0) {}
-  virtual ~Fl_Camera_Driver() {}
+  Fl_Camera_Driver(Fl_Camera *widget);
+  virtual ~Fl_Camera_Driver();
+
+  /** Sets the camera device name or path */
+  virtual void set_device(const char *name);
+
+  /** Returns the current device name or path */
+  virtual const char* device() const;
 
   /**
     Starts capturing.

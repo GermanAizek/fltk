@@ -18,7 +18,7 @@ static Fl_Widget* create_camera_test() {
   grp->end();
   
   // start playing automatically in the test
-  camera->play();
+  camera->start();
   
   return grp;
 }

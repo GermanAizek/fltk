@@ -16,16 +16,36 @@
 //
 
 #include <FL/Fl_Camera.H>
-#include <FL/Fl_Image.H>
-#include <FL/fl_draw.H>
 #include <FL/Fl.H>
+#include <FL/fl_draw.H>
+#include <FL/Fl_Image.H>
 #include "Fl_Camera_Driver.H"
+#include <stdlib.h>
+#include <string.h>
+
+Fl_Camera_Driver::Fl_Camera_Driver(Fl_Camera *widget)
+  : widget_(widget), frame_image_(0), width_(0), height_(0), device_name_(0) {
+}
+
+Fl_Camera_Driver::~Fl_Camera_Driver() {
+  if (device_name_) free(device_name_);
+}
+
+void Fl_Camera_Driver::set_device(const char *name) {
+  if (device_name_) free(device_name_);
+  if (name) {
+    device_name_ = strdup(name);
+  } else {
+    device_name_ = 0;
+  }
+}
+
+const char* Fl_Camera_Driver::device() const {
+  return device_name_;
+}
 
 Fl_Camera::Fl_Camera(int X, int Y, int W, int H, const char *L)
-  : Fl_Widget(X, Y, W, H, L),
-    driver_(0),
-    playing_(0)
-{
+  : Fl_Widget(X, Y, W, H, L), driver_(0), state_(UnloadedState), error_(NoError), error_string_(0) {
   box(FL_FLAT_BOX);
   color(FL_BLACK);
   driver_ = Fl_Camera_Driver::new_camera_driver(this);
@@ -33,26 +53,50 @@ Fl_Camera::Fl_Camera(int X, int Y, int W, int H, const char *L)
 
 Fl_Camera::~Fl_Camera() {
   stop();
-  if (driver_) {
-    delete driver_;
-    driver_ = 0;
-  }
+  if (driver_) delete driver_;
 }
 
-int Fl_Camera::play() {
-  if (playing_) return 1;
-  if (!driver_) return 0;
-  if (driver_->start()) {
-    playing_ = 1;
-    return 1;
+int Fl_Camera::start() {
+  if (!driver_) {
+    set_error(CameraError, "No driver available");
+    return 0;
   }
-  return 0;
+  if (state_ == ActiveState) return 1;
+  
+  if (driver_->start()) {
+    set_state(ActiveState);
+    set_error(NoError, 0);
+    return 1;
+  } else {
+    set_error(CameraError, "Failed to start camera");
+    return 0;
+  }
 }
 
 void Fl_Camera::stop() {
-  if (!playing_) return;
-  if (driver_) driver_->stop();
-  playing_ = 0;
+  if (!driver_) return;
+  if (state_ != ActiveState) return;
+  
+  driver_->stop();
+  set_state(LoadedState);
+}
+
+void Fl_Camera::set_device(const char *dev_name) {
+  if (driver_) driver_->set_device(dev_name);
+}
+
+const char* Fl_Camera::device() const {
+  if (driver_) return driver_->device();
+  return 0;
+}
+
+void Fl_Camera::set_error(Error e, const char *err_str) {
+  error_ = e;
+  error_string_ = err_str;
+}
+
+void Fl_Camera::set_state(State s) {
+  state_ = s;
 }
 
 void Fl_Camera::on_frame() {

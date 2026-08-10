@@ -216,7 +216,8 @@ void* Fl_Unix_Camera_Driver::capture_thread(void* arg) {
 int Fl_Unix_Camera_Driver::start() {
   if (running_) return 1;
 
-  fd_ = open("/dev/video0", O_RDWR | O_NONBLOCK, 0);
+  const char *dev_name = device_name_ ? device_name_ : "/dev/video0";
+  fd_ = open(dev_name, O_RDWR | O_NONBLOCK, 0);
   if (fd_ == -1) {
     return 0;
   }

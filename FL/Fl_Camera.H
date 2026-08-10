@@ -35,8 +35,27 @@ class Fl_Camera_Driver;
   and automatically redraws the widget when a new frame is available.
 */
 class FL_EXPORT Fl_Camera : public Fl_Widget {
+public:
+  /** Camera state enumeration */
+  enum State {
+    UnloadedState, ///< Camera is not initialized or no device selected
+    LoadedState,   ///< Camera is loaded and ready, but not streaming
+    ActiveState    ///< Camera is actively streaming frames
+  };
+
+  /** Camera error enumeration */
+  enum Error {
+    NoError,
+    CameraError,
+    InvalidRequestError,
+    NotSupportedFeatureError
+  };
+
+private:
   Fl_Camera_Driver *driver_;
-  int playing_;
+  State state_;
+  Error error_;
+  const char* error_string_;
 
 protected:
   /** Draws the current camera frame */
@@ -59,7 +78,7 @@ public:
     Starts capturing from the camera.
     \return 1 on success, 0 on failure
   */
-  int play();
+  int start();
 
   /**
     Stops capturing from the camera.
@@ -68,14 +87,35 @@ public:
 
   /**
     Returns whether the camera is currently capturing.
-    \return 1 if playing, 0 otherwise
+    \return true if active (ActiveState), false otherwise
   */
-  int is_playing() const { return playing_; }
+  bool is_active() const { return state_ == ActiveState; }
+
+  /** Returns the current state of the camera. */
+  State state() const { return state_; }
+
+  /** Returns the last error code. */
+  Error error() const { return error_; }
+
+  /** Returns a human-readable string for the last error. */
+  const char* error_string() const { return error_string_; }
+
+  /** Sets the camera device name or path (e.g. "/dev/video0") */
+  void set_device(const char *dev_name);
+
+  /** Returns the currently selected device name or path. */
+  const char* device() const;
 
   /**
     Internal method used by the driver to notify the widget of a new frame.
   */
   void on_frame();
+
+  /** Internal method to update the error state from the driver. */
+  void set_error(Error e, const char *err_str);
+
+  /** Internal method to update the camera state from the driver. */
+  void set_state(State s);
 };
 
 #endif
