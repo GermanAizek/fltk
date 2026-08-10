@@ -29,7 +29,8 @@
 #include "../src/flstring.h"
 
 #include <stdlib.h>
-#include <stdio.h>
+#include <iostream>
+#include <iomanip>
 
 // user interface sizes
 // |<->|<-  group browser ->|<->|<- options ->|<->|
@@ -237,29 +238,30 @@ void print_usage(const char *argv0) {
     app_name = fl_filename_name(argv0);
   if (!app_name || !app_name[0])
     app_name = "fltk-options";
-  fprintf(stdout, "FLTK %d.%d.%d. Usage:\n", FL_MAJOR_VERSION, FL_MINOR_VERSION, FL_PATCH_VERSION);
-  fprintf(stdout, "%s [-Soption[=val]] [-Uoption[=val]] [-L] [-LS] [-LU] [-f] [-v] [-h[option]]\n", app_name);
-  fprintf(stdout, "  -Soption[=value]  change or print system wide option\n");
-  fprintf(stdout, "  -Uoption[=value]  change or print user option\n");
-  fprintf(stdout, "      Values can be 0 or OFF to clear, or 1 or ON to set the option.\n"
+  std::cout << "FLTK " << FL_MAJOR_VERSION << "." << FL_MINOR_VERSION << "." << FL_PATCH_VERSION << ". Usage:\n";
+  std::cout << app_name << " [-Soption[=val]] [-Uoption[=val]] [-L] [-LS] [-LU] [-f] [-v] [-h[option]]\n";
+  std::cout << "  -Soption[=value]  change or print system wide option\n";
+  std::cout << "  -Uoption[=value]  change or print user option\n";
+  std::cout << "      Values can be 0 or OFF to clear, or 1 or ON to set the option.\n"
                   "      The value -1 or DEFAULT sets the option to its default value.\n"
-                  "      If no value is given, the current setting is returned as -1, 0, or 1.\n");
-  fprintf(stdout, "  -L, -LS, -LU  list the value of all options, of all system settings, \n"
-                  "      or of all user setting\n");
-  fprintf(stdout, "  -f  suppresses error messages concerning file access permissions\n");
-  fprintf(stdout, "  -v, --verbose  prints additional information in command line mode\n");
-  fprintf(stdout, "  -h[option], --help [option]  general help, or info for the given option\n\n");
-  fprintf(stdout, "    This version of %s supports the following options:\n", app_name);
+                  "      If no value is given, the current setting is returned as -1, 0, or 1.\n";
+  std::cout << "  -L, -LS, -LU  list the value of all options, of all system settings, \n"
+                  "      or of all user setting\n";
+  std::cout << "  -f  suppresses error messages concerning file access permissions\n";
+  std::cout << "  -v, --verbose  prints additional information in command line mode\n";
+  std::cout << "  -h[option], --help [option]  general help, or info for the given option\n\n";
+  std::cout << "    This version of " << app_name << " supports the following options:\n";
   Fo_Option_Descr *opt;
   for (opt = g_option_list; opt->type != FO_END_OF_LIST; ++opt) {
     if (opt->name) {
-      if (opt->brief)
-        fprintf(stdout, "  %-28s %s\n", opt->name, opt->brief);
-      else
-        fprintf(stdout, "  %s\n", opt->name);
+      if (opt->brief) {
+        std::cout << "  " << std::left << std::setw(28) << opt->name << " " << opt->brief << "\n";
+      } else {
+        std::cout << "  " << opt->name << "\n";
+      }
     }
   }
-  fprintf(stdout, "\n  Calling %s without options will launch %s interactive mode.\n", app_name, app_name);
+  std::cout << "\n  Calling " << app_name << " without options will launch " << app_name << " interactive mode.\n";
 }
 
 /** Print more information for a given option.
@@ -270,17 +272,17 @@ void print_info(const char *option) {
   for (opt = g_option_list; opt->type != FO_END_OF_LIST; ++opt) {
     if ( opt->name && (fl_ascii_strcasecmp(opt->name, option) == 0) ) {
       if (opt->brief)
-        fprintf(stdout, "%s: %s\n", opt->name, opt->brief);
+        std::cout << opt->name << ": " << opt->brief << "\n";
       else
-        fprintf(stdout, "%s: see FLTK manual for details\n", opt->name);
+        std::cout << opt->name << ": see FLTK manual for details\n";
       if (opt->tooltip)
-        fprintf(stdout, "\n%s\n", opt->tooltip);
-      fprintf(stdout, "\nDefault is %s.\n", opt->bool_default ? "on" : "off");
+        std::cout << "\n" << opt->tooltip << "\n";
+      std::cout << "\nDefault is " << (opt->bool_default ? "on" : "off") << ".\n";
       break;
     }
   }
   if (opt->type == FO_END_OF_LIST)
-    fprintf(stderr, "Warning: Unrecognized option \"%s\".\n", option);
+    std::cerr << "Warning: Unrecognized option \"" << option << "\".\n";
 }
 
 /** List the current value of all options.
@@ -290,18 +292,18 @@ void list_options(char cmd) {
   Fo_Option_Descr *opt;
   for (opt = g_option_list; opt->type != FO_END_OF_LIST; ++opt) {
     if (opt->name) {
-      printf("%-28s", opt->name);
+      std::cout << std::left << std::setw(28) << opt->name;
       if (cmd == 'S' || cmd == 0) {
         int value = get_option(FO_SYSTEM, opt->prefs_name);
-        printf(" system: %2d", value);
+        std::cout << " system: " << std::right << std::setw(2) << value;
       }
       if (cmd == 0)
-        printf(",");
+        std::cout << ",";
       if (cmd == 'U' || cmd == 0) {
         int value = get_option(FO_USER, opt->prefs_name);
-        printf(" user: %2d", value);
+        std::cout << " user: " << std::right << std::setw(2) << value;
       }
-      printf("\n");
+      std::cout << "\n";
     }
   }
 }
@@ -320,25 +322,25 @@ void handle_option(Fo_Context ctx, const char *name, int ival) {
       if (ival == FO_PRINT_VALUE) {
         int value = get_option(ctx, opt->prefs_name);
         if (g_verbose)
-          printf("Current value for %s option %s is %d\n", ctx_name, name, value);
+          std::cout << "Current value for " << ctx_name << " option " << name << " is " << value << "\n";
         else
-          printf("%d\n", value);
+          std::cout << value << "\n";
       } else if (ival == -1) {
-        if (g_verbose) printf("Reset %s option %s to default\n", ctx_name, name);
+        if (g_verbose) std::cout << "Reset " << ctx_name << " option " << name << " to default\n";
         clear_option(ctx, opt->prefs_name);
       } else {
-        if (g_verbose) printf("Set %s option %s to %d\n", ctx_name, name, ival);
+        if (g_verbose) std::cout << "Set " << ctx_name << " option " << name << " to " << ival << "\n";
         set_option(ctx, opt->prefs_name, ival);
       }
       if ( (ival != FO_PRINT_VALUE) && !write_permission(ctx) ) {
-        fprintf(stderr, "ERROR: No write permission for %s options\n", ctx_name);
+        std::cerr << "ERROR: No write permission for " << ctx_name << " options\n";
         exit(1);
       }
       break;
     }
   }
   if (opt->type == FO_END_OF_LIST)
-    fprintf(stderr, "Warning: Unrecognized %s option \"%s\".\n", ctx_name, name);
+    std::cerr << "Warning: Unrecognized " << ctx_name << " option \"" << name << "\".\n";
 }
 
 /** FLTK callback for every item in the command line.
@@ -418,7 +420,7 @@ static int read_command_line_args(int argc, char** argv, int& i) {
         else if (strcmp(val, "-1") == 0)
           ival = -1;
         else {
-          fprintf(stderr, "Warning: Unrecognized value \"%s\" for option \"%s\".\n", val, opt);
+          std::cerr << "Warning: Unrecognized value \"" << val << "\" for option \"" << opt << "\".\n";
           g_batch_mode = 1;
           return 1;
         }
@@ -693,7 +695,7 @@ int main(int argc,char **argv) {
   Fl::args_to_utf8(argc, argv); // for MSYS2/MinGW
   int args_processed = Fl::args(argc, argv, i, read_command_line_args);
   if (args_processed < argc) {
-    fprintf(stderr, "ERROR: Unrecognized command line option \"%s\".\n", argv[i]);
+    std::cerr << "ERROR: Unrecognized command line option \"" << argv[i] << "\".\n";
     return 1;
   }
   if (g_batch_mode)
