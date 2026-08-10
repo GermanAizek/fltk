@@ -15,6 +15,7 @@
 //
 
 #include "nodes/Function_Node.h"
+#include <fstream>
 
 #include "Fluid.h"
 #include "message.h"
@@ -78,7 +79,7 @@ static char buffer[128]; // for error messages
 static const char *q_check(const char * & c, int type) {
   for (;;) switch (*c++) {
     case '\0':
-      sprintf(buffer,"missing %c", type);
+      fl_snprintf(buffer, sizeof(buffer), "missing %c", type);
       return buffer;
     case '\\':
       if (*c) c++;
@@ -102,7 +103,7 @@ const char *c_check_recursion(const char * & c, int type) {
   for (;;) switch (*c++) {
     case 0:
       if (!type) return nullptr;
-      sprintf(buffer, "missing '%c'", type);
+      fl_snprintf(buffer, sizeof(buffer), "missing '%c'", type);
       return buffer;
     case '/':
       // Skip comments as needed...
@@ -150,7 +151,7 @@ const char *c_check_recursion(const char * & c, int type) {
     case ']':
 //    UNEXPECTED:
       if (type == *(c-1)) return nullptr;
-      sprintf(buffer, "unexpected '%c'", *(c-1));
+      fl_snprintf(buffer, sizeof(buffer), "unexpected '%c'", *(c-1));
       return buffer;
   }
 }
@@ -955,17 +956,16 @@ void Data_Node::write_code1(fluid::io::Code_Writer& f) {
   // path should be set correctly already
   if (!filename().empty() && !f.write_codeview) {
     Fluid.proj.enter_project_dir();
-    FILE *infile = fl_fopen(filename().c_str(), "rb");
+    std::ifstream infile(filename(), std::ios::binary | std::ios::ate);
     Fluid.proj.leave_project_dir();
-    if (!infile) {
+    if (!infile.is_open()) {
       message = "Can't include data from file. Can't open";
     } else {
-      fseek(infile, 0, SEEK_END);
-      nData = (int)ftell(infile);
-      fseek(infile, 0, SEEK_SET);
+      nData = (int)infile.tellg();
+      infile.seekg(0, std::ios::beg);
       if (nData) {
         data = (char*)calloc(nData, 1);
-        if (fread(data, nData, 1, infile)==0) { /* use default */ }
+        infile.read(data, nData);
         if ((output_format_ == 2) || (output_format_ == 5)) {
           uncompressedDataSize = nData;
           uLong nzData = compressBound(nData);
@@ -976,7 +976,7 @@ void Data_Node::write_code1(fluid::io::Code_Writer& f) {
           nData = (int)nzData;
         }
       }
-      fclose(infile);
+      infile.close();
     }
   } else {
     if (filename().empty())
