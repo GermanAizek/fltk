@@ -179,6 +179,8 @@ endif()
 if(FLTK_USE_BUNDLED_ZLIB)
 
   set(ZLIB_COMPAT ON CACHE BOOL "Enable zlib-compatible API" FORCE)
+  set(ZLIB_ENABLE_TESTS OFF CACHE BOOL "Disable zlib-ng tests" FORCE)
+  set(BUILD_TESTING OFF CACHE BOOL "Disable zlib-ng tests" FORCE)
   add_subdirectory(zlib-ng)
 
   # Include both source and binary directories for zlib headers

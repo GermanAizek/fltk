@@ -538,52 +538,64 @@ char *Fl_Unix_System_Driver::preference_user_rootnode(
     char *buffer)
 {
   // Find the path to the user's home directory.
-  const char *home_path_c = getenv("HOME");
-  std::string home_path = home_path_c ? home_path_c : "";
-  if (home_path.empty()) {
+  const char *home_path = getenv("HOME");
+  if (!home_path || !home_path[0]) {
     struct passwd *pw = getpwuid(getuid());
-    if (pw)
-      home_path = pw->pw_dir;
+    if (pw) home_path = pw->pw_dir;
   }
+  if (!home_path) home_path = "";
 
   // 1: Generate the 1.4 path for this vendor and application.
   const char *prefs_path_14_c = getenv("XDG_CONFIG_HOME");
-  std::string prefs_path_14 = prefs_path_14_c ? prefs_path_14_c : "";
-  if (prefs_path_14.empty()) {
-    prefs_path_14 = home_path + "/.config";
+  char prefs_path_14[FL_PATH_MAX];
+  
+  if (!prefs_path_14_c || !prefs_path_14_c[0]) {
+    snprintf(prefs_path_14, sizeof(prefs_path_14), "%s/.config", home_path);
   } else {
-    if (!prefs_path_14.empty() && prefs_path_14[prefs_path_14.size()-1]!='/')
-      prefs_path_14.append("/");
-    if (prefs_path_14.find("~/")==0) // starts with "~"
-      prefs_path_14.replace(0, 1, home_path);
-    int h_env = prefs_path_14.find("${HOME}");
-    if (h_env!=(int)prefs_path_14.npos)
-      prefs_path_14.replace(h_env, 7, home_path);
-    h_env = prefs_path_14.find("$HOME/");
-    if (h_env!=(int)prefs_path_14.npos)
-      prefs_path_14.replace(h_env, 5, home_path);
+    strlcpy(prefs_path_14, prefs_path_14_c, sizeof(prefs_path_14));
+    size_t len = strlen(prefs_path_14);
+    if (len > 0 && prefs_path_14[len - 1] != '/') {
+      strlcat(prefs_path_14, "/", sizeof(prefs_path_14));
+    }
+    if (strncmp(prefs_path_14, "~/", 2) == 0) {
+      char temp[FL_PATH_MAX];
+      snprintf(temp, sizeof(temp), "%s%s", home_path, prefs_path_14 + 1);
+      strlcpy(prefs_path_14, temp, sizeof(prefs_path_14));
+    }
+    char *h_env = strstr(prefs_path_14, "${HOME}");
+    if (h_env) {
+      char temp[FL_PATH_MAX];
+      *h_env = '\0';
+      snprintf(temp, sizeof(temp), "%s%s%s", prefs_path_14, home_path, h_env + 7);
+      strlcpy(prefs_path_14, temp, sizeof(prefs_path_14));
+    }
+    h_env = strstr(prefs_path_14, "$HOME/");
+    if (h_env) {
+      char temp[FL_PATH_MAX];
+      *h_env = '\0';
+      snprintf(temp, sizeof(temp), "%s%s%s", prefs_path_14, home_path, h_env + 5);
+      strlcpy(prefs_path_14, temp, sizeof(prefs_path_14));
+    }
   }
-  if (!prefs_path_14.empty() && prefs_path_14[prefs_path_14.size()-1]!='/')
-    prefs_path_14.append("/");
-  prefs_path_14.append(vendor);
+
+  size_t len = strlen(prefs_path_14);
+  if (len > 0 && prefs_path_14[len - 1] != '/') {
+    strlcat(prefs_path_14, "/", sizeof(prefs_path_14));
+  }
+  strlcat(prefs_path_14, vendor, sizeof(prefs_path_14));
 
   // 2: If this base path does not exist, try the 1.3 path
-  if (::access(prefs_path_14.c_str(), F_OK) == -1) {
-    std::string prefs_path_13 = home_path + "/.fltk/" + vendor;
-    if (::access(prefs_path_13.c_str(), F_OK) == 0) {
-      prefs_path_13.append("/");
-      prefs_path_13.append(application);
-      prefs_path_13.append(".prefs");
-      strlcpy(buffer, prefs_path_13.c_str(), FL_PATH_MAX);
+  if (::access(prefs_path_14, F_OK) == -1) {
+    char prefs_path_13[FL_PATH_MAX];
+    snprintf(prefs_path_13, sizeof(prefs_path_13), "%s/.fltk/%s", home_path, vendor);
+    if (::access(prefs_path_13, F_OK) == 0) {
+      snprintf(buffer, FL_PATH_MAX, "%s/%s.prefs", prefs_path_13, application);
       return buffer;
     }
   }
 
   // 3: neither path exists, return the 1.4 file path and name
-  prefs_path_14.append("/");
-  prefs_path_14.append(application);
-  prefs_path_14.append(".prefs");
-  strlcpy(buffer, prefs_path_14.c_str(), FL_PATH_MAX);
+  snprintf(buffer, FL_PATH_MAX, "%s/%s.prefs", prefs_path_14, application);
   return buffer;
 }
 
