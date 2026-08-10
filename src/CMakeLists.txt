@@ -37,6 +37,7 @@ set(CPPFILES
   Fl_Browser_load.cxx
   Fl_Box.cxx
   Fl_Button.cxx
+  Fl_Camera.cxx
   Fl_Chart.cxx
   Fl_Check_Browser.cxx
   Fl_Check_Button.cxx
@@ -241,6 +242,7 @@ if(FLTK_USE_X11 AND NOT FLTK_USE_WAYLAND)
     drivers/Xlib/Fl_Xlib_Copy_Surface_Driver.cxx
     drivers/Xlib/Fl_Xlib_Image_Surface_Driver.cxx
     drivers/X11/fl_X11_platform_init.cxx
+    drivers/Unix/Fl_Unix_Camera_Driver.cxx
     Fl_x.cxx
     fl_dnd_x.cxx
     Fl_Native_File_Chooser_FLTK.cxx
@@ -317,6 +319,7 @@ elseif(FLTK_USE_WAYLAND)
     drivers/Wayland/fl_wayland_clipboard_dnd.cxx
     drivers/Wayland/fl_wayland_platform_init.cxx
     drivers/Cairo/Fl_Cairo_Graphics_Driver.cxx
+    drivers/Unix/Fl_Unix_Camera_Driver.cxx
     Fl_Native_File_Chooser_FLTK.cxx
     Fl_Native_File_Chooser_GTK.cxx
   )
@@ -378,6 +381,7 @@ elseif(APPLE)
     drivers/Quartz/Fl_Quartz_Image_Surface_Driver.cxx
     drivers/Cocoa/Fl_Cocoa_Window_Driver.cxx
     drivers/Cocoa/Fl_Cocoa_Screen_Driver.cxx
+    drivers/Cocoa/Fl_Cocoa_Camera_Driver.mm
     drivers/Posix/Fl_Posix_System_Driver.cxx
     drivers/Darwin/Fl_Darwin_System_Driver.cxx
     Fl_get_key_mac.cxx
@@ -403,6 +407,7 @@ else()
     drivers/WinAPI/Fl_WinAPI_System_Driver.cxx
     drivers/WinAPI/Fl_WinAPI_Screen_Driver.cxx
     drivers/WinAPI/Fl_WinAPI_Window_Driver.cxx
+    drivers/WinAPI/Fl_WinAPI_Camera_Driver.cxx
     drivers/WinAPI/Fl_WinAPI_Printer_Driver.cxx
     drivers/GDI/Fl_GDI_Graphics_Driver.cxx
     drivers/GDI/Fl_GDI_Graphics_Driver_arci.cxx
@@ -757,7 +762,7 @@ if(FLTK_USE_X11)
 endif(FLTK_USE_X11)
 
 if(WIN32)
-  list(APPEND OPTIONAL_LIBS comctl32 ws2_32)
+  list(APPEND OPTIONAL_LIBS comctl32 ws2_32 mfplat mfreadwrite mfuuid mf)
   if(USE_GDIPLUS)
     list(APPEND OPTIONAL_LIBS gdiplus)
   endif()

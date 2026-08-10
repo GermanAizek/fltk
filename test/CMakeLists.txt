@@ -249,6 +249,7 @@ SET (UNITTEST_SRCS
   unittest_scrollbarsize.cxx
   unittest_schemes.cxx
   unittest_terminal.cxx
+  unittest_camera.cxx
 )
 fl_create_example(unittests "${UNITTEST_SRCS}" "${GLDEMO_LIBS}")
 

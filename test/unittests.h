@@ -2,6 +2,7 @@
 // Unit tests for the Fast Light Tool Kit (FLTK).
 //
 // Copyright 1998-2022 by Bill Spitzak and others.
+// Copyright 2026 by GermanAizek
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -55,6 +56,7 @@ enum {
   UT_TEST_SCROLLBARSIZE,
   UT_TEST_SCHEMES,
   UT_TEST_SIMPLE_TERMINAL,
+  UT_TEST_CAMERA,
   UT_TEST_CORE
 };
 
