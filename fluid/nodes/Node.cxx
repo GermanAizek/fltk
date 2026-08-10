@@ -696,8 +696,8 @@ void Node::move_before(Node* g) {
  Write a widget and all its children.
 */
 void Node::write(fluid::io::Project_Writer &f) {
-  if (f.write_codeview()) proj1.start = (int)ftell(f.file()) + 1;
-  if (f.write_codeview()) proj2.start = (int)ftell(f.file()) + 1;
+  if (f.write_codeview()) proj1.start = (int)f.file()->tellp() + 1;
+  if (f.write_codeview()) proj2.start = (int)f.file()->tellp() + 1;
   f.write_indent(level);
   f.write_word(type_name());
 
@@ -712,18 +712,18 @@ void Node::write(fluid::io::Project_Writer &f) {
   write_properties(f);
   if (parent) parent->write_parent_properties(f, this, true);
   f.write_close(level);
-  if (f.write_codeview()) proj1.end = (int)ftell(f.file());
+  if (f.write_codeview()) proj1.end = (int)f.file()->tellp();
   if (!can_have_children()) {
-    if (f.write_codeview()) proj2.end = (int)ftell(f.file());
+    if (f.write_codeview()) proj2.end = (int)f.file()->tellp();
     return;
   }
   // now do children:
   f.write_open();
   for (auto *child : children())
     child->write(f);
-  if (f.write_codeview()) proj2.start = (int)ftell(f.file()) + 1;
+  if (f.write_codeview()) proj2.start = (int)f.file()->tellp() + 1;
   f.write_close(level);
-  if (f.write_codeview()) proj2.end = (int)ftell(f.file());
+  if (f.write_codeview()) proj2.end = (int)f.file()->tellp();
 }
 
 /**

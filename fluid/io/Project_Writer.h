@@ -19,7 +19,8 @@
 
 #include <FL/fl_attr.h>
 
-#include <stdio.h>
+#include <iostream>
+#include <fstream>
 
 #include <string>
 
@@ -40,7 +41,8 @@ protected:
   Project &proj_;
 
   // Project output file, always opened in "wb" mode
-  FILE *fout = nullptr;
+  std::ofstream fout_file;
+  std::ostream *fout = nullptr;
   /// If set, one space is written before text unless the format starts with a newline character
   int needspace = 0;
   /// Set if this file will be used in the codeview dialog
@@ -54,11 +56,11 @@ public:
   int write_project(const char *filename, int selected_only, bool codeview);
   void write_word(const char *);
   void write_word(const std::string& word) { write_word(word.c_str()); }
-  void write_string(const char *,...) __fl_attr((__format__ (__printf__, 2, 3)));
+  void write_string(const char *,...);
   void write_indent(int n);
   void write_open();
   void write_close(int n);
-  FILE *file() const { return fout; }
+  std::ostream *file() const { return fout; }
   bool write_codeview() const { return write_codeview_; }
 };
 

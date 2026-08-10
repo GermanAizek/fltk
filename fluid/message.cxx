@@ -25,7 +25,7 @@
 #include <limits>
 #include <algorithm>
 #include <cctype>
-#include <cstdio>
+#include <iostream>
 
 #if defined(_WIN32)
 #  include <conio.h>
@@ -53,7 +53,7 @@ int read_console_key() {
   raw_attr.c_cc[VMIN] = 1;
   raw_attr.c_cc[VTIME] = 0;
   tcsetattr(STDIN_FILENO, TCSANOW, &raw_attr);
-  int key = getchar();
+  int key = std::cin.get();
   tcsetattr(STDIN_FILENO, TCSANOW, &old_attr);
   return key;
 #endif
@@ -71,7 +71,7 @@ void fluid_message(const char *fmt, ...) {
 
 void fluid_message(const char *fmt, va_list ap) {
   char buffer[8096];
-  vsnprintf(buffer, sizeof(buffer), fmt, ap);
+  fl_vsnprintf(buffer, sizeof(buffer), fmt, ap);
   fluid::message("Fluid", buffer);
 }
 
@@ -84,7 +84,7 @@ void fluid_alert(const char *fmt, ...) {
 
 void fluid_alert(const char *fmt, va_list ap) {
   char buffer[8096];
-  vsnprintf(buffer, sizeof(buffer), fmt, ap);
+  fl_vsnprintf(buffer, sizeof(buffer), fmt, ap);
   fluid::alert("Fluid ALERT", buffer);
 }
 
@@ -98,7 +98,7 @@ int fluid_choice(const char *fmt, const char *b0, const char *b1, const char *b2
 
 int fluid_choice(const char *fmt, const char *b0, const char *b1, const char *b2, va_list ap) {
   char buffer[8096];
-  vsnprintf(buffer, sizeof(buffer), fmt, ap);
+  fl_vsnprintf(buffer, sizeof(buffer), fmt, ap);
   if (b0 && b1 && b2) {
     return fluid::choice("Fluid", buffer, { {b0, b0[0]}, {b1, b1[0]}, {b2, b2[0]} });
   } else if (b0 && b1) {
@@ -118,7 +118,7 @@ int fluid_choice(const char *fmt, const char *b0, const char *b1, const char *b2
  */
 void fluid::message(const std::string &title, const std::string &message) {
   if (Fluid.console_mode()) {
-    printf("%s: %s\n", title.c_str(), message.c_str());
+    std::cout << title << ": " << message << "\n";
   } else {
     fl_message_title(title.c_str());
     fl_message("%s", message.c_str());
@@ -133,7 +133,7 @@ void fluid::message(const std::string &title, const std::string &message) {
  */
 void fluid::alert(const std::string &title, const std::string &message) {
   if (Fluid.console_mode()) {
-    printf("%s: %s\n", title.c_str(), message.c_str());
+    std::cout << title << ": " << message << "\n";
   } else {
     fl_message_title(title.c_str());
     fl_alert("%s", message.c_str());
@@ -176,7 +176,7 @@ int fluid::choice(const std::string &title, const std::string &message,
 {
   if (Fluid.console_mode()) {
     // Write the text to the console
-    printf("%s: %s\n", title.c_str(), message.c_str());
+    std::cout << title << ": " << message << "\n";
     // Write all available options
     printf("Options: ");
     bool comma = false;

@@ -72,11 +72,11 @@ Project_Writer::~Project_Writer()
  */
 int Project_Writer::open_write(const char *s) {
   if (!s) {
-    fout = stdout;
+    fout = &std::cout;
   } else {
-    FILE *f = fl_fopen(s,"wb");
-    if (!f) return 0;
-    fout = f;
+    fout_file.open(s, std::ios::binary);
+    if (!fout_file.is_open()) return 0;
+    fout = &fout_file;
   }
   return 1;
 }
@@ -87,10 +87,11 @@ int Project_Writer::open_write(const char *s) {
  \return 1 if succeeded, 0 if fclose failed
  */
 int Project_Writer::close_write() {
-  if (fout != stdout) {
-    int x = fclose(fout);
-    fout = stdout;
-    return x >= 0;
+  if (fout != &std::cout) {
+    fout_file.close();
+    bool ok = !fout_file.fail();
+    fout = &std::cout;
+    return ok;
   }
   return 1;
 }
@@ -166,13 +167,13 @@ int Project_Writer::write_project(const char *filename, int selected_only, bool 
  \param[in] w NUL terminated text
  */
 void Project_Writer::write_word(const char *w) {
-  if (needspace) putc(' ', fout);
+  if (needspace) fout->put(' ');
   needspace = 1;
-  if (!w || !*w) {fprintf(fout,"{}"); return;}
+  if (!w || !*w) { *fout << "{}"; return;}
   const char *p;
   // see if it is a single word:
   for (p = w; is_id(*p); p++) ;
-  if (!*p) {fprintf(fout,"%s",w); return;}
+  if (!*p) { *fout << w; return;}
   // see if there are matching braces:
   int n = 0;
   for (p = w; *p; p++) {
@@ -181,7 +182,7 @@ void Project_Writer::write_word(const char *w) {
   }
   int mismatched = (n != 0);
   // write out brace-quoted string:
-  putc('{', fout);
+  fout->put('{');
   for (; *w; w++) {
     switch (*w) {
     case '{':
@@ -189,12 +190,12 @@ void Project_Writer::write_word(const char *w) {
       if (!mismatched) break;
     case '\\':
     case '#':
-      putc('\\',fout);
+      fout->put('\\');
       break;
     }
-    putc(*w,fout);
+    fout->put(*w);
   }
-  putc('}', fout);
+  fout->put('}');
 }
 
 /**
@@ -206,8 +207,10 @@ void Project_Writer::write_word(const char *w) {
 void Project_Writer::write_string(const char *format, ...) {
   va_list args;
   va_start(args, format);
-  if (needspace && *format != '\n') fputc(' ',fout);
-  vfprintf(fout, format, args);
+  if (needspace && *format != '\n') fout->put(' ');
+  char buffer[8096];
+  fl_vsnprintf(buffer, sizeof(buffer), format, args);
+  *fout << buffer;
   va_end(args);
   needspace = !fl_ascii_isspace(format[strlen(format)-1]);
 }
@@ -217,8 +220,8 @@ void Project_Writer::write_string(const char *format, ...) {
  \param[in] n indent level
  */
 void Project_Writer::write_indent(int n) {
-  fputc('\n',fout);
-  while (n--) {fputc(' ',fout); fputc(' ',fout);}
+  fout->put('\n');
+  while (n--) {fout->put(' '); fout->put(' ');}
   needspace = 0;
 }
 
@@ -226,8 +229,8 @@ void Project_Writer::write_indent(int n) {
  Write a '{' to the .fl file at the given indenting level.
  */
 void Project_Writer::write_open() {
-  if (needspace) fputc(' ',fout);
-  fputc('{',fout);
+  if (needspace) fout->put(' ');
+  fout->put('{');
   needspace = 0;
 }
 
@@ -237,7 +240,7 @@ void Project_Writer::write_open() {
  */
 void Project_Writer::write_close(int n) {
   if (needspace) write_indent(n);
-  fputc('}',fout);
+  fout->put('}');
   needspace = 1;
 }
 
