@@ -138,8 +138,6 @@ jobs:
       run: cmake --build . --config $BUILD_TYPE
 
   build-wayland-arm64:
-    # Don't run this job on 'push' events:
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
 
     runs-on: ubuntu-24.04-arm
 
@@ -267,8 +265,6 @@ jobs:
       run: cmake --build . --config Release
 
   build-windows-arm:
-    # Don't run this job on 'push' events:
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
 
     # Note: For details see above (job "build-windows")
     runs-on: windows-11-arm
@@ -326,7 +322,7 @@ jobs:
             sudo pkg_add -I git cmake ninja
           elif [ "${{ matrix.os.name }}" = "netbsd" ]; then
             sudo pkgin -y update
-            sudo pkgin -y install git cmake ninja pkgconf libXft libXcursor libXrender
+            sudo pkgin -y install git cmake ninja-build pkgconf libXft libXcursor libXrender
           fi
 
           cmake -B build -G Ninja \

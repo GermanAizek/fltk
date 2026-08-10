@@ -552,7 +552,7 @@ char *Fl_Unix_System_Driver::preference_user_rootnode(
   if (prefs_path_14.empty()) {
     prefs_path_14 = home_path + "/.config";
   } else {
-    if (prefs_path_14[prefs_path_14.size()-1]!='/')
+    if (!prefs_path_14.empty() && prefs_path_14[prefs_path_14.size()-1]!='/')
       prefs_path_14.append("/");
     if (prefs_path_14.find("~/")==0) // starts with "~"
       prefs_path_14.replace(0, 1, home_path);
@@ -563,7 +563,7 @@ char *Fl_Unix_System_Driver::preference_user_rootnode(
     if (h_env!=(int)prefs_path_14.npos)
       prefs_path_14.replace(h_env, 5, home_path);
   }
-  if (prefs_path_14[prefs_path_14.size()-1]!='/')
+  if (!prefs_path_14.empty() && prefs_path_14[prefs_path_14.size()-1]!='/')
     prefs_path_14.append("/");
   prefs_path_14.append(vendor);
 
