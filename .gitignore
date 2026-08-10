@@ -23,6 +23,8 @@ TAGS
 # configuration is stored in '.vscode' folders
 
 .vscode/
+.idea/
+.sonarlint/
 
 # default build folder `build` and some more special files ...
 
