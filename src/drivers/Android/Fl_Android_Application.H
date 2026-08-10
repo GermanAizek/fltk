@@ -34,8 +34,10 @@ extern void (*fl_lock_function)();
 #include <sched.h>
 
 #include <android/configuration.h>
-#include <android/looper.h>
+#include <android/asset_manager.h>
 #include <android/native_activity.h>
+#include <jni.h>
+#include <android/looper.h>
 
 
 /**
@@ -180,8 +182,7 @@ public:
   static inline ANativeWindow_Buffer &graphics_buffer() { return pApplicationWindowBuffer; }
 
   // --- timer stuff
-  static void send_timer_index(uint8_t ix);
-  static uint8_t receive_timer_index();
+
 
 
 protected:

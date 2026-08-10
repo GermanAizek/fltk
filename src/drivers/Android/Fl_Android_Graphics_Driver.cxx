@@ -18,6 +18,7 @@
 #include <config.h>
 #include "Fl_Android_Application.H"
 #include "Fl_Android_Graphics_Driver.H"
+#include <FL/Fl_Window.H>
 #include "Fl_Android_Screen_Driver.H"
 #include <FL/Fl.H>
 #include <FL/platform.H>
@@ -1017,7 +1018,7 @@ void Fl_Android_Graphics_Driver::cache(Fl_Bitmap *bm)
   *ph = bm->data_h();
 }
 
-void Fl_Android_Graphics_Driver::delete_bitmask(Fl_Bitmask bm)
+void Fl_Android_Graphics_Driver::delete_bitmask(fl_uintptr_t bm)
 {
   delete (Fl_Android_Bytemap*)bm;
 }

@@ -400,6 +400,35 @@ elseif(APPLE)
     drivers/Quartz/Fl_Quartz_Image_Surface_Driver.H
   )
 
+elseif (ANDROID)
+
+  # Android
+
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+  set (DRIVER_FILES
+    drivers/Posix/Fl_Posix_System_Driver.cxx
+    drivers/Android/Fl_Android_Application.cxx
+    drivers/Android/Fl_Android_System_Driver.cxx
+    drivers/Android/Fl_Android_Screen_Driver.cxx
+    drivers/Android/Fl_Android_Screen_Keyboard.cxx
+    drivers/Android/Fl_Android_Window_Driver.cxx
+    drivers/Android/Fl_Android_Image_Surface_Driver.cxx
+    drivers/Android/Fl_Android_Graphics_Driver.cxx
+    drivers/Android/Fl_Android_Graphics_Clipping.cxx
+    drivers/Android/Fl_Android_Graphics_Font.cxx
+  )
+  set (DRIVER_HEADER_FILES
+    drivers/Posix/Fl_Posix_System_Driver.H
+    drivers/Android/Fl_Android_Application.H
+    drivers/Android/Fl_Android_System_Driver.H
+    drivers/Android/Fl_Android_Screen_Driver.H
+    drivers/Android/Fl_Android_Window_Driver.H
+    drivers/Android/Fl_Android_Graphics_Driver.H
+    drivers/Android/Fl_Android_Graphics_Clipping.H
+    drivers/Android/Fl_Android_Graphics_Font.H
+  )
+
 else()
 
   # Windows (GDI)

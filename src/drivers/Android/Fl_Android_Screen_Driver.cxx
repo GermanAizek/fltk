@@ -25,6 +25,7 @@
 #include <config.h>
 #include "Fl_Android_Screen_Driver.H"
 #include "Fl_Android_Application.H"
+#include <FL/Fl_Window.H>
 #include "Fl_Android_Graphics_Font.H"
 #include <FL/Fl.H>
 #include <FL/platform.H>
@@ -49,7 +50,7 @@ static void nothing() {}
 void (*fl_unlock_function)() = nothing;
 void (*fl_lock_function)() = nothing;
 
-static void timer_do_callback(int timerIndex);
+
 
 
 /**
@@ -211,9 +212,7 @@ int Fl_Android_Screen_Driver::handle_queued_events(double time_to_wait)
       case Fl_Android_Application::LOOPER_ID_INPUT:
         ret = handle_input_event();
         break;
-      case Fl_Android_Application::LOOPER_ID_TIMER:
-        timer_do_callback(Fl_Android_Application::receive_timer_index());
-        break;
+
       case ALOOPER_POLL_WAKE:
         Fl_Android_Application::log_e("Someone woke up ALooper_pollOnce.");
         done = true;
@@ -261,22 +260,12 @@ int Fl_Android_Screen_Driver::handle_queued_events(double time_to_wait)
  */
 double Fl_Android_Screen_Driver::wait(double time_to_wait)
 {
-  Fl::run_checks();
-  static int in_idle = 0;
-  if (Fl::idle) {
-    if (!in_idle) {
-      in_idle = 1;
-      Fl::idle();
-      in_idle = 0;
-    }
-    // the idle function may turn off idle, we can then wait:
-    if (Fl::idle) time_to_wait = 0.0;
-  }
+  time_to_wait = Fl_System_Driver::wait(time_to_wait);
 
-  if (time_to_wait==0.0) {
+  if (time_to_wait <= 0.0) {
     // if there is no wait time, handle the event and show the results right away
     fl_unlock_function();
-    handle_queued_events(time_to_wait);
+    handle_queued_events(0.0);
     fl_lock_function();
     // FIXME: kludge to erase a window after it was hidden
     if (pClearDesktop && fl_graphics_driver) {
@@ -296,8 +285,12 @@ double Fl_Android_Screen_Driver::wait(double time_to_wait)
       pContentChanged = true;
     }
     Fl::flush();
-    if (Fl::idle && !in_idle) // 'idle' may have been set within flush()
+    if (Fl::idle()) // 'idle_' may have been set within flush()
       time_to_wait = 0.0;
+    else {
+      Fl_Timeout::elapse_timeouts();
+      time_to_wait = Fl_Timeout::time_to_wait(time_to_wait);
+    }
     fl_unlock_function();
     handle_queued_events(time_to_wait);
     fl_lock_function();
@@ -328,149 +321,6 @@ void Fl_Android_Screen_Driver::flush()
 
 
 struct TimerData
-{
-  timer_t handle;
-  struct sigevent sigevent;
-  Fl_Timeout_Handler callback;
-  void *data;
-  bool used;
-  bool triggered;
-  struct itimerspec timeout;
-};
-static TimerData* timerData = nullptr;
-static int NTimerData = 0;
-static int nTimerData = 0;
-
-
-static int allocate_more_timers()
-{
-  if (NTimerData == 0) {
-    NTimerData = 8;
-  }
-  if (NTimerData>256) { // out of timers
-    return -1;
-  }
-  NTimerData *= 2;
-  timerData = (TimerData*)realloc(timerData, sizeof(TimerData) * NTimerData);
-  return nTimerData;
-}
-
-
-static void timer_signal_handler(union sigval data)
-{
-  int timerIndex = data.sival_int;
-  Fl_Android_Application::send_timer_index(timerIndex);
-}
-
-
-static void timer_do_callback(int timerIndex)
-{
-  TimerData& t = timerData[timerIndex];
-  t.triggered = false;
-  if (t.callback) {
-    t.callback(t.data);
-    // TODO: should we release the timer at this point?
-  }
-}
-
-
-void Fl_Android_Screen_Driver::add_timeout(double time, Fl_Timeout_Handler cb, void *data)
-{
-  repeat_timeout(time, cb, data);
-}
-
-
-void Fl_Android_Screen_Driver::repeat_timeout(double time, Fl_Timeout_Handler cb, void *data)
-{
-  int ret = -1;
-  int timerIndex = -1;
-
-  // first, find the timer associated with this handler
-  for (int i = 0; i < nTimerData; ++i) {
-    TimerData& t = timerData[i];
-    if ( (t.used) && (t.callback==cb) && (t.data==data) ) {
-      timerIndex = i;
-      break;
-    }
-  }
-
-  // if we did not have a timer yet, find a free slot
-  if (timerIndex==-1) {
-    for (int i = 0; i < nTimerData; ++i) {
-      if (!timerData[i].used)
-        timerIndex = i;
-      break;
-    }
-  }
-
-  // if that didn't work, allocate more timers
-  if (timerIndex==-1) {
-    if (nTimerData==NTimerData)
-      allocate_more_timers();
-    timerIndex = nTimerData++;
-  }
-
-  // if that didn't work either, we ran out of timers
-  if (timerIndex==-1) {
-    Fl::error("FLTK ran out of timer slots.");
-    return;
-  }
-
-  TimerData& t = timerData[timerIndex];
-  if (!t.used) {
-    t.data = data;
-    t.callback = cb;
-    memset(&t.sigevent, 0, sizeof(struct sigevent));
-    t.sigevent.sigev_notify = SIGEV_THREAD;
-    t.sigevent.sigev_notify_function = timer_signal_handler;
-    t.sigevent.sigev_value.sival_int = timerIndex;
-    ret = timer_create(CLOCK_MONOTONIC, &t.sigevent, &t.handle);
-    if (ret==-1) {
-      Fl_Android_Application::log_e("Can't create timer: %s", strerror(errno));
-      return;
-    }
-    t.used = true;
-  }
-
-  double ff;
-  t.timeout = {
-          { 0, 0 },
-          { (time_t)floor(time), (long)(modf(time, &ff)*1000000000) }
-  };
-  ret = timer_settime(t.handle, 0, &t.timeout, nullptr);
-  if (ret==-1) {
-    Fl_Android_Application::log_e("Can't launch timer: %s", strerror(errno));
-    return;
-  }
-  t.triggered = true;
-}
-
-
-int Fl_Android_Screen_Driver::has_timeout(Fl_Timeout_Handler cb, void *data)
-{
-  for (int i = 0; i < nTimerData; ++i) {
-    TimerData& t = timerData[i];
-    if ( (t.used) && (t.callback==cb) && (t.data==data) ) {
-      return 1;
-    }
-  }
-  return 0;
-}
-
-
-void Fl_Android_Screen_Driver::remove_timeout(Fl_Timeout_Handler cb, void *data)
-{
-  for (int i = 0; i < nTimerData; ++i) {
-    TimerData& t = timerData[i];
-    if ( t.used && (t.callback==cb) && ( (t.data==data) || (data==nullptr) ) ) {
-      if (t.used)
-        timer_delete(t.handle);
-      t.triggered = t.used = false;
-    }
-  }
-}
-
-
 /**
  Play some system sound.
 

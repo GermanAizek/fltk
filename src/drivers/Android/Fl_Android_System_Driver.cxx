@@ -16,6 +16,7 @@
 
 #include <config.h>
 #include "Fl_Android_System_Driver.H"
+#include "Fl_Android_Screen_Driver.H"
 #include <FL/Fl.H>
 #include <FL/fl_utf8.h>
 #include <FL/fl_string_functions.h>
@@ -157,6 +158,18 @@ static char *wchar_to_utf8(const wchar_t *wstr, char *&utf8) {
 Fl_System_Driver *Fl_System_Driver::newSystemDriver()
 {
   return new Fl_Android_System_Driver();
+}
+
+double Fl_Android_System_Driver::wait(double time_to_wait) {
+  Fl_Android_Screen_Driver *sd = (Fl_Android_Screen_Driver*)Fl::screen_driver();
+  if (sd) return sd->wait(time_to_wait);
+  return 0.0;
+}
+
+int Fl_Android_System_Driver::ready() {
+  Fl_Android_Screen_Driver *sd = (Fl_Android_Screen_Driver*)Fl::screen_driver();
+  if (sd) return sd->wait(0.0) > 0 ? 1 : 0;
+  return 0;
 }
 
 

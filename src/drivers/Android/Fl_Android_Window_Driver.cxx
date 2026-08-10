@@ -45,16 +45,11 @@ void Fl_Android_Window_Driver::show()
   if (!shown()) {
     // make window
     fl_open_display();
-    if (pWindow->parent() && !Fl_X::i(pWindow->window())) {
+    if (pWindow->parent() && (pWindow->window() && !pWindow->window()->shown())) {
       pWindow->set_visible();
       return;
     }
     pWindow->set_visible();
-    Fl_X *x = new Fl_X;
-    x->w = pWindow;
-    i(x);
-    x->next = Fl_X::first;
-    Fl_X::first = x;
     // position window
     // TODO: we want to scale the screen to hold all windows
     // TODO: we want to allow for screen size hints to make apps look perfect, even if the screen is rotated
@@ -84,21 +79,14 @@ void Fl_Android_Window_Driver::show()
 
 void Fl_Android_Window_Driver::hide()
 {
-  Fl_X* ip = Fl_X::i(pWindow);
   if (hide_common()) return;
-  if (ip->region) {
-    delete ip->region;
-    ip->region = nullptr;
-  }
-  delete ip;
   expose_all();
 }
 
 
 void Fl_Android_Window_Driver::expose_all()
 {
-  for (Fl_X *x = Fl_X::first; x; x = x->next) {
-    Fl_Window *win = x->w;
+  for (Fl_Window *win = Fl::first_window(); win; win = Fl::next_window(win)) {
     Fl_Android_Window_Driver::driver(win)->wait_for_expose_value = 0;
     win->damage(FL_DAMAGE_EXPOSE);
     win->redraw();
@@ -135,8 +123,7 @@ void Fl_Android_Window_Driver::resize(int X,int Y,int W,int H)
       pWindow->redraw();
       // only wait for exposure if this window has a size - a window
       // with no width or height will never get an exposure event
-      Fl_X *i = Fl_X::i(pWindow);
-      if (i && W > 0 && H > 0)
+      if (pWindow->shown() && W > 0 && H > 0)
         wait_for_expose_value = 1;
     }
   } else {

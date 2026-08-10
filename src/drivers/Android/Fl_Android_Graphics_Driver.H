@@ -90,7 +90,7 @@ protected:
   // Support function for image drawing
   virtual void uncache_pixmap(fl_uintptr_t p) override;
   // Support function for image drawing
-  virtual void delete_bitmask(Fl_Bitmask bm) override;
+  virtual void delete_bitmask(fl_uintptr_t bm) override;
 public:
   /** Constructor, C++11 initialises member variables in-line */
   Fl_Android_Graphics_Driver();

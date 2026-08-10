@@ -327,21 +327,6 @@ void Fl_Android_Application::destroy_timer_handler()
 }
 
 
-void Fl_Android_Application::send_timer_index(uint8_t ix)
-{
-  if (pTimerWritePipe!=-1)
-    ::write(pTimerWritePipe, &ix, 1);
-}
-
-
-uint8_t Fl_Android_Application::receive_timer_index()
-{
-  uint8_t ix = 0;
-  if (pTimerReadPipe!=-1)
-    ::read(pTimerReadPipe, &ix, 1);
-  return ix;
-}
-
 
 void Fl_Android_Application::destroy()
 {

@@ -26,6 +26,9 @@
 #include <map>
 #endif
 
+#include <FL/Fl_Preferences.H>
+#include "../../Fl_Scalable_Graphics_Driver.H"
+
 #include "stb_truetype.h"
 
 

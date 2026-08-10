@@ -80,10 +80,7 @@ private:
 public:
   Fl_Android_Screen_Driver();
 
-  virtual void add_timeout(double time, Fl_Timeout_Handler cb, void *argp) override;
-  virtual void repeat_timeout(double time, Fl_Timeout_Handler cb, void *argp) override;
-  virtual int has_timeout(Fl_Timeout_Handler cb, void *argp) override;
-  virtual void remove_timeout(Fl_Timeout_Handler cb, void *argp) override;
+
 
   virtual int compose(int &del) override;
 
@@ -116,7 +113,7 @@ public:
   virtual void beep(int type) override;
   // --- global events
   virtual void flush() override;
-  virtual double wait(double time_to_wait) override;
+  virtual double wait(double time_to_wait);
 #if 0
   virtual int ready();
 #endif
@@ -172,5 +169,7 @@ public:
   bool pContentChanged;
   bool pClearDesktop;
 };
+
+#include "../../Fl_Timeout.h"
 
 #endif // FL_ANDROID_SCREEN_DRIVER_H

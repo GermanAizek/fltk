@@ -42,15 +42,15 @@
  */
 
 
-struct Fl_Window_Driver::shape_data_type {
-  int lw_; ///<  width of shape image
-  int lh_; ///<  height of shape image
-  Fl_Image* shape_; ///<  shape image
-  Fl_Bitmap *effective_bitmap_; ///<  auxiliary bitmap image
-};
-
 class FL_EXPORT Fl_Android_Window_Driver : public Fl_Window_Driver
 {
+public:
+  struct shape_data_type {
+    int lw_; ///<  width of shape image
+    int lh_; ///<  height of shape image
+    Fl_Image* shape_; ///<  shape image
+    Fl_Bitmap *effective_bitmap_; ///<  auxiliary bitmap image
+  };
 #if 0
 
   friend class Fl_Window;
