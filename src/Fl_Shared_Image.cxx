@@ -14,7 +14,7 @@
 //     https://www.fltk.org/bugs.php
 //
 
-#include <stdio.h>
+#include <fstream>
 #include <FL/fl_utf8.h>
 #include "flstring.h"
 
@@ -277,15 +277,17 @@ void Fl_Shared_Image::reload() {
   // Load image from disk...
   int           i;              // Looping var
   int           count = 0;      // number of bytes read from image header
-  FILE          *fp;            // File pointer
+  std::ifstream fp;               // File pointer
   uchar         header[64];     // Buffer for auto-detecting files
   Fl_Image      *img;           // New image
 
   if (!name_) return;
 
-  if ((fp = fl_fopen(name_, "rb")) != NULL) {
-    count = (int)fread(header, 1, sizeof(header), fp);
-    fclose(fp);
+  fp.open(name_, std::ios::binary);
+  if (fp.is_open()) {
+    fp.read((char*)header, sizeof(header));
+    count = fp.gcount();
+    fp.close();
     if (count == 0)
       return;
   } else {

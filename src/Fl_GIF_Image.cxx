@@ -437,7 +437,7 @@ static char ** convert_to_xpm(uchar *Image, int Width, int Height, ColorMap &CMa
 
   // write the first line of xpm data (use suffix as temp array):
   uchar Suffix[4096];
-  int length = snprintf((char*)(Suffix), sizeof(Suffix),
+  int length = fl_snprintf((char*)(Suffix), sizeof(Suffix),
                        "%d %d %d %d",Width,Height,-numcolors,1);
   new_data[0] = new char[length+1];
   strcpy(new_data[0], (char*)Suffix);

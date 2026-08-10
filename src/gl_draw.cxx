@@ -44,6 +44,7 @@
 #if HAVE_GL_GLU_H
 #  include <FL/glu.h>  // for gluUnProject()
 #endif
+#include <sstream>
 #include <FL/glut.H> // for glutStrokeString() and glutStrokeLength()
 #include <stdlib.h>
 
@@ -78,7 +79,7 @@ void  gl_font(int fontid, int size) {
     once = false;
     if (Fl::draw_GL_text_with_textures()) {
       int gl_version_major;
-      sscanf((const char *)glGetString(GL_VERSION), "%d", &gl_version_major);
+      (std::istringstream((const char *)glGetString(GL_VERSION)) >> gl_version_major).good() ? 1 : 0;
       //printf("gl_version_major=%d\n", gl_version_major);
       if (gl_version_major >= 3) {
         has_texture_rectangle = true;

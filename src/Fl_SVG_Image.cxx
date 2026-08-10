@@ -25,7 +25,7 @@
 #include <FL/fl_string_functions.h>
 #include "Fl_Screen_Driver.H"
 #include "Fl_System_Driver.H"
-#include <stdio.h>
+#include <fstream>
 #include <stdlib.h>
 
 #include "../nanosvg/nanosvg.h"
@@ -228,21 +228,20 @@ void Fl_SVG_Image::init_(const char *name, const unsigned char *in_data, size_t 
 
   // if we are reading from a file, just read the entire file into a memory block
   if (!data) {
-    FILE *f = fl_fopen(filename, "rb");
-    if (f) {
-      fseek(f, 0, SEEK_END);
-      length = ftell(f);
-      fseek(f, 0, SEEK_SET);
+    std::ifstream f(filename, std::ios::binary | std::ios::ate);
+    if (f.is_open()) {
+      length = f.tellg();
+      f.seekg(0, std::ios::beg);
       data = (uchar*)malloc(length+1);
       if (data) {
-        if (fread((void*)data, 1, length, f) == length) {
+        if (f.read((char*)data, length)) {
           data[length] = 0;
         } else {
           free((void*)data);
           data = NULL;
         }
       }
-      fclose(f);
+      f.close();
     }
     if (!data) return;
   }

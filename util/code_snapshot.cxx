@@ -44,7 +44,8 @@
 #include "../fluid/widgets/Code_Viewer.h"
 #include "../fluid/widgets/Style_Parser.h"
 
-#include <stdio.h>
+#include <iostream>
+#include <fstream>
 #include <algorithm>
 #include <string>
 
@@ -128,28 +129,32 @@ int main(int argc, char *argv[]) {
 
   // fl_getcwd(cwd, FL_PATH_MAX-1);
   // fprintf(stderr, "code_snapshot:\n");
-  // fprintf(stderr, "Working directory is \"%s\".\n", cwd);
+  // std::cerr << "Working directory is \"" << cwd << "\".\n";
 
   create_window();
 
   for (int i = 1; i < argc; i++) {
-    FILE* f = fl_fopen(argv[i], "rb");
-    if (!f) {
+    std::ifstream f(argv[i]);
+    if (!f.is_open()) {
       fl_getcwd(cwd, FL_PATH_MAX-1);
-      fprintf(stderr, "code_snapshot:\nCan't open file \"%s\".\n", argv[i]);
-      fprintf(stderr, "Working directory is \"%s\".\n", cwd);
+      std::cerr << "code_snapshot:\nCan't open file \"" << argv[i] << "\".\n";
+      std::cerr << "Working directory is \"" << cwd << "\".\n";
       ret = -1;
       break;
     }
 
-    // fprintf(stderr, "Reading \"%s\".\n", argv[i]);
+    // std::cerr << "Reading \"" << argv[i] << "\".\n";
 
     std::string code;
     std::string filename;
     bool in_code_block = false;
     for (;;) {
-      fgets(line, 1023, f);
-      if (feof(f)) break;
+      if (!f.getline(line, 1023)) break;
+      int len = strlen(line);
+      if (len < 1022 && f.peek() != EOF && line[len-1] != '\n') {
+        line[len] = '\n';
+        line[len+1] = '\0';
+      }
       if (in_code_block) {
         if (strstr(line, "\\endcode_international")) {
           if (!code.empty()) {
@@ -172,7 +177,7 @@ int main(int argc, char *argv[]) {
         }
       }
     }
-    fclose(f);
+    f.close();
   }
 
   delete window;

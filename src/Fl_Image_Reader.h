@@ -27,7 +27,7 @@
 #ifndef FL_IMAGE_READER_H
 #define FL_IMAGE_READER_H
 
-#include <stdio.h>
+#include <fstream>
 
 class Fl_Image_Reader {
 public:
@@ -36,7 +36,7 @@ public:
     : is_file_(0)
     , is_data_(0)
     , error_(0)
-    , file_(0L)
+    , file_(nullptr)
     , data_(0L)
     , start_(0L)
     , end_((const unsigned char *)(-1L))
@@ -110,7 +110,7 @@ private:
   // a flag to store EOF or error status
   int error_;
   // a pointer to the opened file
-  FILE *file_;
+  std::ifstream* file_;
   // a pointer to the current byte in memory
   const unsigned char *data_;
   // a pointer to the start of the image data

@@ -42,7 +42,10 @@ int Fl_Image_Reader::open(const char *filename) {
   if (!filename)
     return -1;
   name_ = fl_strdup(filename);
-  if ((file_ = fl_fopen(filename, "rb")) == NULL) {
+  file_ = new std::ifstream(filename, std::ios::binary);
+  if (!file_->is_open()) {
+    delete file_;
+    file_ = nullptr;
     return -1;
   }
   is_file_ = 1;
@@ -82,7 +85,7 @@ int Fl_Image_Reader::open(const char *imagename, const unsigned char *data) {
 // Close and destroy the reader
 Fl_Image_Reader::~Fl_Image_Reader() {
   if (is_file_ && file_) {
-    fclose(file_);
+    delete file_;
   }
   free(name_);
 }
@@ -92,17 +95,18 @@ uchar Fl_Image_Reader::read_byte() {
   if (error()) // don't read after read error or EOF
     return 0;
   if (is_file_) {
-    int ret = getc(file_);
-    if (ret < 0) {
-      if (feof(file_))
+    char ret;
+    if (file_->get(ret)) {
+      return (uchar)ret;
+    } else {
+      if (file_->eof())
         error_ = 1;
-      else if (ferror(file_))
+      else if (file_->fail() || file_->bad())
         error_ = 2;
       else
         error_ = 3; // unknown error
       return 0;
     }
-    return ret;
   } else if (is_data_) {
     if (data_ < end_)
       return *data_++;
@@ -143,8 +147,8 @@ unsigned int Fl_Image_Reader::read_dword() {
 void Fl_Image_Reader::seek(unsigned int n) {
   error_ = 0;
   if (is_file_) {
-    int ret = fseek(file_, n, SEEK_SET);
-    if (ret < 0)
+    file_->seekg((std::streampos)n, std::ios::beg);
+    if (file_->fail())
       error_ = 2; // read / position error
     return;
   } else if (is_data_) {
@@ -166,7 +170,7 @@ void Fl_Image_Reader::seek(unsigned int n) {
 
 long Fl_Image_Reader::tell() const {
   if (is_file_) {
-    return ftell(file_);
+    return (long)file_->tellg();
   } else if (is_data_) {
     return long(data_ - start_);
   }

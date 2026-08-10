@@ -23,7 +23,9 @@
 //
 
 #include <FL/Fl_XBM_Image.H>
-#include <stdio.h>
+#include <fstream>
+#include <sstream>
+#include <iomanip>
 #include <FL/fl_utf8.h>
 #include "flstring.h"
 
@@ -38,10 +40,11 @@
   the image.
 */
 Fl_XBM_Image::Fl_XBM_Image(const char *name) : Fl_Bitmap((const char *)0,0,0) {
-  FILE  *f;
+  std::ifstream f;
   uchar *ptr;
 
-  if ((f = fl_fopen(name, "rb")) == NULL) return;
+  f.open(name, std::ios::binary);
+  if (!f.is_open()) return;
 
   char buffer[1024];
   char junk[1024];
@@ -49,19 +52,21 @@ Fl_XBM_Image::Fl_XBM_Image(const char *name) : Fl_Bitmap((const char *)0,0,0) {
   int i;
   for (i = 0; i<2; i++) {
     for (;;) {
-      if (!fgets(buffer,1024,f)) {
-        fclose(f);
+      if (!f.getline(buffer, 1024)) {
+        f.close();
         return;
       }
-      int r = sscanf(buffer, "#define %1023s %d", junk, &wh[i]);
+      int r = 0;
+      std::string dummy1, dummy2;
+      if ((std::istringstream(buffer) >> dummy1 >> dummy2 >> wh[i]) && dummy1 == "#define") r = 2;
       if (r >= 2) break;
     }
   }
 
   // skip to data array:
   for (;;) {
-    if (!fgets(buffer,1024,f)) {
-      fclose(f);
+    if (!f.getline(buffer, 1024)) {
+      f.close();
       return;
     }
     if (!strncmp(buffer,"static ",7)) break;
@@ -76,14 +81,16 @@ Fl_XBM_Image::Fl_XBM_Image(const char *name) : Fl_Bitmap((const char *)0,0,0) {
 
   // read the data:
   for (i = 0, ptr = (uchar *)array; i < n;) {
-    if (!fgets(buffer,1024,f)) {
-      fclose(f);
+    if (!f.getline(buffer, 1024)) {
+      f.close();
       return;
     }
     const char *a = buffer;
     while (*a && i<n) {
       unsigned int t;
-      if (sscanf(a," 0x%x",&t)>0) {
+      std::string chunk(a);
+      size_t pos = chunk.find("0x");
+      if (pos != std::string::npos && (std::istringstream(chunk.substr(pos)) >> std::hex >> t)) {
         *ptr++ = (uchar)t;
         i ++;
       }
@@ -91,5 +98,5 @@ Fl_XBM_Image::Fl_XBM_Image(const char *name) : Fl_Bitmap((const char *)0,0,0) {
     }
   }
 
-  fclose(f);
+  f.close();
 }
