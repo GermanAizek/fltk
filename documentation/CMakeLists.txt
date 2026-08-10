@@ -110,6 +110,10 @@ if(FLTK_BUILD_HTML_DOCS)
 
   # configure Doxygen input file for HTML docs (Doxyfile.in)
 
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/header.html
+            ${CMAKE_CURRENT_SOURCE_DIR}/doxygen-awesome
+       DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
   configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in
     ${CMAKE_CURRENT_BINARY_DIR}/${DOXYFILE}.in
