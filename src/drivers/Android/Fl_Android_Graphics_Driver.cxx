@@ -509,7 +509,8 @@ void Fl_Android_Graphics_Driver::end_polygon(int begin, int end)
   }
   xMax++; yMax++;
 
-  int nodes, nodeX[end - begin], pixelX, pixelY, i, j, swap;
+  int nodes, pixelX, pixelY, i, j, swap;
+  int *nodeX = new int[end - begin];
 
   //  Loop through the rows of the image.
   for (pixelY = yMin; pixelY < yMax; pixelY++) {
@@ -555,7 +556,7 @@ void Fl_Android_Graphics_Driver::end_polygon(int begin, int end)
       }
     }
   }
-
+  delete[] nodeX;
 }
 
 /**
@@ -601,7 +602,8 @@ void Fl_Android_Graphics_Driver::end_complex_polygon()
   }
   xMax++; yMax++;
 
-  int nodes, nodeX[end - begin], pixelX, pixelY, i, j, swap;
+  int nodes, pixelX, pixelY, i, j, swap;
+  int *nodeX = new int[end - begin];
 
   //  Loop through the rows of the image.
   for (pixelY = yMin; pixelY < yMax; pixelY++) {
@@ -649,6 +651,7 @@ void Fl_Android_Graphics_Driver::end_complex_polygon()
       }
     }
   }
+  delete[] nodeX;
 }
 
 /**

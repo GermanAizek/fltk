@@ -41,6 +41,8 @@ class Fl_Window;
 #    include "x11.H"
 #  elif defined(__APPLE__)
 #    include "mac.H"
+#  elif defined(__ANDROID__)
+#    include "android.H"
 #  endif // _WIN32
 
 //

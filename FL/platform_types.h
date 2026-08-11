@@ -114,7 +114,11 @@ typedef unsigned long fl_uintptr_t;
 #endif /* _WIN64 */
 
 typedef void *GLContext;
+#if defined(__ANDROID__)
+typedef struct Fl_Rect_Region *Fl_Region;
+#else
 typedef void *Fl_Region;
+#endif
 typedef fl_uintptr_t  Fl_Offscreen;
 
 /* Allows all hybrid combinations except WIN32 + X11 with MSVC */

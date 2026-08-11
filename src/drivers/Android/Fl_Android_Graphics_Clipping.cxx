@@ -709,7 +709,7 @@ void Fl_Android_Graphics_Driver::clip_region(Fl_Region r)
 {
   Fl_Region oldr = rstack[rstackptr];
   if (oldr)
-    ::free(oldr);
+    delete oldr;
   rstack[rstackptr] = r;
   restore_clip();
 }
@@ -752,7 +752,7 @@ void Fl_Android_Graphics_Driver::pop_clip()
   if (rstackptr > 0) {
     Fl_Region oldr = rstack[rstackptr--];
     if (oldr)
-      ::free(oldr);
+      delete oldr;
   } else Fl::warning("Fl_Android_Graphics_Driver::pop_clip: clip stack underflow!\n");
   restore_clip();
 }

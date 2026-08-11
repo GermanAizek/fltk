@@ -61,6 +61,8 @@
 #    if !defined(__gl3_h_) // make sure OpenGL/gl3.h was not included before
 #      include <OpenGL/gl.h>
 #    endif
+#  elif defined(__ANDROID__)
+#    include <GLES/gl.h>
 #  else
 #    include <GL/gl.h>
 #  endif  // __APPLE__ // PORTME: OpenGL Path abstraction
@@ -95,5 +97,124 @@ FL_EXPORT int  gl_texture_pile_height();
 FL_EXPORT void gl_texture_reset();
 
 FL_EXPORT void gl_draw_image(const uchar *, int x,int y,int w,int h, int d=3, int ld=0);
+
+#ifdef __ANDROID__
+// Mock desktop OpenGL functions missing in OpenGL ES to allow fltk_gl to compile
+typedef float GLdouble;
+#define glDrawBuffer(x) (void)0
+#define glReadBuffer(x) (void)0
+#define glOrtho glOrthof
+#define glRasterPos2i(x, y) (void)0
+#define glRasterPos2f(x, y) (void)0
+#define glCopyPixels(x, y, w, h, t) (void)0
+#define glPushAttrib(x) (void)0
+#define glPopAttrib() (void)0
+#define glPushClientAttrib(x) (void)0
+#define glPopClientAttrib() (void)0
+#define glDeleteLists(x, y) (void)0
+#define glBegin(x) (void)0
+#define glEnd() (void)0
+#define glVertex2f(x, y) (void)0
+#define glVertex2i(x, y) (void)0
+#define glVertex3d(x, y, z) (void)0
+#define glNormal3d(x, y, z) (void)0
+#define glColor3ub(r, g, b) (void)0
+#define glVertex3dv(v) (void)0
+#define glNormal3dv(v) (void)0
+#define glMap2d(...) (void)0
+#define glMapGrid2d(...) (void)0
+#define glEvalMesh2(...) (void)0
+#define glRotated glRotatef
+#define glScaled glScalef
+#define glTranslated glTranslatef
+#define glRecti(x,y,w,h) (void)0
+#define glDrawPixels(w,h,f,t,p) (void)0
+#define glTexCoord2f(x,y) (void)0
+#define glCallLists(n,t,p) (void)0
+#define glVertex2d(x,y) (void)0
+
+#ifndef GL_INDEX_BITS
+#define GL_INDEX_BITS 0
+#endif
+#ifndef GL_UNPACK_ROW_LENGTH
+#define GL_UNPACK_ROW_LENGTH 0
+#endif
+#ifndef GL_CURRENT_RASTER_POSITION
+#define GL_CURRENT_RASTER_POSITION 0
+#endif
+#ifndef GL_TEXTURE_WIDTH
+#define GL_TEXTURE_WIDTH 0
+#endif
+#ifndef GL_TEXTURE_HEIGHT
+#define GL_TEXTURE_HEIGHT 0
+#endif
+#ifndef GL_ALPHA8
+#define GL_ALPHA8 0
+#endif
+#ifndef GL_CURRENT_RASTER_POSITION_VALID
+#define GL_CURRENT_RASTER_POSITION_VALID 0
+#endif
+
+#ifndef GL_ALL_ATTRIB_BITS
+#define GL_ALL_ATTRIB_BITS 0
+#endif
+#ifndef GL_CLIENT_PIXEL_STORE_BIT
+#define GL_CLIENT_PIXEL_STORE_BIT 0
+#endif
+#ifndef GL_PACK_ROW_LENGTH
+#define GL_PACK_ROW_LENGTH 0
+#endif
+#ifndef GL_PACK_SKIP_ROWS
+#define GL_PACK_SKIP_ROWS 0
+#endif
+#ifndef GL_PACK_SKIP_PIXELS
+#define GL_PACK_SKIP_PIXELS 0
+#endif
+#ifndef GL_COLOR
+#define GL_COLOR 0
+#endif
+#ifndef GL_FRONT
+#define GL_FRONT 0
+#endif
+#ifndef GL_BACK
+#define GL_BACK 0
+#endif
+#ifndef GL_ENABLE_BIT
+#define GL_ENABLE_BIT 0
+#endif
+#ifndef GL_EVAL_BIT
+#define GL_EVAL_BIT 0
+#endif
+#ifndef GL_AUTO_NORMAL
+#define GL_AUTO_NORMAL 0
+#endif
+#ifndef GL_MAP2_VERTEX_3
+#define GL_MAP2_VERTEX_3 0
+#endif
+#ifndef GL_MAP2_TEXTURE_COORD_2
+#define GL_MAP2_TEXTURE_COORD_2 0
+#endif
+#ifndef GL_LINE
+#define GL_LINE 0
+#endif
+#ifndef GL_FILL
+#define GL_FILL 0
+#endif
+#ifndef GL_QUADS
+#define GL_QUADS 0
+#endif
+#ifndef GL_POLYGON
+#define GL_POLYGON 0
+#endif
+#ifndef GL_LINE_LOOP
+#define GL_LINE_LOOP 0
+#endif
+#ifndef GL_TRIANGLES
+#define GL_TRIANGLES 0
+#endif
+#ifndef GL_NORMALIZE
+#define GL_NORMALIZE 0
+#endif
+#endif // __ANDROID__
 
 #endif // !FL_gl_H

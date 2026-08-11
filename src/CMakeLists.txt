@@ -555,6 +555,9 @@ elseif(APPLE)
 elseif(WIN32)
   set(GL_DRIVER_FILES ${GL_DRIVER_FILES} drivers/WinAPI/Fl_WinAPI_Gl_Window_Driver.cxx)
   set(GL_DRIVER_HEADER_FILES drivers/WinAPI/Fl_WinAPI_Gl_Window_Driver.H)
+elseif(ANDROID)
+  set(GL_DRIVER_FILES ${GL_DRIVER_FILES} drivers/Android/Fl_Android_Gl_Window_Driver.cxx)
+  set(GL_DRIVER_HEADER_FILES drivers/Android/Fl_Android_Gl_Window_Driver.H)
 endif(FLTK_USE_WAYLAND)
 
 set(GL_DRIVER_HEADER_FILES ${GL_DRIVER_FILES}

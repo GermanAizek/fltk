@@ -31,12 +31,11 @@ extern "C" {
 /*
  This is the function that application code must implement, representing
  the main entry to the app.
- */
-extern int main(int argc, char **argv);
-
-#ifdef __cplusplus
+ */#ifdef __cplusplus
 }
 #endif
+
+extern int main(int argc, char **argv);
 
 
 

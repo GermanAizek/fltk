@@ -25,6 +25,8 @@
 #include <config.h>
 #include "Fl_Android_Screen_Driver.H"
 #include "Fl_Android_Application.H"
+#include "../../Fl_System_Driver.H"
+#include "../../Fl_Timeout.h"
 #include <FL/Fl_Window.H>
 #include "Fl_Android_Graphics_Font.H"
 #include <FL/Fl.H>
@@ -260,7 +262,7 @@ int Fl_Android_Screen_Driver::handle_queued_events(double time_to_wait)
  */
 double Fl_Android_Screen_Driver::wait(double time_to_wait)
 {
-  time_to_wait = Fl_System_Driver::wait(time_to_wait);
+  time_to_wait = Fl::system_driver()->Fl_System_Driver::wait(time_to_wait);
 
   if (time_to_wait <= 0.0) {
     // if there is no wait time, handle the event and show the results right away
@@ -319,8 +321,6 @@ void Fl_Android_Screen_Driver::flush()
 
 // ---- timers -----------------------------------------------------------------
 
-
-struct TimerData
 /**
  Play some system sound.
 

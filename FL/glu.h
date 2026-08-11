@@ -38,6 +38,8 @@
 
 #  ifdef __APPLE__  // PORTME: OpenGL Path abstraction
 #    include <OpenGL/glu.h>
+#  elif defined(__ANDROID__)
+// Android does not have GLU
 #  else
 #    include <GL/glu.h>
 #  endif
