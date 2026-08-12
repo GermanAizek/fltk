@@ -141,7 +141,7 @@ if(APPLE)
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_LIBCPP_HAS_THREAD_API_PTHREAD")
     endif(NOT(${CMAKE_SYSTEM_VERSION} VERSION_LESS 17.0.0))
   else()
-    set(FLTK_COCOA_FRAMEWORKS "-framework Cocoa -framework AVFoundation -framework CoreMedia -framework CoreVideo")
+    set(FLTK_COCOA_FRAMEWORKS "-framework Cocoa -framework AVFoundation -framework CoreMedia -framework CoreVideo -framework IOBluetooth")
     if (NOT (CMAKE_OSX_ARCHITECTURES STREQUAL "ppc" OR CMAKE_OSX_ARCHITECTURES STREQUAL "i386"))
       CHECK_OSX_MAX_ALLOWED(150000 SDK_15_AVAILABLE) # at least SDK 15.0.0 ?
       if (SDK_15_AVAILABLE)

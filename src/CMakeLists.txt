@@ -59,6 +59,7 @@ set(CPPFILES
   Fl_Grid.cxx
   Fl_Gpio.cxx
   Fl_I2C.cxx
+  Fl_Bluetooth.cxx
   Fl_Serial_Port.cxx
   Fl_Group.cxx
   Fl_Help_View.cxx
@@ -797,7 +798,7 @@ if(FLTK_USE_X11)
 endif(FLTK_USE_X11)
 
 if(WIN32)
-  list(APPEND OPTIONAL_LIBS comctl32 ws2_32 mfplat mfreadwrite mfuuid mf)
+  list(APPEND OPTIONAL_LIBS comctl32 ws2_32 bthprops mfplat mfreadwrite mfuuid mf)
   if(USE_GDIPLUS)
     list(APPEND OPTIONAL_LIBS gdiplus)
   endif()
