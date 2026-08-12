@@ -60,6 +60,7 @@ set(CPPFILES
   Fl_Gpio.cxx
   Fl_I2C.cxx
   Fl_Bluetooth.cxx
+  Fl_MQTT_Client.cxx
   Fl_Serial_Port.cxx
   Fl_Group.cxx
   Fl_Help_View.cxx
