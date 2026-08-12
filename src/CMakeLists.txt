@@ -59,6 +59,7 @@ set(CPPFILES
   Fl_Grid.cxx
   Fl_Gpio.cxx
   Fl_I2C.cxx
+  Fl_SPI.cxx
   Fl_Bluetooth.cxx
   Fl_MQTT_Client.cxx
   Fl_CoAP_Client.cxx
