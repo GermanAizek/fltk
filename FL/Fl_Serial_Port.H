@@ -21,6 +21,9 @@
 #include "Fl_Export.H"
 #include <stdint.h>
 
+class Fl_Serial_Port;
+typedef void (*Fl_Serial_Callback)(Fl_Serial_Port*, void*);
+
 /**
   Cross-platform Serial Port (COM Port) wrapper.
   
@@ -55,8 +58,12 @@ public:
   };
 
 private:
+  Fl_Serial_Callback callback_;
+  void* user_data_;
+
 #if defined(_WIN32)
   void* handle_; // HANDLE on Windows
+  void* thread_data_; // Internal pointer for std::thread state
 #else
   int fd_; // File descriptor on POSIX
 #endif
@@ -134,6 +141,34 @@ public:
     \return The number of bytes read, or -1 on error.
   */
   int read_data(void* buffer, int len);
+
+  /**
+    Sets the callback function to be called when data is available to read.
+    This enables asynchronous I/O (like Qt's readyRead).
+    \param cb The callback function.
+    \param user_data Optional user data passed to the callback.
+  */
+  void callback(Fl_Serial_Callback cb, void* user_data = nullptr);
+  
+  /**
+    Triggers the callback manually.
+  */
+  void do_callback();
+  
+  /**
+    Gets the current callback.
+  */
+  Fl_Serial_Callback callback() const { return callback_; }
+  
+  /**
+    Gets the current user data.
+  */
+  void* user_data() const { return user_data_; }
+  
+  /**
+    Sets the user data.
+  */
+  void user_data(void* data) { user_data_ = data; }
 };
 
 #endif

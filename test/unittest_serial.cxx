@@ -34,6 +34,13 @@ static Fl_Widget* create_serial_test() {
   port.set_parity(Fl_Serial_Port::PARITY_NONE);
   port.set_stop_bits(Fl_Serial_Port::STOP_1);
   
+  // Test async callback assignment
+  port.callback([](Fl_Serial_Port* p, void* d) {
+    // This is just a dummy callback to verify compilation and API usage
+    char dummy[10];
+    p->read_data(dummy, sizeof(dummy));
+  }, (void*)box);
+  
   box->copy_label(buf);
   
   grp->end();

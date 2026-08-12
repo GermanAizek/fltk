@@ -16,11 +16,52 @@
 //
 
 #include <FL/Fl_Serial_Port.H>
+#include <FL/Fl.H>
 
 #if defined(_WIN32)
 #include <windows.h>
+#include <thread>
+#include <atomic>
 
-Fl_Serial_Port::Fl_Serial_Port() : handle_(INVALID_HANDLE_VALUE) {
+struct WinThreadData {
+  std::thread t;
+  std::atomic<bool> running;
+};
+
+static void windows_awake_cb(void* data) {
+  Fl_Serial_Port* port = (Fl_Serial_Port*)data;
+  port->do_callback();
+}
+
+static void serial_listener_thread(Fl_Serial_Port* port, WinThreadData* td, HANDLE handle) {
+  DWORD last_cbInQue = 0;
+  while (td->running) {
+    DWORD errors;
+    COMSTAT comstat;
+    if (ClearCommError(handle, &errors, &comstat)) {
+      if (comstat.cbInQue > 0 && comstat.cbInQue > last_cbInQue) {
+        if (port->callback()) {
+          Fl::awake(windows_awake_cb, port);
+        }
+      }
+      last_cbInQue = comstat.cbInQue;
+    }
+    Sleep(10);
+  }
+}
+
+Fl_Serial_Port::Fl_Serial_Port() : callback_(nullptr), user_data_(nullptr), handle_(INVALID_HANDLE_VALUE), thread_data_(nullptr) {
+}
+
+void Fl_Serial_Port::callback(Fl_Serial_Callback cb, void* user_data) {
+  callback_ = cb;
+  user_data_ = user_data;
+}
+
+void Fl_Serial_Port::do_callback() {
+  if (callback_) {
+    callback_(this, user_data_);
+  }
 }
 
 Fl_Serial_Port::~Fl_Serial_Port() {
@@ -44,11 +85,27 @@ int Fl_Serial_Port::open(const char* port_name) {
   timeouts.WriteTotalTimeoutConstant = 0;
   SetCommTimeouts(handle_, &timeouts);
   
+  WinThreadData* td = new WinThreadData();
+  td->running = true;
+  td->t = std::thread(serial_listener_thread, this, td, handle_);
+  thread_data_ = td;
+  
   return 0;
 }
 
 int Fl_Serial_Port::close() {
   if (!is_open()) return -1;
+  
+  if (thread_data_) {
+    WinThreadData* td = (WinThreadData*)thread_data_;
+    td->running = false;
+    if (td->t.joinable()) {
+      td->t.join();
+    }
+    delete td;
+    thread_data_ = nullptr;
+  }
+  
   CloseHandle(handle_);
   handle_ = INVALID_HANDLE_VALUE;
   return 0;
@@ -132,8 +189,26 @@ int Fl_Serial_Port::read_data(void* buffer, int len) {
 #include <unistd.h>
 #include <fcntl.h>
 #include <termios.h>
+#include <FL/Fl.H>
 
-Fl_Serial_Port::Fl_Serial_Port() : fd_(-1) {
+Fl_Serial_Port::Fl_Serial_Port() : callback_(nullptr), user_data_(nullptr), fd_(-1) {
+}
+
+void Fl_Serial_Port::callback(Fl_Serial_Callback cb, void* user_data) {
+  callback_ = cb;
+  user_data_ = user_data;
+  if (is_open()) {
+    if (cb) Fl::add_fd(fd_, FL_READ, [](int, void* data) {
+      ((Fl_Serial_Port*)data)->do_callback();
+    }, this);
+    else Fl::remove_fd(fd_);
+  }
+}
+
+void Fl_Serial_Port::do_callback() {
+  if (callback_) {
+    callback_(this, user_data_);
+  }
 }
 
 Fl_Serial_Port::~Fl_Serial_Port() {
@@ -147,11 +222,21 @@ int Fl_Serial_Port::open(const char* port_name) {
     return -1;
   }
   fcntl(fd_, F_SETFL, 0); // Clear O_NDELAY to enable blocking reads if configured later
+  
+  if (callback_) {
+    Fl::add_fd(fd_, FL_READ, [](int, void* data) {
+      ((Fl_Serial_Port*)data)->do_callback();
+    }, this);
+  }
+  
   return 0;
 }
 
 int Fl_Serial_Port::close() {
   if (!is_open()) return -1;
+  if (callback_) {
+    Fl::remove_fd(fd_);
+  }
   ::close(fd_);
   fd_ = -1;
   return 0;
