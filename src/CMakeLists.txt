@@ -58,6 +58,7 @@ set(CPPFILES
   Fl_Graphics_Driver.cxx
   Fl_Grid.cxx
   Fl_Gpio.cxx
+  Fl_I2C.cxx
   Fl_Group.cxx
   Fl_Help_View.cxx
   Fl_Image.cxx

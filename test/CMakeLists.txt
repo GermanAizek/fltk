@@ -251,6 +251,7 @@ SET (UNITTEST_SRCS
   unittest_terminal.cxx
   unittest_camera.cxx
   unittest_gpio.cxx
+  unittest_i2c.cxx
 )
 fl_create_example(unittests "${UNITTEST_SRCS}" "${GLDEMO_LIBS}")
 
