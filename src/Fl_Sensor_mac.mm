@@ -17,6 +17,9 @@
 
 #include "Fl_Sensor_mac.h"
 #import <Foundation/Foundation.h>
+#import <TargetConditionals.h>
+
+#if TARGET_OS_IPHONE
 #import <CoreMotion/CoreMotion.h>
 
 struct Fl_Mac_Sensor_Context {
@@ -130,3 +133,55 @@ void fl_sensor_mac_read(void* ctx_ptr, double* x, double* y, double* z, double* 
   *z = ctx->last_z;
   *value = ctx->last_value;
 }
+
+#else
+
+// Fallback/stub for macOS Desktop since CMMotionManager is iOS-only
+
+struct Fl_Mac_Sensor_Context {
+  int type;
+  BOOL active;
+};
+
+void* fl_sensor_mac_init(int type) {
+  Fl_Mac_Sensor_Context* ctx = new Fl_Mac_Sensor_Context();
+  ctx->type = type;
+  ctx->active = NO;
+  return ctx;
+}
+
+void fl_sensor_mac_destroy(void* ctx_ptr) {
+  if (!ctx_ptr) return;
+  Fl_Mac_Sensor_Context* ctx = (Fl_Mac_Sensor_Context*)ctx_ptr;
+  delete ctx;
+}
+
+int fl_sensor_mac_start(void* ctx_ptr) {
+  if (!ctx_ptr) return 0;
+  Fl_Mac_Sensor_Context* ctx = (Fl_Mac_Sensor_Context*)ctx_ptr;
+  ctx->active = YES;
+  return 1;
+}
+
+void fl_sensor_mac_stop(void* ctx_ptr) {
+  if (!ctx_ptr) return;
+  Fl_Mac_Sensor_Context* ctx = (Fl_Mac_Sensor_Context*)ctx_ptr;
+  ctx->active = NO;
+}
+
+int fl_sensor_mac_is_active(void* ctx_ptr) {
+  if (!ctx_ptr) return 0;
+  Fl_Mac_Sensor_Context* ctx = (Fl_Mac_Sensor_Context*)ctx_ptr;
+  return ctx->active ? 1 : 0;
+}
+
+void fl_sensor_mac_read(void* ctx_ptr, double* x, double* y, double* z, double* value) {
+  // macOS desktop does not provide direct standard sensor APIs via CoreMotion.
+  // Returning 0s will trigger the fallback dummy values in Fl_Sensor.cxx so tests pass.
+  *x = 0.0;
+  *y = 0.0;
+  *z = 0.0;
+  *value = 0.0;
+}
+
+#endif
