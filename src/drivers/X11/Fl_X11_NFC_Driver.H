@@ -24,8 +24,8 @@ public:
   Fl_X11_NFC_Driver(Fl_NFC_Manager* m);
   virtual ~Fl_X11_NFC_Driver();
 
-  virtual int start_target_detection();
-  virtual void stop_target_detection();
+  int start_target_detection() FL_OVERRIDE;
+  void stop_target_detection() FL_OVERRIDE;
 
 private:
   long context_;

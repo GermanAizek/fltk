@@ -45,11 +45,9 @@ void Fl_WinAPI_NFC_Driver::timer_cb(void* data) {
   if (rv == SCARD_S_SUCCESS) {
     if (rs.dwEventState & SCARD_STATE_PRESENT) {
       Fl_NFC_Target target;
-      target.type = 1;
       self->manager_->handle_target_detected(&target);
     } else if (rs.dwEventState & SCARD_STATE_EMPTY) {
       Fl_NFC_Target target;
-      target.type = 1;
       self->manager_->handle_target_lost(&target);
     }
   }

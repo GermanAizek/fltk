@@ -18,6 +18,7 @@
 #define Fl_NFC_Driver_H
 
 #include <FL/Fl_NFC.H>
+#include <FL/fl_attr.h>
 
 class Fl_NFC_Driver {
 protected:

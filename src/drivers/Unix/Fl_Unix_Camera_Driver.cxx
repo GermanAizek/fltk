@@ -26,15 +26,21 @@
 #define USE_V4L2 1
 #elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
 /* On BSD systems, webcamd/cuse provides V4L2 compatibility */
+#if defined(__has_include)
 #if __has_include(<sys/videoio.h>)
 #include <sys/videoio.h>
+#define USE_V4L2 1
 #elif __has_include(<linux/videodev2.h>)
 #include <linux/videodev2.h>
-#else
-/* Fallback: attempt to include sys/videoio.h anyway if __has_include fails */
-#include <sys/videoio.h>
-#endif
 #define USE_V4L2 1
+#endif
+#else
+/* Fallback for older compilers without __has_include */
+#if defined(__NetBSD__) || defined(__OpenBSD__)
+#include <sys/videoio.h>
+#define USE_V4L2 1
+#endif
+#endif
 #endif
 
 Fl_Camera_Driver* Fl_Camera_Driver::new_camera_driver(Fl_Camera *widget) {

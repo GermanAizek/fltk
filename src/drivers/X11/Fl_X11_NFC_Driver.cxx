@@ -49,11 +49,9 @@ void Fl_X11_NFC_Driver::timer_cb(void* data) {
     if (rs.dwEventState & SCARD_STATE_PRESENT) {
       // Just emit a fake target for the stub
       Fl_NFC_Target target;
-      target.type = 1;
       self->manager_->handle_target_detected(&target);
     } else if (rs.dwEventState & SCARD_STATE_EMPTY) {
       Fl_NFC_Target target;
-      target.type = 1;
       self->manager_->handle_target_lost(&target);
     }
   }
