@@ -256,6 +256,7 @@ SET (UNITTEST_SRCS
   unittest_pcm.cxx
   unittest_spi.cxx
   unittest_bluetooth.cxx
+  unittest_dbus.cxx
   unittest_serial.cxx
   unittest_sbus.cxx
   unittest_crsf.cxx

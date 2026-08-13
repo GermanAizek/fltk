@@ -47,6 +47,7 @@ set(CPPFILES
   Fl_Copy_Surface.cxx
   Fl_Counter.cxx
   Fl_Device.cxx
+  Fl_DBus.cxx
   Fl_Dial.cxx
   Fl_Double_Window.cxx
   Fl_File_Browser.cxx
