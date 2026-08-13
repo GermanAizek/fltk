@@ -132,6 +132,7 @@ typedef float GLdouble;
 #define glTexCoord2f(x,y) (void)0
 #define glCallLists(n,t,p) (void)0
 #define glVertex2d(x,y) (void)0
+#define glGetTexLevelParameteriv(t,l,p,v) (void)0
 
 #ifndef GL_INDEX_BITS
 #define GL_INDEX_BITS 0

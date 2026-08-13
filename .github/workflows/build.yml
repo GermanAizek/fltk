@@ -325,6 +325,7 @@ jobs:
             sudo pkgin -y update
             sudo pkgin -y install git cmake ninja-build pkgconf libXft libXcursor libXrender
           elif [ "${{ matrix.os.name }}" = "haiku" ]; then
+            pkgman update -y
             pkgman install -y cmd:cmake cmd:ninja cmd:gcc cmd:make cmd:pkg_config xlibe_devel mesa_devel glu_devel
           fi
 
