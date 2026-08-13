@@ -62,6 +62,7 @@ set(CPPFILES
   Fl_I2C.cxx
   Fl_SPI.cxx
   Fl_Bluetooth.cxx
+  Fl_PPM.cxx
   Fl_MQTT_Client.cxx
   Fl_CoAP_Client.cxx
   Fl_Serial_Port.cxx

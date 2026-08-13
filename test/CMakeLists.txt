@@ -257,6 +257,7 @@ SET (UNITTEST_SRCS
   unittest_mqtt.cxx
   unittest_coap.cxx
   unittest_pwm.cxx
+  unittest_ppm.cxx
 )
 fl_create_example(unittests "${UNITTEST_SRCS}" "${GLDEMO_LIBS}")
 

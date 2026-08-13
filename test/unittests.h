@@ -65,6 +65,7 @@ enum {
   UT_TEST_MQTT,
   UT_TEST_COAP,
   UT_TEST_PWM,
+  UT_TEST_PPM,
   UT_TEST_CORE
 };
 
