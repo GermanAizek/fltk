@@ -80,6 +80,7 @@ set(CPPFILES
   Fl_ARINC629.cxx
   Fl_MIL_STD_1553.cxx
   Fl_AFDX.cxx
+  Fl_ActiveX.cxx
   Fl_Group.cxx
   Fl_Help_View.cxx
   Fl_Image.cxx

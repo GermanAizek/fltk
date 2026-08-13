@@ -80,7 +80,8 @@ enum {
   UT_TEST_MIL_STD_1553,
   UT_TEST_AFDX,
   UT_TEST_SENSOR,
-  UT_TEST_CORE
+  UT_TEST_CORE,
+  UT_TEST_ACTIVEX
 };
 
 // This class helps to automatically register a new test with the unittest app.
