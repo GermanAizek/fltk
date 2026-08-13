@@ -255,6 +255,14 @@ SET (UNITTEST_SRCS
   unittest_pcm.cxx
   unittest_spi.cxx
   unittest_bluetooth.cxx
+  unittest_serial.cxx
+  unittest_sbus.cxx
+  unittest_crsf.cxx
+  unittest_ibus.cxx
+  unittest_xbus.cxx
+  unittest_msp.cxx
+  unittest_sumd.cxx
+  unittest_fport.cxx
   unittest_mqtt.cxx
   unittest_coap.cxx
   unittest_pwm.cxx

@@ -67,6 +67,13 @@ set(CPPFILES
   Fl_MQTT_Client.cxx
   Fl_CoAP_Client.cxx
   Fl_Serial_Port.cxx
+  Fl_SBUS.cxx
+  Fl_CRSF.cxx
+  Fl_IBUS.cxx
+  Fl_XBUS.cxx
+  Fl_MSP.cxx
+  Fl_SUMD.cxx
+  Fl_FPort.cxx
   Fl_Group.cxx
   Fl_Help_View.cxx
   Fl_Image.cxx
