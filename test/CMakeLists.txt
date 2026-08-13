@@ -267,6 +267,10 @@ SET (UNITTEST_SRCS
   unittest_coap.cxx
   unittest_pwm.cxx
   unittest_ppm.cxx
+  unittest_arinc429.cxx
+  unittest_arinc629.cxx
+  unittest_mil_std_1553.cxx
+  unittest_afdx.cxx
 )
 fl_create_example(unittests "${UNITTEST_SRCS}" "${GLDEMO_LIBS}")
 

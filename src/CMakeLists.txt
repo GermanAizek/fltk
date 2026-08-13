@@ -74,6 +74,10 @@ set(CPPFILES
   Fl_MSP.cxx
   Fl_SUMD.cxx
   Fl_FPort.cxx
+  Fl_ARINC429.cxx
+  Fl_ARINC629.cxx
+  Fl_MIL_STD_1553.cxx
+  Fl_AFDX.cxx
   Fl_Group.cxx
   Fl_Help_View.cxx
   Fl_Image.cxx
