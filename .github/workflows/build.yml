@@ -310,7 +310,7 @@ jobs:
         submodules: recursive
 
     - name: Build and Test in VM
-      uses: cross-platform-actions/action@v0.25.0
+      uses: cross-platform-actions/action@v1.4.0
       with:
         operating_system: ${{ matrix.os.name }}
         version: ${{ matrix.os.version }}
@@ -325,7 +325,7 @@ jobs:
             sudo pkgin -y update
             sudo pkgin -y install git cmake ninja-build pkgconf libXft libXcursor libXrender
           elif [ "${{ matrix.os.name }}" = "haiku" ]; then
-            pkgman install -y cmd:cmake cmd:ninja cmd:gcc cmd:make xlibproto x11 xext xft xinerama xcursor xfixes xrender mesa glu
+            pkgman install -y cmd:cmake cmd:ninja cmd:gcc cmd:make cmd:pkg_config libx11_devel libxext_devel libxft_devel libxinerama_devel libxcursor_devel libxfixes_devel libxrender_devel mesa_devel glu_devel
           fi
 
           cmake -B build -G Ninja \
@@ -412,11 +412,11 @@ jobs:
     runs-on: ubuntu-latest
     container: alpine:latest
     steps:
+    - name: Install dependencies
+      run: apk add build-base cmake ninja git libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxfixes-dev libxrender-dev mesa-dev glu-dev fontconfig-dev
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-    - name: Install dependencies
-      run: apk add build-base cmake ninja git libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxfixes-dev libxrender-dev mesa-dev glu-dev fontconfig-dev
     - name: Configure
       run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
     - name: Build
