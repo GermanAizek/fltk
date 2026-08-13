@@ -96,6 +96,13 @@ include(FindPkgConfig)
 # fl_debug_var(PKG_CONFIG_EXECUTABLE)
 # fl_debug_var(PKG_CONFIG_VERSION_STRING)
 
+if(PKG_CONFIG_FOUND AND UNIX AND NOT APPLE)
+  pkg_check_modules(PKG_PCSC libpcsclite)
+  if(PKG_PCSC_FOUND)
+    list(APPEND FLTK_BUILD_INCLUDE_DIRECTORIES ${PKG_PCSC_INCLUDE_DIRS})
+  endif()
+endif()
+
 #######################################################################
 # GitHub Issue #1001: try to "repair" the CMake Cache
 # GitHub Issue #1046: don't try "too hard" (see GitHub Issue)
@@ -188,6 +195,7 @@ endif(MSVC)
 # once we found the first suitable header file.
 
 fl_find_header(HAVE_DIRENT_H dirent.h)
+fl_find_header(HAVE_PCSC_WINSCARD_H PCSC/winscard.h)
 
 if(NOT HAVE_DIRENT_H)
   fl_find_header(HAVE_SYS_NDIR_H sys/ndir.h)

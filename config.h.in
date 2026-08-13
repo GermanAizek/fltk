@@ -292,6 +292,13 @@
 #cmakedefine HAVE_PTHREAD_H 1
 
 /*
+ * HAVE_PCSC_WINSCARD_H:
+ *
+ * Do we have the <PCSC/winscard.h> header file?
+ */
+#cmakedefine HAVE_PCSC_WINSCARD_H 1
+
+/*
  * Do we have PTHREAD_MUTEX_RECURSIVE?
  */
 

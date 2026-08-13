@@ -99,6 +99,7 @@ set(CPPFILES
   Fl_Message.cxx
   Fl_Multi_Label.cxx
   Fl_Native_File_Chooser.cxx
+  Fl_NFC.cxx
   Fl_Overlay_Window.cxx
   Fl_Pack.cxx
   Fl_Paged_Device.cxx
@@ -262,6 +263,7 @@ if(FLTK_USE_X11 AND NOT FLTK_USE_WAYLAND)
     drivers/X11/Fl_X11_Window_Driver.cxx
     drivers/Posix/Fl_Posix_System_Driver.cxx
     drivers/Unix/Fl_Unix_System_Driver.cxx
+    drivers/X11/Fl_X11_NFC_Driver.cxx
     drivers/Unix/Fl_Unix_Screen_Driver.cxx
     drivers/Xlib/Fl_Xlib_Copy_Surface_Driver.cxx
     drivers/Xlib/Fl_Xlib_Image_Surface_Driver.cxx
@@ -310,6 +312,7 @@ if(FLTK_USE_X11 AND NOT FLTK_USE_WAYLAND)
   set(DRIVER_HEADER_FILES
     drivers/Posix/Fl_Posix_System_Driver.H
     drivers/X11/Fl_X11_Screen_Driver.H
+    drivers/X11/Fl_X11_NFC_Driver.H
     drivers/X11/Fl_X11_Window_Driver.H
     drivers/Xlib/Fl_Xlib_Graphics_Driver.H
     drivers/Xlib/Fl_Font.H
@@ -338,6 +341,7 @@ elseif(FLTK_USE_WAYLAND)
     drivers/Wayland/Fl_Wayland_Window_Driver.cxx
     drivers/Unix/Fl_Unix_System_Driver.cxx
     drivers/Wayland/Fl_Wayland_Graphics_Driver.cxx
+    drivers/X11/Fl_X11_NFC_Driver.cxx
     drivers/Wayland/Fl_Wayland_Copy_Surface_Driver.cxx
     drivers/Wayland/Fl_Wayland_Image_Surface_Driver.cxx
     drivers/Wayland/fl_wayland_clipboard_dnd.cxx
@@ -368,6 +372,7 @@ elseif(FLTK_USE_WAYLAND)
   set(DRIVER_HEADER_FILES
     drivers/Posix/Fl_Posix_System_Driver.H
     drivers/Wayland/Fl_Wayland_Screen_Driver.H
+    drivers/X11/Fl_X11_NFC_Driver.H
     drivers/Wayland/Fl_Wayland_Window_Driver.H
     drivers/Wayland/Fl_Wayland_Graphics_Driver.H
     drivers/Cairo/Fl_Cairo_Graphics_Driver.H
@@ -405,6 +410,7 @@ elseif(APPLE)
     drivers/Quartz/Fl_Quartz_Image_Surface_Driver.cxx
     drivers/Cocoa/Fl_Cocoa_Window_Driver.cxx
     drivers/Cocoa/Fl_Cocoa_Screen_Driver.cxx
+    drivers/Cocoa/Fl_Cocoa_NFC_Driver.mm
     drivers/Cocoa/Fl_Cocoa_Camera_Driver.mm
     drivers/Posix/Fl_Posix_System_Driver.cxx
     drivers/Darwin/Fl_Darwin_System_Driver.cxx
@@ -415,6 +421,7 @@ elseif(APPLE)
     drivers/Posix/Fl_Posix_System_Driver.H
     drivers/Darwin/Fl_Darwin_System_Driver.H
     drivers/Cocoa/Fl_Cocoa_Screen_Driver.H
+    drivers/Cocoa/Fl_Cocoa_NFC_Driver.H
     drivers/Cocoa/Fl_Cocoa_Window_Driver.H
     drivers/Cocoa/Fl_MacOS_Sys_Menu_Bar_Driver.H
     drivers/Quartz/Fl_Quartz_Graphics_Driver.H
@@ -460,6 +467,7 @@ else()
     drivers/WinAPI/Fl_WinAPI_System_Driver.cxx
     drivers/WinAPI/Fl_WinAPI_Screen_Driver.cxx
     drivers/WinAPI/Fl_WinAPI_Window_Driver.cxx
+    drivers/WinAPI/Fl_WinAPI_NFC_Driver.cxx
     drivers/WinAPI/Fl_WinAPI_Camera_Driver.cxx
     drivers/WinAPI/Fl_WinAPI_Printer_Driver.cxx
     drivers/GDI/Fl_GDI_Graphics_Driver.cxx
@@ -481,6 +489,7 @@ else()
   set(DRIVER_HEADER_FILES
     drivers/WinAPI/Fl_WinAPI_System_Driver.H
     drivers/WinAPI/Fl_WinAPI_Screen_Driver.H
+    drivers/WinAPI/Fl_WinAPI_NFC_Driver.H
     drivers/WinAPI/Fl_WinAPI_Window_Driver.H
     drivers/GDI/Fl_GDI_Graphics_Driver.H
     drivers/GDI/Fl_Font.H
