@@ -20,6 +20,7 @@
 
 #include "Fl_Export.H"
 #include <string>
+#include <FL/platform_types.h>
 
 class Fl_CoAP_Client;
 
@@ -67,7 +68,7 @@ private:
   std::string recv_buffer_;
   
   // Internal socket handler for Fl::add_fd
-  static void socket_cb_static(int fd, void* data);
+  static void socket_cb_static(FL_SOCKET fd, void* data);
   void socket_cb();
   
   // CoAP Protocol helpers

@@ -133,7 +133,7 @@ int Fl_CoAP_Client::connect() {
 
     // 3. Register FLTK fd callback
 #if defined(_WIN32)
-    Fl::add_fd((SOCKET)socket_, FL_READ | FL_EXCEPT, socket_cb_static, this);
+    Fl::add_fd((int)socket_, FL_READ | FL_EXCEPT, socket_cb_static, this);
 #else
     Fl::add_fd((int)socket_, FL_READ | FL_EXCEPT, socket_cb_static, this);
 #endif
@@ -250,7 +250,7 @@ int Fl_CoAP_Client::send_packet(const void* data, int len) {
     return n == len ? 0 : -1;
 }
 
-void Fl_CoAP_Client::socket_cb_static(int fd, void* data) {
+void Fl_CoAP_Client::socket_cb_static(FL_SOCKET fd, void* data) {
     (void)fd;
     ((Fl_CoAP_Client*)data)->socket_cb();
 }
@@ -277,6 +277,7 @@ void Fl_CoAP_Client::handle_packet(const unsigned char* data, int len) {
     if (version != 1) return;
     
     int type = (data[0] >> 4) & 0x03;
+    (void)type;
     int tkl = data[0] & 0x0F;
     int code = data[1];
     int message_id = (data[2] << 8) | data[3];

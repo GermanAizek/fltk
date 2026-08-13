@@ -50,7 +50,7 @@ Fl_Sensor::Fl_Sensor(SensorType type) : type_(type), active_(false) {
     GUID sensorGuid;
     switch (type) {
       case Accelerometer: sensorGuid = SENSOR_TYPE_ACCELEROMETER_3D; break;
-      case Proximity: sensorGuid = SENSOR_TYPE_PROXIMITY; break;
+      case Proximity: sensorGuid = SENSOR_TYPE_HUMAN_PROXIMITY; break;
       case Compass: sensorGuid = SENSOR_TYPE_COMPASS_3D; break;
       case Magnetometer: sensorGuid = SENSOR_TYPE_COMPASS_3D; break; // Windows uses compass for mag
       case Gyroscope: sensorGuid = SENSOR_TYPE_GYROMETER_3D; break;

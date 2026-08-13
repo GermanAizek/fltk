@@ -171,7 +171,7 @@ int Fl_MQTT_Client::connect() {
 
     // 3. Register FLTK fd callback
 #if defined(_WIN32)
-    Fl::add_fd((SOCKET)socket_, FL_READ | FL_EXCEPT, socket_cb_static, this);
+    Fl::add_fd((int)socket_, FL_READ | FL_EXCEPT, socket_cb_static, this);
 #else
     Fl::add_fd((int)socket_, FL_READ | FL_EXCEPT, socket_cb_static, this);
 #endif
@@ -277,7 +277,7 @@ int Fl_MQTT_Client::subscribe(const char* topic) {
     payload.push_back(0); // QoS 0
 
     std::string packet;
-    packet.push_back(SUBSCRIBE | 0x02);
+    packet.push_back(static_cast<char>(SUBSCRIBE | 0x02));
     encode_remaining_length(packet, (int)(variable_header.length() + payload.length()));
     packet.append(variable_header);
     packet.append(payload);
@@ -299,7 +299,7 @@ int Fl_MQTT_Client::unsubscribe(const char* topic) {
     append_string(payload, std::string(topic));
 
     std::string packet;
-    packet.push_back(UNSUBSCRIBE | 0x02);
+    packet.push_back(static_cast<char>(UNSUBSCRIBE | 0x02));
     encode_remaining_length(packet, (int)(variable_header.length() + payload.length()));
     packet.append(variable_header);
     packet.append(payload);
@@ -317,7 +317,7 @@ int Fl_MQTT_Client::send_packet(const void* data, int len) {
     return n == len ? 0 : -1;
 }
 
-void Fl_MQTT_Client::socket_cb_static(int fd, void* data) {
+void Fl_MQTT_Client::socket_cb_static(FL_SOCKET fd, void* data) {
     (void)fd;
     ((Fl_MQTT_Client*)data)->socket_cb();
 }
@@ -377,7 +377,6 @@ void Fl_MQTT_Client::handle_packet(const unsigned char* data, int len) {
     unsigned char type = data[0] & 0xF0;
     
     // Find where the variable header starts
-    int multiplier = 1;
     size_t idx = 1;
     while (idx < (size_t)len && idx <= 4) {
         unsigned char b = data[idx++];
