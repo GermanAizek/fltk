@@ -248,6 +248,7 @@ SET (UNITTEST_SRCS
   unittest_viewport.cxx
   unittest_scrollbarsize.cxx
   unittest_schemes.cxx
+  unittest_sensor.cxx
   unittest_terminal.cxx
   unittest_camera.cxx
   unittest_gpio.cxx

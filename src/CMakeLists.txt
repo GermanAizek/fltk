@@ -63,6 +63,7 @@ set(CPPFILES
   Fl_PCM.cxx
   Fl_SPI.cxx
   Fl_Bluetooth.cxx
+  Fl_Sensor.cxx
   Fl_PPM.cxx
   Fl_MQTT_Client.cxx
   Fl_CoAP_Client.cxx
@@ -720,6 +721,7 @@ if(APPLE AND NOT FLTK_BACKEND_X11)
     drivers/Cocoa/Fl_Cocoa_Printer_Driver.mm
     Fl_Native_File_Chooser_MAC.mm
     Fl_MacOS_Sys_Menu_Bar.mm
+    Fl_Sensor_mac.mm
   )
   if(FLTK_HAVE_PEN_SUPPORT)
     list(APPEND MMFILES
