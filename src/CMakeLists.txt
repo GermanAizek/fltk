@@ -60,6 +60,7 @@ set(CPPFILES
   Fl_Gpio.cxx
   Fl_PWM.cxx
   Fl_I2C.cxx
+  Fl_PCM.cxx
   Fl_SPI.cxx
   Fl_Bluetooth.cxx
   Fl_PPM.cxx

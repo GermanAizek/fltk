@@ -252,6 +252,7 @@ SET (UNITTEST_SRCS
   unittest_camera.cxx
   unittest_gpio.cxx
   unittest_i2c.cxx
+  unittest_pcm.cxx
   unittest_spi.cxx
   unittest_bluetooth.cxx
   unittest_mqtt.cxx
