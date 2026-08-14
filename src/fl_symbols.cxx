@@ -26,9 +26,9 @@
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <FL/math.h>
+#include "flstring.h"
 
-#include <string>
-#include <unordered_map>
+#include <cstring>
 
 // fl_return_arrow() is defined in src/Fl_Return_Button.cxx,
 // it is not public (defined in a header) and not "exported" though.
@@ -51,8 +51,9 @@ struct Symbol {
   uint8_t call_with_rect : 1;
 };
 
-// Defined after the drawing functions so the initializer list can reference them.
-static std::unordered_map<std::string, Symbol>& symbol_table();
+static const Symbol *find_symbol(const char *name);
+static void set_symbol(const char *name, const Symbol &sym);
+static void remove_symbol(const char *name);
 
 /* *************** The routines seen by the user ************************ */
 
@@ -78,8 +79,7 @@ static std::unordered_map<std::string, Symbol>& symbol_table();
 */
 int fl_add_symbol(const char* name, void (*drawit)(Fl_Color c), int scalable)
 {
-  auto& t = symbol_table();
-  t[name] = Symbol(drawit, scalable);
+  set_symbol(name, Symbol(drawit, scalable));
   return 1;
 }
 
@@ -106,8 +106,7 @@ int fl_add_symbol(const char* name, void (*drawit)(Fl_Color c), int scalable)
 int fl_add_symbol(const char* name, void (*draw_in_rect)(int x, int y, int w, int h, Fl_Color c),
                   int scalable)
 {
-  auto& t = symbol_table();
-  t[name] = Symbol(draw_in_rect, scalable);
+  set_symbol(name, Symbol(draw_in_rect, scalable));
   return 1;
 }
 
@@ -121,8 +120,7 @@ int fl_add_symbol(const char* name, void (*draw_in_rect)(int x, int y, int w, in
 */
 int fl_remove_symbol(const char* name)
 {
-  auto& t = symbol_table();
-  t.erase(name);
+  remove_symbol(name);
   return 1;
 }
 
@@ -214,18 +212,16 @@ int fl_draw_symbol(const char* label, int x, int y, int w, int h, Fl_Color col)
       p--;
       break;
   }
-  auto& t = symbol_table();
-  auto it = t.find(p);
-  if (it == t.end())
+  const Symbol *sym = find_symbol(p);
+  if (!sym)
     return 0;
-  const Symbol& sym = it->second;
 
-  if (sym.call_with_rect && !sym.scalable) {
-    sym.draw_in_rect(x, y, w, h, col);
+  if (sym->call_with_rect && !sym->scalable) {
+    sym->draw_in_rect(x, y, w, h, col);
   } else {
     fl_push_matrix();
     fl_translate(x + w / 2, y + h / 2);
-    if (sym.scalable) {
+    if (sym->scalable) {
       int ws = w, hs = h;
       if (equalscale) {
         if (ws < hs)
@@ -240,10 +236,10 @@ int fl_draw_symbol(const char* label, int x, int y, int w, int h, Fl_Color col)
       if (flip_y)
         fl_scale(1.0, -1.0);
     }
-    if (sym.call_with_rect)
-      sym.draw_in_rect(x, y, w, h, col);
+    if (sym->call_with_rect)
+      sym->draw_in_rect(x, y, w, h, col);
     else
-      sym.drawit(col);
+      sym->drawit(col);
     fl_pop_matrix();
   }
   return 1;
@@ -1107,50 +1103,117 @@ static void draw_export(Fl_Color col)
   fl_pop_matrix();
 }
 
+struct BuiltinSymbol {
+  const char *name;
+  Symbol symbol;
+};
+
+struct DynamicSymbol {
+  char name[64];
+  Symbol symbol;
+  bool removed;
+};
+
+static DynamicSymbol dynamic_symbols[64];
+static size_t num_dynamic_symbols = 0;
+
 // clang-format off
-static std::unordered_map<std::string, Symbol> &symbol_table() {
-  static std::unordered_map<std::string, Symbol> t = {
-    { "",            { draw_arrow1,      1 } },
-    { "->",          { draw_arrow1,      1 } },
-    { ">",           { draw_arrow2,      1 } },
-    { ">>",          { draw_arrow3,      1 } },
-    { ">|",          { draw_arrowbar,    1 } },
-    { ">[]",         { draw_arrowbox,    1 } },
-    { "|>",          { draw_bararrow,    1 } },
-    { "<-",          { draw_arrow01,     1 } },
-    { "<",           { draw_arrow02,     1 } },
-    { "<<",          { draw_arrow03,     1 } },
-    { "|<",          { draw_0arrowbar,   1 } },
-    { "[]<",         { draw_0arrowbox,   1 } },
-    { "<|",          { draw_0bararrow,   1 } },
-    { "<->",         { draw_doublearrow, 1 } },
-    { "-->",         { draw_arrow,       1 } },
-    { "+",           { draw_plus,        1 } },
-    { "->|",         { draw_arrow1bar,   1 } },
-    { "arrow",       { draw_arrow,       1 } },
-    { "returnarrow", { draw_returnarrow, 0 } },
-    { "square",      { draw_square,      1 } },
-    { "circle",      { draw_circle,      1 } },
-    { "line",        { draw_line,        1 } },
-    { "plus",        { draw_plus,        1 } },
-    { "menu",        { draw_menu,        1 } },
-    { "UpArrow",     { draw_uparrow,     1 } },
-    { "DnArrow",     { draw_downarrow,   1 } },
-    { "||",          { draw_doublebar,   1 } },
-    { "search",      { draw_search,      1 } },
-    { "FLTK",        { draw_fltk,        1 } },
-    { "filenew",     { draw_filenew,     1 } },
-    { "fileopen",    { draw_fileopen,    1 } },
-    { "filesave",    { draw_filesave,    1 } },
-    { "filesaveas",  { draw_filesaveas,  1 } },
-    { "fileprint",   { draw_fileprint,   1 } },
-    { "refresh",     { draw_refresh,     1 } },
-    { "reload",      { draw_reload,      1 } },
-    { "undo",        { draw_undo,        1 } },
-    { "redo",        { draw_redo,        1 } },
-    { "import",      { draw_import,      1 } },
-    { "export",      { draw_export,      1 } },
-  };
-  return t;
-}
+static const BuiltinSymbol builtin_symbols[] = {
+  { "",            { draw_arrow1,      1 } },
+  { "->",          { draw_arrow1,      1 } },
+  { ">",           { draw_arrow2,      1 } },
+  { ">>",          { draw_arrow3,      1 } },
+  { ">|",          { draw_arrowbar,    1 } },
+  { ">[]",         { draw_arrowbox,    1 } },
+  { "|>",          { draw_bararrow,    1 } },
+  { "<-",          { draw_arrow01,     1 } },
+  { "<",           { draw_arrow02,     1 } },
+  { "<<",          { draw_arrow03,     1 } },
+  { "|<",          { draw_0arrowbar,   1 } },
+  { "[]<",         { draw_0arrowbox,   1 } },
+  { "<|",          { draw_0bararrow,   1 } },
+  { "<->",         { draw_doublearrow, 1 } },
+  { "-->",         { draw_arrow,       1 } },
+  { "+",           { draw_plus,        1 } },
+  { "->|",         { draw_arrow1bar,   1 } },
+  { "arrow",       { draw_arrow,       1 } },
+  { "returnarrow", { draw_returnarrow, 0 } },
+  { "square",      { draw_square,      1 } },
+  { "circle",      { draw_circle,      1 } },
+  { "line",        { draw_line,        1 } },
+  { "plus",        { draw_plus,        1 } },
+  { "menu",        { draw_menu,        1 } },
+  { "UpArrow",     { draw_uparrow,     1 } },
+  { "DnArrow",     { draw_downarrow,   1 } },
+  { "||",          { draw_doublebar,   1 } },
+  { "search",      { draw_search,      1 } },
+  { "FLTK",        { draw_fltk,        1 } },
+  { "filenew",     { draw_filenew,     1 } },
+  { "fileopen",    { draw_fileopen,    1 } },
+  { "filesave",    { draw_filesave,    1 } },
+  { "filesaveas",  { draw_filesaveas,  1 } },
+  { "fileprint",   { draw_fileprint,   1 } },
+  { "refresh",     { draw_refresh,     1 } },
+  { "reload",      { draw_reload,      1 } },
+  { "undo",        { draw_undo,        1 } },
+  { "redo",        { draw_redo,        1 } },
+  { "import",      { draw_import,      1 } },
+  { "export",      { draw_export,      1 } },
+};
 // clang-format on
+static const size_t num_builtin_symbols = sizeof(builtin_symbols) / sizeof(builtin_symbols[0]);
+
+static const Symbol *find_symbol(const char *name) {
+  if (!name) return nullptr;
+  for (size_t i = num_dynamic_symbols; i > 0; --i) {
+    if (strcmp(dynamic_symbols[i - 1].name, name) == 0) {
+      if (dynamic_symbols[i - 1].removed) return nullptr;
+      return &dynamic_symbols[i - 1].symbol;
+    }
+  }
+  for (size_t i = 0; i < num_builtin_symbols; ++i) {
+    if (strcmp(builtin_symbols[i].name, name) == 0)
+      return &builtin_symbols[i].symbol;
+  }
+  return nullptr;
+}
+
+static void set_symbol(const char *name, const Symbol &sym) {
+  if (!name) return;
+  for (size_t i = 0; i < num_dynamic_symbols; ++i) {
+    if (strcmp(dynamic_symbols[i].name, name) == 0) {
+      dynamic_symbols[i].symbol = sym;
+      dynamic_symbols[i].removed = false;
+      return;
+    }
+  }
+  if (num_dynamic_symbols < sizeof(dynamic_symbols) / sizeof(dynamic_symbols[0])) {
+    DynamicSymbol &ds = dynamic_symbols[num_dynamic_symbols++];
+    memset(ds.name, 0, sizeof(ds.name));
+    strlcpy(ds.name, name, sizeof(ds.name));
+    ds.symbol = sym;
+    ds.removed = false;
+  }
+}
+
+static void remove_symbol(const char *name) {
+  if (!name) return;
+  for (size_t i = 0; i < num_dynamic_symbols; ++i) {
+    if (strcmp(dynamic_symbols[i].name, name) == 0) {
+      dynamic_symbols[i].removed = true;
+      return;
+    }
+  }
+  for (size_t i = 0; i < num_builtin_symbols; ++i) {
+    if (strcmp(builtin_symbols[i].name, name) == 0) {
+      if (num_dynamic_symbols < sizeof(dynamic_symbols) / sizeof(dynamic_symbols[0])) {
+        DynamicSymbol &ds = dynamic_symbols[num_dynamic_symbols++];
+        memset(ds.name, 0, sizeof(ds.name));
+        strlcpy(ds.name, name, sizeof(ds.name));
+        ds.symbol = Symbol();
+        ds.removed = true;
+      }
+      return;
+    }
+  }
+}
