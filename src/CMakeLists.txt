@@ -78,6 +78,17 @@ set(CPPFILES
   Fl_FPort.cxx
   Fl_ARINC429.cxx
   Fl_ARINC629.cxx
+  Fl_ARINC717.cxx
+  Fl_IRIG106_Ch10.cxx
+  Fl_ARINC825.cxx
+  Fl_SpaceWire.cxx
+  Fl_ARINC818.cxx
+  Fl_ARINC708.cxx
+  Fl_ASTERIX.cxx
+  Fl_ADSB_1090ES.cxx
+  Fl_MAVLink2.cxx
+  Fl_Cyphal.cxx
+  Fl_STANAG4586.cxx
   Fl_MIL_STD_1553.cxx
   Fl_AFDX.cxx
   Fl_ActiveX.cxx
