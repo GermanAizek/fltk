@@ -273,6 +273,17 @@ SET (UNITTEST_SRCS
   unittest_arinc629.cxx
   unittest_mil_std_1553.cxx
   unittest_afdx.cxx
+  unittest_arinc717.cxx
+  unittest_irig106.cxx
+  unittest_arinc825.cxx
+  unittest_spacewire.cxx
+  unittest_arinc818.cxx
+  unittest_arinc708.cxx
+  unittest_asterix.cxx
+  unittest_adsb1090.cxx
+  unittest_mavlink2.cxx
+  unittest_cyphal.cxx
+  unittest_stanag4586.cxx
   unittest_activex.cxx
   unittest_nfc.cxx
   unittest_multimedia.cxx
