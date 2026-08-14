@@ -25,9 +25,8 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
-#include <set>
-#include <map>
-#include <sstream>
+#include <vector>
+#include <utility>
 
 class Node;
 struct Fd_Identifier_Tree;
@@ -88,23 +87,23 @@ private:
   /// Link Code_Writer class to the project.
   Project &proj_;
 
-  /// string stream buffer for generating C++ code file content
-  std::ostringstream code_buffer { };
-  /// string stream buffer for generating C++ header file content
-  std::ostringstream header_buffer { };
+  /// string buffer for generating C++ code file content
+  std::string code_buffer { };
+  /// string buffer for generating C++ header file content
+  std::string header_buffer { };
 
   std::string header_filename { };
   std::string code_filename { };
   std::string header_guard_macro_ { };
 
-  /// tree of unique but human-readable identifiers
-  std::map<std::string, void*> unique_id_list { };
-  /// searchable text tree for text that is only written once to the header file
-  std::set<std::string> text_in_header { };
-  /// searchable text tree for text that is only written once to the code file
-  std::set<std::string> text_in_code { };
-  /// searchable tree for pointers that are only written once to the code file
-  std::set<void*> ptr_in_code { };
+  /// list of unique but human-readable identifiers
+  std::vector<std::pair<std::string, void*>> unique_id_list { };
+  /// text that is only written once to the header file
+  std::vector<std::string> text_in_header { };
+  /// text that is only written once to the code file
+  std::vector<std::string> text_in_code { };
+  /// pointers that are only written once to the code file
+  std::vector<void*> ptr_in_code { };
 
   /// crc32 for blocks of text written to the code file
   fluid::CRC32 crc_ { };
@@ -117,9 +116,9 @@ private:
   int flush();
 
   /// Return the current write position in the code output stream.
-  int code_pos() { return (int)code_buffer.tellp(); }
+  int code_pos() { return (int)code_buffer.size(); }
   /// Return the current write position in the header output stream.
-  int header_pos() { return (int)header_buffer.tellp(); }
+  int header_pos() { return (int)header_buffer.size(); }
 
 protected:
   int crc_puts(const std::string& text);
@@ -174,9 +173,9 @@ public:
   void write_epilogue_comment();
 
   /// Return the generated source code as a string (valid after write_code() with to_codeview=true).
-  std::string code_string() const { return code_buffer.str(); }
+  std::string code_string() const { return code_buffer; }
   /// Return the generated header code as a string (valid after write_code() with to_codeview=true).
-  std::string header_string() const { return header_buffer.str(); }
+  std::string header_string() const { return header_buffer; }
 
   /// Return the predefined header guard, or generate one based on the header filename if not set.
   std::string header_guard_macro();

@@ -74,18 +74,18 @@ FL_EXPORT extern int fl_vsnprintf(char *, size_t, const char *, va_list ap);
 /*
  * strlcpy() and strlcat() are some really useful BSD string functions
  * that work the way strncpy() and strncat() *should* have worked.
+ * We always use our own implementation (fl_strlcat/fl_strlcpy) to avoid
+ * missing interceptors in sanitizers (e.g. MemorySanitizer) with libc versions.
  */
 
 FL_EXPORT extern size_t fl_strlcat(char *, const char *, size_t);
-#  ifndef HAVE_STRLCAT
-#    define strlcat fl_strlcat
-#  endif /* !HAVE_STRLCAT */
+#  undef strlcat
+#  define strlcat fl_strlcat
 
 /* promoted to <FL/fl_string_functions.h> */
 /* FL_EXPORT extern size_t fl_strlcpy(char *, const char *, size_t); */
-#  ifndef HAVE_STRLCPY
-#    define strlcpy fl_strlcpy
-#  endif /* !HAVE_STRLCPY */
+#  undef strlcpy
+#  define strlcpy fl_strlcpy
 
 /*
  * Locale independent ASCII string compare function,

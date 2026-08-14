@@ -36,29 +36,17 @@ char *fl_strdup(const char *s) {
 /*
  * 'fl_strlcpy()' - Safely copy two strings.
  */
-size_t                          /* O - Length of string */
+size_t                          /* O - Length of source string */
 fl_strlcpy(char       *dst,     /* O - Destination string */
            const char *src,     /* I - Source string */
            size_t      size) {  /* I - Size of destination string buffer */
-  size_t        srclen;         /* Length of source string */
+  size_t        srclen = strlen(src);
 
-
-  /*
-   * Figure out how much room is needed...
-   */
-
-  size --;
-
-  srclen = strlen(src);
-
-  /*
-   * Copy the appropriate amount...
-   */
-
-  if (srclen > size) srclen = size;
-
-  memcpy(dst, src, srclen);
-  dst[srclen] = '\0';
+  if (size != 0) {
+    size_t copylen = (srclen >= size) ? size - 1 : srclen;
+    memcpy(dst, src, copylen);
+    dst[copylen] = '\0';
+  }
 
   return (srclen);
 }

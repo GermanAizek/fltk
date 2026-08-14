@@ -99,18 +99,22 @@ std::string Code_Writer::unique_id(void* o, const std::string& type, const std::
     while (is_id(*n) && (q < q_end)) *q++ = *n++;
   }
   *q = 0;
-  // okay, search the tree and see if the name was already used:
+  // okay, search the list and see if the name was already used:
   int which = 0;
   for (;;) {
-    auto it = unique_id_list.find(buffer);
-    // If the id does not exist, add it to the map
-    if (it == unique_id_list.end()) {
-      it = unique_id_list.insert(std::make_pair(buffer, o)).first;
-      return it->first;
+    bool found = false;
+    for (const auto &entry : unique_id_list) {
+      if (entry.first == buffer) {
+        if (entry.second == o) {
+          return entry.first;
+        }
+        found = true;
+        break;
+      }
     }
-    // If it does exist, and the pointers are the same, just return it.
-    if (it->second == o) {
-      return it->first;
+    if (!found) {
+      unique_id_list.emplace_back(buffer, o);
+      return unique_id_list.back().first;
     }
     // Else repeat until we have a new id,
     sprintf(q,"%x",++which);
@@ -160,11 +164,11 @@ std::string Code_Writer::indent_plus(int offset) const {
  \return 1 if the text was added to the file, 0 if it was previously written.
  */
 int Code_Writer::write_h_once(const std::string& code) {
-  if (text_in_header.find(code) != text_in_header.end()) {
-    return 0;
+  for (const auto &s : text_in_header) {
+    if (s == code) return 0;
   }
-  header_buffer << code << "\n";
-  text_in_header.insert(code);
+  header_buffer += code + "\n";
+  text_in_header.push_back(code);
   return 1;
 }
 
@@ -173,14 +177,25 @@ int Code_Writer::write_h_once(const std::string& code) {
  \param[in] code block of code, newline characters will be appended
  */
 void Code_Writer::write_block_h_once(const std::string& code) {
-  std::istringstream iss(code);
-  std::string line;
-  while (std::getline(iss, line)) {
+  size_t start = 0;
+  while (start < code.size()) {
+    size_t end = code.find('\n', start);
+    if (end == std::string::npos) {
+      std::string line = code.substr(start);
+      if (line.empty()) {
+        write_h("\n");
+      } else {
+        write_h_once(line);
+      }
+      break;
+    }
+    std::string line = code.substr(start, end - start);
     if (line.empty()) {
       write_h("\n");
     } else {
       write_h_once(line);
     }
+    start = end + 1;
   }
 }
 
@@ -190,15 +205,15 @@ void Code_Writer::write_block_h_once(const std::string& code) {
  \return 1 if the text was added to the file, 0 if it was previously written.
  */
 int Code_Writer::write_c_once(const std::string& code) {
-  if (text_in_header.find(code) != text_in_header.end()) {
-    return 0;
+  for (const auto &s : text_in_header) {
+    if (s == code) return 0;
   }
-  if (text_in_code.find(code) != text_in_code.end()) {
-    return 0;
+  for (const auto &s : text_in_code) {
+    if (s == code) return 0;
   }
   crc_puts(code);
   crc_putc('\n');
-  text_in_code.insert(code);
+  text_in_code.push_back(code);
   return 1;
 }
 
@@ -209,10 +224,10 @@ int Code_Writer::write_c_once(const std::string& code) {
  \return true if found in the tree, false if added to the tree
  */
 bool Code_Writer::c_contains(void *pp) {
-  if (ptr_in_code.find(pp) != ptr_in_code.end()) {
-    return true;
+  for (void *p : ptr_in_code) {
+    if (p == pp) return true;
   }
-  ptr_in_code.insert(pp);
+  ptr_in_code.push_back(pp);
   return false;
 }
 
@@ -388,7 +403,7 @@ void Code_Writer::write_cc(const std::string& indent, const std::string& code, c
  \param[in] code string containing the code to write
  */
 void Code_Writer::write_h(const std::string& code) {
-  header_buffer << code;
+  header_buffer += code;
 }
 
 /**
@@ -767,17 +782,17 @@ int Code_Writer::flush()
   // Write code output: to file if filename provided, to stdout otherwise
   bool code_ok = true;
   if (!code_filename.empty()) {
-    code_ok = write_file_if_changed(code_filename, code_buffer.str());
+    code_ok = write_file_if_changed(code_filename, code_buffer);
   } else {
-    fputs(code_buffer.str().c_str(), stdout);
+    fputs(code_buffer.c_str(), stdout);
   }
 
   // Write header output: to file if filename provided, to stdout otherwise
   bool header_ok = true;
   if (!header_filename.empty()) {
-    header_ok = write_file_if_changed(header_filename, header_buffer.str());
+    header_ok = write_file_if_changed(header_filename, header_buffer);
   } else {
-    fputs(header_buffer.str().c_str(), stdout);
+    fputs(header_buffer.c_str(), stdout);
   }
 
   return code_ok && header_ok ? 1 : 0;
@@ -819,7 +834,7 @@ Code_Writer::Code_Writer(Project &proj)
  */
 void Code_Writer::tag(proj::Mergeback::Tag prev_type, proj::Mergeback::Tag next_type, unsigned short uid) {
   if (proj_.write_mergeback_data) {
-    code_buffer << Mergeback::format_tag(prev_type, next_type, uid, crc_.value());
+    code_buffer += Mergeback::format_tag(prev_type, next_type, uid, crc_.value());
   }
   crc_.reset();
 }
@@ -833,7 +848,7 @@ int Code_Writer::crc_puts(const std::string& text) {
   if (proj_.write_mergeback_data) {
     crc_.update(text);
   }
-  code_buffer << text;
+  code_buffer += text;
   return 0;
 }
 
@@ -848,7 +863,7 @@ int Code_Writer::crc_putc(int c) {
     char cc = (char)c;
     crc_.update(fluid::string_view((const char*)&cc, 1));
   }
-  code_buffer << (char)c;
+  code_buffer += (char)c;
   return c;
 }
 
@@ -990,7 +1005,7 @@ std::string Code_Writer::header_guard_macro()
   }
   header_guard_macro_ = proj_.include_guard;
   if (header_guard_macro_.empty()) {
-    std::ostringstream macro_name;
+    std::string macro_name;
     std::string header_name;
     const char* a = nullptr;
     if (write_codeview) {
@@ -1003,21 +1018,25 @@ std::string Code_Writer::header_guard_macro()
     int len = 0;
     unsigned ucs = fl_utf8decode(a, b, &len);
     if (!fl_ascii_isalpha(ucs) && (ucs != '_'))
-      macro_name << '_';
+      macro_name += '_';
     while (a < b) {
       ucs = fl_utf8decode(a, b, &len);
       if (ucs > 0x0000ffff) { // large unicode character
-        macro_name << "\\U" << std::setw(8) << std::setfill('0') << std::hex << ucs;
+        char buf[16];
+        snprintf(buf, sizeof(buf), "\\U%08x", ucs);
+        macro_name += buf;
       } else if (ucs > 127) { // small unicode character or not an ASCI letter or digit
-        macro_name << "\\u" << std::setw(4) << std::setfill('0') << std::hex << ucs;
+        char buf[16];
+        snprintf(buf, sizeof(buf), "\\u%04x", ucs);
+        macro_name += buf;
       } else if (!fl_ascii_isalnum(ucs)) {
-        macro_name << '_';
+        macro_name += '_';
       } else {
-        macro_name << (char)ucs;
+        macro_name += (char)ucs;
       }
       a += len;
     }
-    header_guard_macro_ = macro_name.str();
+    header_guard_macro_ = macro_name;
   }
   return header_guard_macro_;
 }

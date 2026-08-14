@@ -24,34 +24,16 @@
 size_t                          /* O - Length of string */
 fl_strlcat(char       *dst,     /* O - Destination string */
            const char *src,     /* I - Source string */
-           size_t     size) {   /* I - Size of destination string buffer */
-  size_t        srclen;         /* Length of source string */
-  size_t        dstlen;         /* Length of destination string */
+           size_t      size) {  /* I - Size of destination string buffer */
+  size_t        srclen = strlen(src);
+  size_t        dstlen = strlen(dst);
 
+  if (dstlen >= size)
+    return (size + srclen);
 
- /*
-  * Figure out how much room is left...
-  */
-
-  dstlen = strlen(dst);
-  size   -= dstlen + 1;
-
-  if (!size) return (dstlen);   /* No room, return immediately... */
-
- /*
-  * Figure out how much room is needed...
-  */
-
-  srclen = strlen(src);
-
- /*
-  * Copy the appropriate amount...
-  */
-
-  if (srclen > size) srclen = size;
-
-  memcpy(dst + dstlen, src, srclen);
-  dst[dstlen + srclen] = '\0';
+  size_t copylen = (srclen >= size - dstlen) ? (size - dstlen - 1) : srclen;
+  memcpy(dst + dstlen, src, copylen);
+  dst[dstlen + copylen] = '\0';
 
   return (dstlen + srclen);
 }
