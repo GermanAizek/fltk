@@ -413,15 +413,72 @@ jobs:
     runs-on: ubuntu-latest
     container: alpine:latest
     steps:
-    - name: Install dependencies
-      run: apk add build-base cmake ninja git libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxfixes-dev libxrender-dev mesa-dev glu-dev fontconfig-dev
-    - uses: actions/checkout@v4
+    - name: Install prerequisites
+      run: |
+        apk update
+        apk add --no-cache \
+          bash \
+          build-base \
+          cmake \
+          ninja \
+          git \
+          nodejs \
+          pkgconf \
+          alsa-lib-dev \
+          fontconfig-dev \
+          freetype-dev \
+          glu-dev \
+          glew-dev \
+          mesa-dev \
+          libx11-dev \
+          libxcursor-dev \
+          libxext-dev \
+          libxfixes-dev \
+          libxft-dev \
+          libxinerama-dev \
+          libxrender-dev \
+          libjpeg-turbo-dev \
+          libpng-dev \
+          zlib-dev \
+          cairo-dev \
+          pango-dev \
+          wayland-dev \
+          wayland-protocols \
+          libxkbcommon-dev \
+          dbus-dev \
+          libdecor-dev
+
+    - uses: actions/checkout@v6
       with:
         submodules: recursive
-    - name: Configure
-      run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+    - name: Create Build Environment
+      run: cmake -E make_directory ${{github.workspace}}/build
+
+    - name: Configure CMake
+      shell: bash
+      working-directory: ${{github.workspace}}/build
+      run: |
+        cmake $GITHUB_WORKSPACE \
+        -G Ninja \
+        -D CMAKE_BUILD_TYPE=$BUILD_TYPE \
+        -D CMAKE_CXX_STANDARD=11 \
+        -D CMAKE_CXX_EXTENSIONS=OFF \
+        -D CMAKE_C_FLAGS_INIT="-Wall -Wunused" \
+        -D CMAKE_CXX_FLAGS_INIT="-Wall -Wunused -Wsuggest-override" \
+        -D FLTK_BUILD_SHARED_LIBS:BOOL=ON \
+        -D FLTK_BUILD_FORMS=ON
+
     - name: Build
-      run: cmake --build build
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: cmake --build . --config $BUILD_TYPE
+
+    - name: Unittest
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: ./bin/test/unittests --core
+
 
   build-android:
     runs-on: ubuntu-latest
