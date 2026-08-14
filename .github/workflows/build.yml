@@ -137,6 +137,11 @@ jobs:
       shell: bash
       run: cmake --build . --config $BUILD_TYPE
 
+    - name: Unittest
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: ./bin/test/unittests --core
+
   build-wayland-arm64:
 
     runs-on: ubuntu-24.04-arm
@@ -190,6 +195,11 @@ jobs:
       shell: bash
       run: cmake --build . --config $BUILD_TYPE
 
+    - name: Unittest
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: ./bin/test/unittests --core
+
   build-macos:
     runs-on: macos-latest
 
@@ -229,6 +239,11 @@ jobs:
       shell: bash
       run: cmake --build . --config $BUILD_TYPE
 
+    - name: Unittest
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: ./bin/test/unittests --core
+
   build-windows:
     # This build config has been minimized. Please see other configs for further advice.
     # We don't use the "bash" shell (defaults to PowerShell) and avoid using environment
@@ -264,6 +279,15 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: cmake --build . --config Release
 
+    - name: Unittest
+      working-directory: ${{github.workspace}}/build
+      run: |
+        if (Test-Path .\bin\test\Release\unittests.exe) {
+          .\bin\test\Release\unittests.exe --core
+        } else {
+          .\bin\test\unittests.exe --core
+        }
+
   build-windows-arm:
 
     # Note: For details see above (job "build-windows")
@@ -290,6 +314,16 @@ jobs:
     - name: Build
       working-directory: ${{github.workspace}}/build
       run: cmake --build . --config Release
+
+    - name: Unittest
+      working-directory: ${{github.workspace}}/build
+      run: |
+        if (Test-Path .\bin\test\Release\unittests.exe) {
+          .\bin\test\Release\unittests.exe --core
+        } else {
+          .\bin\test\unittests.exe --core
+        }
+
 
   build-bsd:
     runs-on: ubuntu-latest
