@@ -82,7 +82,21 @@ enum {
   UT_TEST_SENSOR,
   UT_TEST_CORE,
   UT_TEST_ACTIVEX,
-  UT_TEST_NFC
+  UT_TEST_NFC,
+  UT_TEST_MULTIMEDIA,
+  UT_TEST_MEDIA_PLAYER,
+  UT_TEST_VIDEO_WIDGET,
+  UT_TEST_MEDIA_CAPTURE_SESSION,
+  UT_TEST_AUDIO_INPUT,
+  UT_TEST_AUDIO_OUTPUT,
+  UT_TEST_IMAGE_CAPTURE,
+  UT_TEST_MEDIA_RECORDER,
+  UT_TEST_VIDEO_SINK,
+  UT_TEST_AUDIO_SINK,
+  UT_TEST_SCREEN_CAPTURE,
+  UT_TEST_WINDOW_CAPTURE,
+  UT_TEST_VIDEO_FRAME_INPUT,
+  UT_TEST_AUDIO_BUFFER_INPUT
 };
 
 // This class helps to automatically register a new test with the unittest app.
@@ -192,7 +206,7 @@ public:
  */
 #define TEST(SUITE, CASE) \
   static bool UT_CONCAT(test_call_, __LINE__)(); \
-  Ut_Test UT_CONCAT(test__, __LINE__)(#SUITE, #CASE, UT_CONCAT(test_call_, __LINE__)); \
+  static Ut_Test UT_CONCAT(test__, __LINE__)(#SUITE, #CASE, UT_CONCAT(test_call_, __LINE__)); \
   static bool UT_CONCAT(test_call_, __LINE__)()
 
 /** Create a test case where the result is expected to be a boolena with the value true */

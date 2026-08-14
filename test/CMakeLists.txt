@@ -275,6 +275,20 @@ SET (UNITTEST_SRCS
   unittest_afdx.cxx
   unittest_activex.cxx
   unittest_nfc.cxx
+  unittest_multimedia.cxx
+  unittest_media_player.cxx
+  unittest_video_widget.cxx
+  unittest_media_capture_session.cxx
+  unittest_audio_input.cxx
+  unittest_audio_output.cxx
+  unittest_image_capture.cxx
+  unittest_media_recorder.cxx
+  unittest_video_sink.cxx
+  unittest_audio_sink.cxx
+  unittest_screen_capture.cxx
+  unittest_window_capture.cxx
+  unittest_video_frame_input.cxx
+  unittest_audio_buffer_input.cxx
 )
 fl_create_example(unittests "${UNITTEST_SRCS}" "${GLDEMO_LIBS}")
 

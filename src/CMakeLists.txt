@@ -98,6 +98,20 @@ set(CPPFILES
   Fl_Menu_global.cxx
   Fl_Message.cxx
   Fl_Multi_Label.cxx
+  Fl_Multimedia.cxx
+  Fl_Media_Player.cxx
+  Fl_Media_Capture_Session.cxx
+  Fl_Media_Recorder.cxx
+  Fl_Audio_Input.cxx
+  Fl_Audio_Output.cxx
+  Fl_Audio_Sink.cxx
+  Fl_Audio_Buffer_Input.cxx
+  Fl_Video_Widget.cxx
+  Fl_Video_Sink.cxx
+  Fl_Video_Frame_Input.cxx
+  Fl_Image_Capture.cxx
+  Fl_Screen_Capture.cxx
+  Fl_Window_Capture.cxx
   Fl_Native_File_Chooser.cxx
   Fl_NFC.cxx
   Fl_Overlay_Window.cxx
@@ -269,6 +283,12 @@ if(FLTK_USE_X11 AND NOT FLTK_USE_WAYLAND)
     drivers/Xlib/Fl_Xlib_Image_Surface_Driver.cxx
     drivers/X11/fl_X11_platform_init.cxx
     drivers/Unix/Fl_Unix_Camera_Driver.cxx
+    drivers/Unix/Fl_Unix_Multimedia_Driver.cxx
+    drivers/Unix/Fl_Unix_Audio_Sink_Driver.cxx
+    drivers/Unix/Fl_Unix_Audio_Input_Driver.cxx
+    drivers/Unix/Fl_Unix_Audio_Output_Driver.cxx
+    drivers/Unix/Fl_Unix_Screen_Capture_Driver.cxx
+    drivers/Unix/Fl_Unix_Window_Capture_Driver.cxx
     Fl_x.cxx
     fl_dnd_x.cxx
     Fl_Native_File_Chooser_FLTK.cxx
@@ -348,6 +368,12 @@ elseif(FLTK_USE_WAYLAND)
     drivers/Wayland/fl_wayland_platform_init.cxx
     drivers/Cairo/Fl_Cairo_Graphics_Driver.cxx
     drivers/Unix/Fl_Unix_Camera_Driver.cxx
+    drivers/Unix/Fl_Unix_Multimedia_Driver.cxx
+    drivers/Unix/Fl_Unix_Audio_Sink_Driver.cxx
+    drivers/Unix/Fl_Unix_Audio_Input_Driver.cxx
+    drivers/Unix/Fl_Unix_Audio_Output_Driver.cxx
+    drivers/Unix/Fl_Unix_Screen_Capture_Driver.cxx
+    drivers/Unix/Fl_Unix_Window_Capture_Driver.cxx
     Fl_Native_File_Chooser_FLTK.cxx
     Fl_Native_File_Chooser_GTK.cxx
   )
@@ -412,6 +438,12 @@ elseif(APPLE)
     drivers/Cocoa/Fl_Cocoa_Screen_Driver.cxx
     drivers/Cocoa/Fl_Cocoa_NFC_Driver.mm
     drivers/Cocoa/Fl_Cocoa_Camera_Driver.mm
+    drivers/Cocoa/Fl_Cocoa_Multimedia_Driver.mm
+    drivers/Cocoa/Fl_Cocoa_Audio_Sink_Driver.mm
+    drivers/Cocoa/Fl_Cocoa_Audio_Input_Driver.mm
+    drivers/Cocoa/Fl_Cocoa_Audio_Output_Driver.mm
+    drivers/Cocoa/Fl_Cocoa_Screen_Capture_Driver.mm
+    drivers/Cocoa/Fl_Cocoa_Window_Capture_Driver.mm
     drivers/Posix/Fl_Posix_System_Driver.cxx
     drivers/Darwin/Fl_Darwin_System_Driver.cxx
     Fl_get_key_mac.cxx
@@ -469,6 +501,12 @@ else()
     drivers/WinAPI/Fl_WinAPI_Window_Driver.cxx
     drivers/WinAPI/Fl_WinAPI_NFC_Driver.cxx
     drivers/WinAPI/Fl_WinAPI_Camera_Driver.cxx
+    drivers/WinAPI/Fl_WinAPI_Multimedia_Driver.cxx
+    drivers/WinAPI/Fl_WinAPI_Audio_Sink_Driver.cxx
+    drivers/WinAPI/Fl_WinAPI_Audio_Input_Driver.cxx
+    drivers/WinAPI/Fl_WinAPI_Audio_Output_Driver.cxx
+    drivers/WinAPI/Fl_WinAPI_Screen_Capture_Driver.cxx
+    drivers/WinAPI/Fl_WinAPI_Window_Capture_Driver.cxx
     drivers/WinAPI/Fl_WinAPI_Printer_Driver.cxx
     drivers/GDI/Fl_GDI_Graphics_Driver.cxx
     drivers/GDI/Fl_GDI_Graphics_Driver_arci.cxx
