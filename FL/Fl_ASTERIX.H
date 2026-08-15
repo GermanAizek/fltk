@@ -35,27 +35,31 @@ typedef void (*Fl_ASTERIX_Callback)(Fl_ASTERIX*, void*);
 class FL_EXPORT Fl_ASTERIX : public Fl_Serial_Port {
 public:
   struct Cat021Record {
-    uint8_t  category;        // 21 for ADS-B
-    uint8_t  sac;             // System Area Code
-    uint8_t  sic;             // System Identification Code
-    uint32_t target_address;  // 24-bit ICAO address
+    // 64-bit floating point (8-byte aligned)
     double   latitude_deg;    // WGS-84 Latitude
     double   longitude_deg;   // WGS-84 Longitude
     double   flight_level;    // Flight Level (1/4 FL or feet)
     double   ground_speed_kt; // Ground Speed in knots
     double   track_angle_deg; // Track angle in degrees
+
+    // 32-bit & 16-bit integers
+    uint32_t target_address;  // 24-bit ICAO address
     uint16_t squawk_mode3a;   // Mode 3/A code (e.g. 07700)
-    char     callsign[10];    // 8-character ICAO callsign
+
+    // 8-bit metrics & strings
+    uint8_t  category;        // 21 for ADS-B
+    uint8_t  sac;             // System Area Code
+    uint8_t  sic;             // System Identification Code
     bool     is_valid;
+    char     callsign[10];    // 8-character ICAO callsign
   };
 
 private:
-  uint8_t buffer_[2048];
-  size_t buf_idx_;
   Cat021Record last_record_;
-
   Fl_ASTERIX_Callback asterix_cb_;
   void* user_data_;
+  size_t buf_idx_;
+  uint8_t buffer_[2048];
 
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);

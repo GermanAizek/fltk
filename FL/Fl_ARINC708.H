@@ -35,17 +35,16 @@ public:
     uint16_t range_nm;        // 10, 20, 40, 80, 160, 320 NM
     uint8_t  mode;            // WX, WX+TURB, MAP, TEST
     uint8_t  gain;            // Gain level
-    uint8_t  range_bins[512]; // 0-7 color index for each range bin
     bool     is_valid;
+    uint8_t  range_bins[512]; // 0-7 color index for each range bin
   };
 
 private:
-  uint8_t buffer_[256];
-  size_t buf_idx_;
   RadarRadial last_radial_;
-
   Fl_ARINC708_Callback arinc708_cb_;
   void* user_data_;
+  size_t buf_idx_;
+  uint8_t buffer_[256];
 
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);

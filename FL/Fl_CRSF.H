@@ -37,22 +37,19 @@ typedef void (*Fl_CRSF_Callback)(Fl_CRSF*, void*);
 */
 class FL_EXPORT Fl_CRSF : public Fl_Serial_Port {
 private:
-  uint16_t channels_[16]; // 16 proportional channels (11-bit)
-  
-  // State machine for parsing
-  enum State {
+  enum State : uint8_t {
     WAIT_SYNC = 0,
     WAIT_LENGTH,
     WAIT_PAYLOAD
   };
-  
+
+  Fl_CRSF_Callback crsf_cb_;
+  void* crsf_user_data_;
+  uint16_t channels_[16]; // 16 proportional channels (11-bit)
+  uint8_t buffer_[64];    // Max CRSF frame is 64 bytes
   State state_;
   uint8_t current_len_;
   uint8_t buf_idx_;
-  uint8_t buffer_[64]; // Max CRSF frame is 64 bytes
-  
-  Fl_CRSF_Callback crsf_cb_;
-  void* crsf_user_data_;
 
   // Internal serial callback to feed the parser
   static void serial_cb(Fl_Serial_Port* p, void* data);

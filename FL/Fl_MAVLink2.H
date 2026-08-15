@@ -35,25 +35,24 @@ typedef void (*Fl_MAVLink2_Callback)(Fl_MAVLink2*, void*);
 class FL_EXPORT Fl_MAVLink2 : public Fl_Serial_Port {
 public:
   struct Message {
+    uint32_t msg_id;          // 24-bit Message ID
+    uint16_t checksum;
     uint8_t  payload_len;     // 0 to 255
     uint8_t  incompat_flags;
     uint8_t  compat_flags;
     uint8_t  seq;             // Packet sequence
     uint8_t  sys_id;          // System ID (e.g. 1)
     uint8_t  comp_id;         // Component ID (e.g. 1 Autopilot)
-    uint32_t msg_id;          // 24-bit Message ID
-    uint8_t  payload[255];
-    uint16_t checksum;
     bool     crc_valid;
+    uint8_t  payload[255];
   };
 
 private:
-  uint8_t buffer_[280];
-  size_t buf_idx_;
   Message last_msg_;
-
   Fl_MAVLink2_Callback mav_cb_;
   void* user_data_;
+  size_t buf_idx_;
+  uint8_t buffer_[280];
 
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);

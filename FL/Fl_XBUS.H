@@ -37,13 +37,11 @@ typedef void (*Fl_XBUS_Callback)(Fl_XBUS*, void*);
 */
 class FL_EXPORT Fl_XBUS : public Fl_Serial_Port {
 private:
-  uint16_t channels_[16]; // 16 proportional channels (16-bit)
-  
-  uint8_t buf_idx_;
-  uint8_t buffer_[35]; // XBUS frames (SRXL format 0xA1) are 35 bytes
-  
   Fl_XBUS_Callback xbus_cb_;
   void* xbus_user_data_;
+  uint16_t channels_[16]; // 16 proportional channels (16-bit)
+  uint8_t buffer_[35];    // XBUS frames (SRXL format 0xA1) are 35 bytes
+  uint8_t buf_idx_;
 
   // Internal serial callback to feed the parser
   static void serial_cb(Fl_Serial_Port* p, void* data);

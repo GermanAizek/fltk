@@ -44,21 +44,19 @@ public:
     Structure representing a decoded AFDX frame summary.
   */
   struct FrameInfo {
+    int payload_length;    // Length of the IP/UDP payload (excluding MAC/SEQ)
     uint16_t virtual_link; // VL ID extracted from Dest MAC
     uint8_t seq_num;       // Sequence Number extracted from the end of the frame
-    int payload_length;    // Length of the IP/UDP payload (excluding MAC/SEQ)
     bool is_valid;         // Basic validation flag
   };
 
 private:
-  uint8_t buffer_[2048]; // Max AFDX frame is 1518 bytes + SLIP overhead
-  int buf_idx_;
-  bool escape_flag_;
-  
   FrameInfo last_frame_;
-  
   Fl_AFDX_Callback afdx_cb_;
   void* afdx_user_data_;
+  uint16_t buf_idx_;
+  bool escape_flag_;
+  uint8_t buffer_[2048]; // Max AFDX frame is 1518 bytes + SLIP overhead
 
   // Internal serial callback to feed the parser
   static void serial_cb(Fl_Serial_Port* p, void* data);

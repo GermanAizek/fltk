@@ -37,13 +37,11 @@ typedef void (*Fl_IBUS_Callback)(Fl_IBUS*, void*);
 */
 class FL_EXPORT Fl_IBUS : public Fl_Serial_Port {
 private:
-  uint16_t channels_[14]; // 14 proportional channels (16-bit, usually 1000-2000)
-  
-  uint8_t buf_idx_;
-  uint8_t buffer_[32]; // IBUS frames are always 32 bytes
-  
   Fl_IBUS_Callback ibus_cb_;
   void* ibus_user_data_;
+  uint16_t channels_[14]; // 14 proportional channels (16-bit, usually 1000-2000)
+  uint8_t buffer_[32];    // IBUS frames are always 32 bytes
+  uint8_t buf_idx_;
 
   // Internal serial callback to feed the parser
   static void serial_cb(Fl_Serial_Port* p, void* data);

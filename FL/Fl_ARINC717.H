@@ -32,21 +32,20 @@ typedef void (*Fl_ARINC717_Callback)(Fl_ARINC717*, void*);
 class FL_EXPORT Fl_ARINC717 : public Fl_Serial_Port {
 public:
   struct Subframe {
-    uint8_t subframe_num;  // 1 to 4
-    uint16_t sync_word;    // 0x247, 0x5B8, 0xA47, 0xDB8
-    uint16_t words[512];   // 12-bit telemetry words
     size_t word_count;     // 64, 128, 256, 512
+    uint16_t words[512];   // 12-bit telemetry words
+    uint16_t sync_word;    // 0x247, 0x5B8, 0xA47, 0xDB8
+    uint8_t subframe_num;  // 1 to 4
     bool is_valid;
   };
 
 private:
   Subframe current_subframe_;
   size_t current_word_idx_;
-  uint8_t raw_bit_buf_[1024];
   size_t raw_bit_count_;
-  
   Fl_ARINC717_Callback arinc717_cb_;
   void* user_data_;
+  uint8_t raw_bit_buf_[1024];
 
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);

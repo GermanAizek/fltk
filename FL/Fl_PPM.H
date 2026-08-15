@@ -34,17 +34,15 @@ class FL_EXPORT Fl_PPM {
 private:
   Fl_PPM_Callback callback_;
   void* user_data_;
-
-  int num_channels_;
-  int frame_length_us_;
-  int pulse_width_us_;
-  uint16_t channels_[16]; // Maximum 16 channels
-
 #if defined(_WIN32)
   void* handle_;
 #else
   int fd_;
 #endif
+  uint16_t channels_[16]; // Maximum 16 channels
+  uint16_t frame_length_us_;
+  uint16_t pulse_width_us_;
+  uint8_t num_channels_;
 
 public:
   /**

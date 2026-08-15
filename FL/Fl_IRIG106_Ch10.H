@@ -34,28 +34,27 @@ typedef void (*Fl_IRIG106_Callback)(Fl_IRIG106_Ch10*, void*);
 class FL_EXPORT Fl_IRIG106_Ch10 : public Fl_Serial_Port {
 public:
   struct PacketHeader {
-    uint16_t sync;            // 0xEB25
-    uint16_t channel_id;      // Telemetry Channel
+    uint64_t rtc_timestamp;   // Relative Time Counter (100ns units)
     uint32_t packet_len;      // Total packet length in bytes
     uint32_t data_len;        // Payload data length in bytes
+    uint16_t sync;            // 0xEB25
+    uint16_t channel_id;      // Telemetry Channel
+    uint16_t header_checksum; // 16-bit header checksum
     uint8_t  data_type;       // DataType ID (0x01: Time, 0x19: 1553, 0x38: A429, etc.)
     uint8_t  seq_num;         // Packet sequence counter
     uint8_t  packet_flags;    // Time source & secondary header flags
     uint8_t  data_type_ver;   // Data type version
-    uint64_t rtc_timestamp;   // Relative Time Counter (100ns units)
-    uint16_t header_checksum; // 16-bit header checksum
     bool     checksum_ok;
   };
 
 private:
-  uint8_t buffer_[65536];
-  size_t buf_idx_;
   PacketHeader last_header_;
-  uint8_t payload_[65536];
-  size_t payload_len_;
-
   Fl_IRIG106_Callback irig_cb_;
   void* user_data_;
+  size_t buf_idx_;
+  size_t payload_len_;
+  uint8_t buffer_[4096];
+  uint8_t payload_[4096];
 
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);

@@ -37,24 +37,22 @@ typedef void (*Fl_SUMD_Callback)(Fl_SUMD*, void*);
 */
 class FL_EXPORT Fl_SUMD : public Fl_Serial_Port {
 private:
-  uint16_t channels_[32]; // Max 32 channels (16-bit)
-  uint8_t num_channels_;
-  uint8_t status_; // 0x01 = valid, 0x00 = failsafe, 0x81 = failsafe valid
-  
-  enum State {
+  enum State : uint8_t {
     WAIT_HEADER = 0,
     WAIT_STATUS,
     WAIT_COUNT,
     WAIT_PAYLOAD
   };
-  
-  State state_;
-  uint8_t buf_idx_;
-  uint8_t current_len_;
-  uint8_t buffer_[128]; // Max SUMD frame is roughly 3 + 32*2 + 2 = 69 bytes
-  
+
   Fl_SUMD_Callback sumd_cb_;
   void* sumd_user_data_;
+  uint16_t channels_[32]; // Max 32 channels (16-bit)
+  uint8_t buffer_[128];   // Max SUMD frame is roughly 3 + 32*2 + 2 = 69 bytes
+  State state_;
+  uint8_t num_channels_;
+  uint8_t status_; // 0x01 = valid, 0x00 = failsafe, 0x81 = failsafe valid
+  uint8_t buf_idx_;
+  uint8_t current_len_;
 
   // Internal serial callback to feed the parser
   static void serial_cb(Fl_Serial_Port* p, void* data);

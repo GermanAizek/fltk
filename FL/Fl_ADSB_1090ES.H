@@ -35,28 +35,32 @@ typedef void (*Fl_ADSB_1090ES_Callback)(Fl_ADSB_1090ES*, void*);
 class FL_EXPORT Fl_ADSB_1090ES : public Fl_Serial_Port {
 public:
   struct SquitterMsg {
-    uint8_t  df;              // Downlink Format (17 or 18)
-    uint8_t  ca;              // Capability
-    uint32_t icao24;          // 24-bit ICAO address
-    uint8_t  type_code;       // Extended Squitter Type Code (1-31)
-    char     callsign[10];    // Decoded callsign
+    // 64-bit doubles (8-byte aligned)
     double   altitude_ft;     // Decoded barometric / GNSS altitude
     double   lat_cpr;         // Encoded CPR latitude
     double   lon_cpr;         // Encoded CPR longitude
     double   speed_kts;       // Velocity in knots
     double   heading_deg;     // Heading / Track angle
     double   vsi_fpm;         // Vertical rate
+
+    // 32-bit & 16-bit integers
+    uint32_t icao24;          // 24-bit ICAO address
     uint16_t squawk;          // 4-digit octal squawk (e.g. 7700)
+
+    // 8-bit metrics & strings
+    uint8_t  df;              // Downlink Format (17 or 18)
+    uint8_t  ca;              // Capability
+    uint8_t  type_code;       // Extended Squitter Type Code (1-31)
     bool     crc_valid;
+    char     callsign[10];    // Decoded callsign
   };
 
 private:
-  uint8_t buffer_[14]; // 112 bits = 14 bytes
-  size_t buf_idx_;
   SquitterMsg last_msg_;
-
   Fl_ADSB_1090ES_Callback adsb_cb_;
   void* user_data_;
+  size_t buf_idx_;
+  uint8_t buffer_[14]; // 112 bits = 14 bytes
 
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);

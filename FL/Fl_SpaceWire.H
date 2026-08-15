@@ -31,21 +31,20 @@ typedef void (*Fl_SpaceWire_Callback)(Fl_SpaceWire*, void*);
 class FL_EXPORT Fl_SpaceWire : public Fl_Serial_Port {
 public:
   struct Packet {
+    uint16_t length;          // Payload byte count
     uint8_t  logical_address; // SpaceWire Logical Address
     uint8_t  protocol_id;     // Protocol Identifier
-    uint16_t length;          // Payload byte count
-    uint8_t  payload[1024];   // Data bytes
     bool     is_eep;          // Error End of Packet flag
     bool     is_valid;
+    uint8_t  payload[1024];   // Data bytes
   };
 
 private:
-  uint8_t buffer_[1024];
-  size_t buf_idx_;
   Packet last_packet_;
-
   Fl_SpaceWire_Callback spacewire_cb_;
   void* user_data_;
+  size_t buf_idx_;
+  uint8_t buffer_[1024];
 
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);

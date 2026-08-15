@@ -41,21 +41,19 @@ public:
     Structure representing a decoded ARINC 429 word.
   */
   struct Word {
+    uint32_t data;    // 19 bits
     uint8_t label;    // 8 bits
     uint8_t sdi;      // 2 bits
-    uint32_t data;    // 19 bits
     uint8_t ssm;      // 2 bits
     bool parity_ok;
   };
 
 private:
-  uint8_t buffer_[4];
-  int buf_idx_;
-  
   Word last_word_;
-  
   Fl_ARINC429_Callback arinc429_cb_;
   void* arinc429_user_data_;
+  uint8_t buffer_[4];
+  uint8_t buf_idx_;
 
   // Internal serial callback to feed the parser
   static void serial_cb(Fl_Serial_Port* p, void* data);

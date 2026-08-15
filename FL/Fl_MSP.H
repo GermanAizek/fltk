@@ -46,7 +46,7 @@ typedef void (*Fl_MSP_Callback)(Fl_MSP* msp, uint8_t cmd, const uint8_t* payload
 */
 class FL_EXPORT Fl_MSP : public Fl_Serial_Port {
 private:
-  enum State {
+  enum State : uint8_t {
     WAIT_HEADER_1 = 0, // '$'
     WAIT_HEADER_2,     // 'M'
     WAIT_DIRECTION,    // '<' or '>'
@@ -55,17 +55,15 @@ private:
     WAIT_PAYLOAD,
     WAIT_CHECKSUM
   };
-  
+
+  Fl_MSP_Callback msp_cb_;
+  void* msp_user_data_;
+  uint8_t payload_buffer_[256]; // Max MSP V1 payload size is 255
   State state_;
   uint8_t payload_size_;
   uint8_t cmd_;
   uint8_t current_checksum_;
-  
   uint8_t buf_idx_;
-  uint8_t payload_buffer_[256]; // Max MSP V1 payload size is 255
-  
-  Fl_MSP_Callback msp_cb_;
-  void* msp_user_data_;
 
   // Internal serial callback to feed the parser
   static void serial_cb(Fl_Serial_Port* p, void* data);

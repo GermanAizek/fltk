@@ -38,7 +38,7 @@ typedef void (*Fl_ARINC629_Callback)(Fl_ARINC629*, void*);
 */
 class FL_EXPORT Fl_ARINC629 : public Fl_Serial_Port {
 public:
-  enum WordType {
+  enum WordType : uint8_t {
     DATA_WORD = 0,
     COMMAND_WORD = 1
   };
@@ -47,19 +47,17 @@ public:
     Structure representing a decoded ARINC 629 word.
   */
   struct Word {
-    WordType type;    // Derived from sync
     uint16_t data;    // 16 bits data
+    WordType type;    // Derived from sync
     bool parity_ok;   // 1 bit parity (odd)
   };
 
 private:
-  uint8_t buffer_[3]; // Assuming 3 bytes to fit 20-bits
-  int buf_idx_;
-  
   Word last_word_;
-  
   Fl_ARINC629_Callback arinc629_cb_;
   void* arinc629_user_data_;
+  uint8_t buffer_[3]; // 3 bytes to fit 20-bits
+  uint8_t buf_idx_;
 
   // Internal serial callback to feed the parser
   static void serial_cb(Fl_Serial_Port* p, void* data);

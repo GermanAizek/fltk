@@ -36,15 +36,13 @@ typedef void (*Fl_SBUS_Callback)(Fl_SBUS*, void*);
 */
 class FL_EXPORT Fl_SBUS : public Fl_Serial_Port {
 private:
-  uint16_t channels_[18]; // 16 proportional channels (11-bit) + 2 digital channels
-  bool failsafe_;
-  bool frame_lost_;
-  
-  uint8_t buffer_[25];
-  int buf_idx_;
-  
   Fl_SBUS_Callback sbus_cb_;
   void* sbus_user_data_;
+  uint16_t channels_[18]; // 16 proportional channels (11-bit) + 2 digital channels
+  uint8_t buffer_[25];
+  uint8_t buf_idx_;
+  bool failsafe_;
+  bool frame_lost_;
 
   // Internal serial callback to feed the parser
   static void serial_cb(Fl_Serial_Port* p, void* data);

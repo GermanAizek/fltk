@@ -37,28 +37,24 @@ typedef void (*Fl_FPort_Callback)(Fl_FPort*, void*);
 */
 class FL_EXPORT Fl_FPort : public Fl_Serial_Port {
 private:
-  uint16_t channels_[16]; // 16 proportional channels (11-bit)
-  uint8_t flags_;
-  uint8_t rssi_;
-  
-  enum State {
+  enum State : uint8_t {
     WAIT_SYNC = 0,
     WAIT_LENGTH,
     WAIT_TYPE,
     WAIT_PAYLOAD
   };
-  
-  State state_;
-  bool escape_next_;
-  
-  uint8_t frame_length_;
-  uint8_t frame_type_;
-  
-  uint8_t buf_idx_;
-  uint8_t buffer_[128]; 
-  
+
   Fl_FPort_Callback fport_cb_;
   void* fport_user_data_;
+  uint16_t channels_[16]; // 16 proportional channels (11-bit)
+  uint8_t buffer_[128];
+  State state_;
+  uint8_t frame_length_;
+  uint8_t frame_type_;
+  uint8_t buf_idx_;
+  uint8_t flags_;
+  uint8_t rssi_;
+  bool escape_next_;
 
   // Internal serial callback to feed the parser
   static void serial_cb(Fl_Serial_Port* p, void* data);

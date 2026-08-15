@@ -34,23 +34,22 @@ class FL_EXPORT Fl_ARINC825 : public Fl_Serial_Port {
 public:
   struct CanMessage {
     uint32_t can_id;      // 29-bit CAN Identifier
+    uint16_t doc;         // Data Object Code (e.g. Engine RPM, Airspeed, Actuator)
     uint8_t  lcc;         // Logical Communication Channel (0-7)
     uint8_t  src_node_id; // Source Node ID
-    uint16_t doc;         // Data Object Code (e.g. Engine RPM, Airspeed, Actuator)
     uint8_t  rci;         // Redundancy Channel ID
     uint8_t  dlc;         // Data length (0-64)
-    uint8_t  data[64];    // Payload data bytes
     bool     is_extended; // 29-bit vs 11-bit
     bool     is_fd;       // CAN FD frame
+    uint8_t  data[64];    // Payload data bytes
   };
 
 private:
-  uint8_t buffer_[128];
-  size_t buf_idx_;
   CanMessage last_msg_;
-
   Fl_ARINC825_Callback arinc825_cb_;
   void* user_data_;
+  size_t buf_idx_;
+  uint8_t buffer_[128];
 
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);

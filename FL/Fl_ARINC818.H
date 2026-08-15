@@ -30,24 +30,23 @@ typedef void (*Fl_ARINC818_Callback)(Fl_ARINC818*, void*);
 class FL_EXPORT Fl_ARINC818 : public Fl_Serial_Port {
 public:
   struct ContainerInfo {
-    uint8_t  container_ver;    // ARINC 818 revision (e.g. 1 or 2)
-    uint8_t  color_format;     // 0: RGB, 1: YCbCr, 2: Monochrome
+    uint32_t frame_count;      // Monotonic frame counter
     uint16_t video_width;      // Horizontal pixels (e.g. 1920, 1024)
     uint16_t video_height;     // Vertical pixels (e.g. 1080, 768)
     uint16_t frame_rate_fps;   // 30, 60, 120 fps
-    uint32_t frame_count;      // Monotonic frame counter
     uint16_t ancillary_len;    // Ancillary telemetry bytes
-    uint8_t  ancillary_data[512];
+    uint8_t  container_ver;    // ARINC 818 revision (e.g. 1 or 2)
+    uint8_t  color_format;     // 0: RGB, 1: YCbCr, 2: Monochrome
     bool     is_valid;
+    uint8_t  ancillary_data[512];
   };
 
 private:
-  uint8_t buffer_[1024];
-  size_t buf_idx_;
   ContainerInfo last_container_;
-
   Fl_ARINC818_Callback arinc818_cb_;
   void* user_data_;
+  size_t buf_idx_;
+  uint8_t buffer_[1024];
 
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);

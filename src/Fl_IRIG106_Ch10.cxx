@@ -55,7 +55,7 @@ void Fl_IRIG106_Ch10::process_byte(uint8_t b) {
 
   if (buf_idx_ >= 24) {
     uint32_t pkt_len = buffer_[4] | (buffer_[5] << 8) | (buffer_[6] << 16) | (buffer_[7] << 24);
-    if (pkt_len < 24 || pkt_len > 65536) {
+    if (pkt_len < 24 || pkt_len > sizeof(buffer_)) {
       buf_idx_ = 0;
       return;
     }

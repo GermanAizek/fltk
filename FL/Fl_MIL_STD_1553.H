@@ -38,7 +38,7 @@ typedef void (*Fl_MIL_STD_1553_Callback)(Fl_MIL_STD_1553*, void*);
 */
 class FL_EXPORT Fl_MIL_STD_1553 : public Fl_Serial_Port {
 public:
-  enum SyncType {
+  enum SyncType : uint8_t {
     SYNC_COMMAND_STATUS = 0,
     SYNC_DATA = 1
   };
@@ -47,19 +47,17 @@ public:
     Structure representing a decoded MIL-STD-1553 word.
   */
   struct Word {
-    SyncType sync;    // Sync pulse type
     uint16_t data;    // 16 bits data (can be command, status, or data payload)
+    SyncType sync;    // Sync pulse type
     bool parity_ok;   // 1 bit parity (odd)
   };
 
 private:
-  uint8_t buffer_[3]; // Assuming 3 bytes to fit 20-bits
-  int buf_idx_;
-  
   Word last_word_;
-  
   Fl_MIL_STD_1553_Callback mil1553_cb_;
   void* mil1553_user_data_;
+  uint8_t buffer_[3]; // 3 bytes to fit 20-bits
+  uint8_t buf_idx_;
 
   // Internal serial callback to feed the parser
   static void serial_cb(Fl_Serial_Port* p, void* data);
