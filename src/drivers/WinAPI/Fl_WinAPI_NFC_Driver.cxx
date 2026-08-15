@@ -23,6 +23,10 @@
 #include <windows.h>
 #include <winscard.h>
 
+#if defined(_MSC_VER)
+#pragma comment(lib, "winscard.lib")
+#endif
+
 Fl_WinAPI_NFC_Driver::Fl_WinAPI_NFC_Driver(Fl_NFC_Manager* m)
   : Fl_NFC_Driver(m), context_(0) {
 }

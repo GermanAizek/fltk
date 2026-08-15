@@ -877,11 +877,15 @@ if(FLTK_USE_X11)
 endif(FLTK_USE_X11)
 
 if(WIN32)
-  list(APPEND OPTIONAL_LIBS comctl32 ws2_32 bthprops mfplat mfreadwrite mfuuid mf)
+  list(APPEND OPTIONAL_LIBS comctl32 ws2_32 bthprops mfplat mfreadwrite mfuuid mf winscard)
   if(USE_GDIPLUS)
     list(APPEND OPTIONAL_LIBS gdiplus)
   endif()
 endif(WIN32)
+
+if(ANDROID)
+  list(APPEND OPTIONAL_LIBS android log)
+endif(ANDROID)
 
 if(HAVE_XINERAMA)
   list(APPEND OPTIONAL_LIBS ${X11_Xinerama_LIB})

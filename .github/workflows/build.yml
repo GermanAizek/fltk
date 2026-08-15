@@ -359,8 +359,9 @@ jobs:
             sudo pkgin -y update
             sudo pkgin -y install git cmake ninja-build pkgconf libXft libXcursor libXrender
           elif [ "${{ matrix.os.name }}" = "haiku" ]; then
-            pkgman update -y
-            pkgman install -y cmd:cmake cmd:ninja cmd:gcc cmd:make cmd:pkg_config xlibe_devel mesa_devel glu_devel
+            for i in 1 2 3 4 5; do
+              pkgman refresh && pkgman install -y cmd:cmake cmd:ninja cmd:gcc cmd:make cmd:pkg_config xlibe_devel mesa_devel glu_devel && break || sleep 3
+            done
           fi
 
           cmake -B build -G Ninja \
@@ -486,15 +487,9 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Create Build Environment
-      run: cmake -E make_directory ${{github.workspace}}/build
-
     - name: Configure CMake
-      shell: bash
-      working-directory: ${{github.workspace}}/build
       run: |
-        cmake $GITHUB_WORKSPACE \
-        -G Ninja \
+        cmake -B build -G Ninja \
         -D CMAKE_BUILD_TYPE=$BUILD_TYPE \
         -D CMAKE_CXX_STANDARD=11 \
         -D CMAKE_CXX_EXTENSIONS=OFF \
@@ -504,14 +499,10 @@ jobs:
         -D FLTK_BUILD_FORMS=ON
 
     - name: Build
-      working-directory: ${{github.workspace}}/build
-      shell: bash
-      run: cmake --build . --config $BUILD_TYPE
+      run: cmake --build build
 
     - name: Unittest
-      working-directory: ${{github.workspace}}/build
-      shell: bash
-      run: ./bin/test/unittests --core
+      run: ./build/bin/test/unittests --core
 
 
   build-android:

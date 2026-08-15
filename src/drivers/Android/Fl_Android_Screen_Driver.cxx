@@ -63,6 +63,19 @@ Fl_Screen_Driver *Fl_Screen_Driver::newScreenDriver()
   return new Fl_Android_Screen_Driver();
 }
 
+#if FLTK_HAVE_PEN_SUPPORT
+#include "../Base/Fl_Base_Pen_Driver.H"
+namespace Fl {
+  namespace Pen
+  {
+    Fl::Pen::Driver& newPenDriver() {
+      static Driver default_driver;
+      return default_driver;
+    }
+  }
+}
+#endif
+
 
 extern int fl_send_system_handlers(void *e);
 

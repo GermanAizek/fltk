@@ -123,7 +123,7 @@ void Fl_Android_Gl_Window_Driver::set_gl_context(Fl_Window* w, GLContext context
   ANativeWindow* win = Fl_Android_Application::native_window();
   if (!win) return;
   if (!egl_surface) {
-    Fl_Android_Gl_Choice* g = (Fl_Android_Gl_Choice*)Fl_Gl_Window_Driver::g();
+    Fl_Android_Gl_Choice* g = (Fl_Android_Gl_Choice*)this->g();
     if (g && g->egl_conf) {
       egl_surface = eglCreateWindowSurface(egl_display, g->egl_conf, win, NULL);
     }
@@ -152,9 +152,9 @@ void Fl_Android_Gl_Window_Driver::delete_gl_context(GLContext context) {
 
 void Fl_Android_Gl_Window_Driver::make_current_before() {
   if (!egl_display) init();
-  if (!pWindow->g) {
-    pWindow->g = find(pWindow->mode_, pWindow->alist);
-    pWindow->context(create_gl_context(pWindow, pWindow->g), 1);
+  if (!this->g()) {
+    this->g(find(this->mode(), this->alist()));
+    pWindow->context(create_gl_context(pWindow, this->g()), 1);
     pWindow->valid(0);
   }
   set_gl_context(pWindow, pWindow->context());

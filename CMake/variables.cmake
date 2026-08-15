@@ -41,6 +41,8 @@ endif(DEBUG_VARIABLES_CMAKE)
 
 if(WIN32)
   list(APPEND FLTK_LDLIBS -lole32 -luuid -lcomctl32 -lws2_32 -lwinspool -lwinscard)
+elseif(ANDROID)
+  list(APPEND FLTK_LDLIBS -landroid -llog)
 elseif(APPLE AND NOT FLTK_BACKEND_X11)
   list(APPEND FLTK_LDLIBS ${FLTK_COCOA_FRAMEWORKS})
 elseif(FLTK_USE_WAYLAND)

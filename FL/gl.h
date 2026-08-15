@@ -128,8 +128,12 @@ typedef float GLdouble;
 #define glScaled glScalef
 #define glTranslated glTranslatef
 #define glRecti(x,y,w,h) (void)0
+#define glRectf(x,y,w,h) (void)0
+#define glLineStipple(f,p) (void)0
 #define glDrawPixels(w,h,f,t,p) (void)0
 #define glTexCoord2f(x,y) (void)0
+#define glTexCoord2i(x,y) (void)0
+#define glColor4ub(r,g,b,a) (void)0
 #define glCallLists(n,t,p) (void)0
 #define glVertex2d(x,y) (void)0
 #define glGetTexLevelParameteriv(t,l,p,v) (void)0
@@ -152,8 +156,29 @@ typedef float GLdouble;
 #ifndef GL_ALPHA8
 #define GL_ALPHA8 0
 #endif
+#ifndef GL_RGBA8
+#define GL_RGBA8 0
+#endif
 #ifndef GL_CURRENT_RASTER_POSITION_VALID
 #define GL_CURRENT_RASTER_POSITION_VALID 0
+#endif
+#ifndef GL_LINE_STIPPLE
+#define GL_LINE_STIPPLE 0
+#endif
+#ifndef GL_UNSIGNED_INT_8_8_8_8_REV
+#define GL_UNSIGNED_INT_8_8_8_8_REV 0
+#endif
+#ifndef GL_TEXTURE_RECTANGLE_ARB
+#define GL_TEXTURE_RECTANGLE_ARB 0
+#endif
+#ifndef GL_TRANSFORM_BIT
+#define GL_TRANSFORM_BIT 0
+#endif
+#ifndef GL_TEXTURE_BIT
+#define GL_TEXTURE_BIT 0
+#endif
+#ifndef GL_COLOR_BUFFER_BIT
+#define GL_COLOR_BUFFER_BIT 0
 #endif
 
 #ifndef GL_ALL_ATTRIB_BITS

@@ -78,8 +78,8 @@ void  gl_font(int fontid, int size) {
   if (once) {
     once = false;
     if (Fl::draw_GL_text_with_textures()) {
-      int gl_version_major;
-      (std::istringstream((const char *)glGetString(GL_VERSION)) >> gl_version_major).good() ? 1 : 0;
+      int gl_version_major = 0;
+      std::istringstream((const char *)glGetString(GL_VERSION)) >> gl_version_major;
       //printf("gl_version_major=%d\n", gl_version_major);
       if (gl_version_major >= 3) {
         has_texture_rectangle = true;
