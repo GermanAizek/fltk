@@ -587,3 +587,474 @@ jobs:
       working-directory: ${{github.workspace}}/build
       shell: bash
       run: cmake --build . --config $BUILD_TYPE
+
+
+  build-freertos:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        submodules: recursive
+
+    - name: Install prerequisites
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib ninja-build
+
+    - name: Checkout FreeRTOS Kernel
+      run: |
+        git clone --depth 1 https://github.com/FreeRTOS/FreeRTOS-Kernel.git ${{ github.workspace }}/freertos-kernel
+
+    - name: Configure CMake
+      run: |
+        cmake -B build -G Ninja \
+          -D CMAKE_BUILD_TYPE=Release \
+          -D CMAKE_CXX_STANDARD=11 \
+          -D CMAKE_CXX_EXTENSIONS=OFF \
+          -D CMAKE_SYSTEM_NAME=Generic \
+          -D CMAKE_C_COMPILER=arm-none-eabi-gcc \
+          -D CMAKE_CXX_COMPILER=arm-none-eabi-g++ \
+          -D CMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
+          -D CMAKE_C_FLAGS="-mcpu=cortex-m4 -mthumb -I${{ github.workspace }}/freertos-kernel/include -I${{ github.workspace }}/freertos-kernel/portable/GCC/ARM_CM4F" \
+          -D CMAKE_CXX_FLAGS="-mcpu=cortex-m4 -mthumb -I${{ github.workspace }}/freertos-kernel/include -I${{ github.workspace }}/freertos-kernel/portable/GCC/ARM_CM4F" \
+          -D FLTK_USE_SYSTEM_LIBJPEG=OFF \
+          -D FLTK_USE_SYSTEM_LIBPNG=OFF \
+          -D FLTK_USE_SYSTEM_ZLIB=OFF \
+          -D FLTK_BUILD_SHARED_LIBS=OFF \
+          -D FLTK_BUILD_TEST=OFF \
+          -D FLTK_BUILD_EXAMPLES=OFF \
+          -D FLTK_BUILD_FORMS=OFF \
+          -D FLTK_BUILD_GL=OFF
+
+    - name: Build
+      run: cmake --build build
+
+
+  build-zephyr:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/zephyrproject-rtos/ci-base:latest
+
+    steps:
+    - name: Safe directory
+      run: git config --global --add safe.directory "*"
+
+    - uses: actions/checkout@v6
+      with:
+        submodules: recursive
+
+    - name: Configure CMake
+      run: |
+        cmake -B build -G Ninja \
+          -D CMAKE_BUILD_TYPE=Release \
+          -D CMAKE_CXX_STANDARD=11 \
+          -D CMAKE_CXX_EXTENSIONS=OFF \
+          -D FLTK_USE_SYSTEM_LIBJPEG=OFF \
+          -D FLTK_USE_SYSTEM_LIBPNG=OFF \
+          -D FLTK_USE_SYSTEM_ZLIB=OFF \
+          -D FLTK_BUILD_SHARED_LIBS=OFF \
+          -D FLTK_BUILD_TEST=OFF \
+          -D FLTK_BUILD_EXAMPLES=OFF \
+          -D FLTK_BUILD_FORMS=ON \
+          -D FLTK_BUILD_GL=OFF
+
+    - name: Build
+      run: cmake --build build
+
+
+  build-threadx:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        submodules: recursive
+
+    - name: Install prerequisites
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib ninja-build
+
+    - name: Checkout Eclipse ThreadX
+      run: |
+        git clone --depth 1 https://github.com/eclipse-threadx/threadx.git ${{ github.workspace }}/threadx
+
+    - name: Build ThreadX Kernel
+      run: |
+        cmake -B build-tx -S ${{ github.workspace }}/threadx \
+          -G Ninja \
+          -D THREADX_ARCH=cortex_m4 \
+          -D THREADX_TOOLCHAIN=gnu
+        cmake --build build-tx
+
+    - name: Configure CMake
+      run: |
+        cmake -B build -G Ninja \
+          -D CMAKE_BUILD_TYPE=Release \
+          -D CMAKE_CXX_STANDARD=11 \
+          -D CMAKE_CXX_EXTENSIONS=OFF \
+          -D CMAKE_SYSTEM_NAME=Generic \
+          -D CMAKE_C_COMPILER=arm-none-eabi-gcc \
+          -D CMAKE_CXX_COMPILER=arm-none-eabi-g++ \
+          -D CMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
+          -D CMAKE_C_FLAGS="-mcpu=cortex-m4 -mthumb -I${{ github.workspace }}/threadx/common/inc -I${{ github.workspace }}/threadx/ports/cortex_m4/gnu/inc" \
+          -D CMAKE_CXX_FLAGS="-mcpu=cortex-m4 -mthumb -I${{ github.workspace }}/threadx/common/inc -I${{ github.workspace }}/threadx/ports/cortex_m4/gnu/inc" \
+          -D FLTK_USE_SYSTEM_LIBJPEG=OFF \
+          -D FLTK_USE_SYSTEM_LIBPNG=OFF \
+          -D FLTK_USE_SYSTEM_ZLIB=OFF \
+          -D FLTK_BUILD_SHARED_LIBS=OFF \
+          -D FLTK_BUILD_TEST=OFF \
+          -D FLTK_BUILD_EXAMPLES=OFF \
+          -D FLTK_BUILD_FORMS=OFF \
+          -D FLTK_BUILD_GL=OFF
+
+    - name: Build
+      run: cmake --build build
+
+
+  build-rtems:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        submodules: recursive
+
+    - name: Install prerequisites
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib ninja-build
+
+    - name: Configure CMake
+      run: |
+        cmake -B build -G Ninja \
+          -D CMAKE_BUILD_TYPE=Release \
+          -D CMAKE_CXX_STANDARD=11 \
+          -D CMAKE_CXX_EXTENSIONS=OFF \
+          -D CMAKE_SYSTEM_NAME=Generic \
+          -D CMAKE_C_COMPILER=arm-none-eabi-gcc \
+          -D CMAKE_CXX_COMPILER=arm-none-eabi-g++ \
+          -D CMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
+          -D CMAKE_C_FLAGS="-mcpu=cortex-m4 -mthumb -D__rtems__ -D__RTEMS__" \
+          -D CMAKE_CXX_FLAGS="-mcpu=cortex-m4 -mthumb -D__rtems__ -D__RTEMS__" \
+          -D FLTK_USE_SYSTEM_LIBJPEG=OFF \
+          -D FLTK_USE_SYSTEM_LIBPNG=OFF \
+          -D FLTK_USE_SYSTEM_ZLIB=OFF \
+          -D FLTK_BUILD_SHARED_LIBS=OFF \
+          -D FLTK_BUILD_TEST=OFF \
+          -D FLTK_BUILD_EXAMPLES=OFF \
+          -D FLTK_BUILD_FORMS=OFF \
+          -D FLTK_BUILD_GL=OFF
+
+    - name: Build
+      run: cmake --build build
+
+
+  build-arm-cortex-m:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        cpu:
+          - { name: cortex-m0, flags: "-mcpu=cortex-m0 -mthumb" }
+          - { name: cortex-m3, flags: "-mcpu=cortex-m3 -mthumb" }
+          - { name: cortex-m4, flags: "-mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard" }
+          - { name: cortex-m7, flags: "-mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard" }
+          - { name: cortex-m33, flags: "-mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard" }
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        submodules: recursive
+
+    - name: Install prerequisites
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib ninja-build
+
+    - name: Configure CMake
+      run: |
+        cmake -B build -G Ninja \
+          -D CMAKE_BUILD_TYPE=Release \
+          -D CMAKE_CXX_STANDARD=11 \
+          -D CMAKE_CXX_EXTENSIONS=OFF \
+          -D CMAKE_SYSTEM_NAME=Generic \
+          -D CMAKE_C_COMPILER=arm-none-eabi-gcc \
+          -D CMAKE_CXX_COMPILER=arm-none-eabi-g++ \
+          -D CMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
+          -D CMAKE_C_FLAGS="${{ matrix.cpu.flags }}" \
+          -D CMAKE_CXX_FLAGS="${{ matrix.cpu.flags }}" \
+          -D FLTK_USE_SYSTEM_LIBJPEG=OFF \
+          -D FLTK_USE_SYSTEM_LIBPNG=OFF \
+          -D FLTK_USE_SYSTEM_ZLIB=OFF \
+          -D FLTK_BUILD_SHARED_LIBS=OFF \
+          -D FLTK_BUILD_TEST=OFF \
+          -D FLTK_BUILD_EXAMPLES=OFF \
+          -D FLTK_BUILD_FORMS=OFF \
+          -D FLTK_BUILD_GL=OFF
+
+    - name: Build
+      run: cmake --build build
+
+
+  build-arm-cortex-r:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        cpu:
+          - { name: cortex-r4, flags: "-mcpu=cortex-r4 -mthumb" }
+          - { name: cortex-r5, flags: "-mcpu=cortex-r5 -mthumb -mfpu=vfpv3-d16 -mfloat-abi=hard" }
+          - { name: cortex-r7, flags: "-mcpu=cortex-r7 -mthumb -mfpu=vfpv3-d16 -mfloat-abi=hard" }
+          - { name: cortex-r52, flags: "-mcpu=cortex-r52 -mthumb -mfpu=neon-fp-armv8 -mfloat-abi=hard" }
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        submodules: recursive
+
+    - name: Install prerequisites
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib ninja-build
+
+    - name: Configure CMake
+      run: |
+        cmake -B build -G Ninja \
+          -D CMAKE_BUILD_TYPE=Release \
+          -D CMAKE_CXX_STANDARD=11 \
+          -D CMAKE_CXX_EXTENSIONS=OFF \
+          -D CMAKE_SYSTEM_NAME=Generic \
+          -D CMAKE_C_COMPILER=arm-none-eabi-gcc \
+          -D CMAKE_CXX_COMPILER=arm-none-eabi-g++ \
+          -D CMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
+          -D CMAKE_C_FLAGS="${{ matrix.cpu.flags }}" \
+          -D CMAKE_CXX_FLAGS="${{ matrix.cpu.flags }}" \
+          -D FLTK_USE_SYSTEM_LIBJPEG=OFF \
+          -D FLTK_USE_SYSTEM_LIBPNG=OFF \
+          -D FLTK_USE_SYSTEM_ZLIB=OFF \
+          -D FLTK_BUILD_SHARED_LIBS=OFF \
+          -D FLTK_BUILD_TEST=OFF \
+          -D FLTK_BUILD_EXAMPLES=OFF \
+          -D FLTK_BUILD_FORMS=OFF \
+          -D FLTK_BUILD_GL=OFF
+
+    - name: Build
+      run: cmake --build build
+
+
+  build-riscv:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - { name: riscv64-linux, compiler_pkg: "gcc-riscv64-linux-gnu g++-riscv64-linux-gnu", c_compiler: riscv64-linux-gnu-gcc, cxx_compiler: riscv64-linux-gnu-g++, run_tests: true }
+          - { name: riscv64-elf, compiler_pkg: "gcc-riscv64-unknown-elf libnewlib-riscv64-unknown-elf", c_compiler: riscv64-unknown-elf-gcc, cxx_compiler: riscv64-unknown-elf-g++, run_tests: false, flags: "-march=rv64gc -mabi=lp64d" }
+          - { name: riscv32-elf, compiler_pkg: "gcc-riscv64-unknown-elf libnewlib-riscv64-unknown-elf", c_compiler: riscv64-unknown-elf-gcc, cxx_compiler: riscv64-unknown-elf-g++, run_tests: false, flags: "-march=rv32imac -mabi=ilp32" }
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        submodules: recursive
+
+    - name: Install prerequisites
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y ${{ matrix.target.compiler_pkg }} qemu-user-static ninja-build
+
+    - name: Configure CMake
+      run: |
+        FLAGS="${{ matrix.target.flags }}"
+        RUN_TESTS="${{ matrix.target.run_tests }}"
+        if [ "$RUN_TESTS" = "true" ]; then
+          cmake -B build -G Ninja \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D CMAKE_CXX_STANDARD=11 \
+            -D CMAKE_CXX_EXTENSIONS=OFF \
+            -D CMAKE_SYSTEM_NAME=Linux \
+            -D CMAKE_SYSTEM_PROCESSOR=riscv64 \
+            -D CMAKE_C_COMPILER=${{ matrix.target.c_compiler }} \
+            -D CMAKE_CXX_COMPILER=${{ matrix.target.cxx_compiler }} \
+            -D FLTK_USE_SYSTEM_LIBJPEG=OFF \
+            -D FLTK_USE_SYSTEM_LIBPNG=OFF \
+            -D FLTK_USE_SYSTEM_ZLIB=OFF \
+            -D FLTK_BUILD_SHARED_LIBS=OFF \
+            -D FLTK_BUILD_TEST=ON \
+            -D FLTK_BUILD_EXAMPLES=OFF \
+            -D FLTK_BUILD_FORMS=ON \
+            -D FLTK_BUILD_GL=OFF \
+            -D FLTK_BACKEND_WAYLAND=OFF
+        else
+          cmake -B build -G Ninja \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D CMAKE_CXX_STANDARD=11 \
+            -D CMAKE_CXX_EXTENSIONS=OFF \
+            -D CMAKE_SYSTEM_NAME=Generic \
+            -D CMAKE_C_COMPILER=${{ matrix.target.c_compiler }} \
+            -D CMAKE_CXX_COMPILER=${{ matrix.target.cxx_compiler }} \
+            -D CMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
+            -D CMAKE_C_FLAGS="$FLAGS" \
+            -D CMAKE_CXX_FLAGS="$FLAGS" \
+            -D FLTK_USE_SYSTEM_LIBJPEG=OFF \
+            -D FLTK_USE_SYSTEM_LIBPNG=OFF \
+            -D FLTK_USE_SYSTEM_ZLIB=OFF \
+            -D FLTK_BUILD_SHARED_LIBS=OFF \
+            -D FLTK_BUILD_TEST=OFF \
+            -D FLTK_BUILD_EXAMPLES=OFF \
+            -D FLTK_BUILD_FORMS=OFF \
+            -D FLTK_BUILD_GL=OFF
+        fi
+
+    - name: Build
+      run: cmake --build build
+
+    - name: Run unit tests via QEMU
+      if: matrix.target.run_tests == true
+      run: |
+        qemu-riscv64-static -L /usr/riscv64-linux-gnu ./build/bin/test/unittests --core
+
+
+  build-xtensa:
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - { name: esp32, compiler: xtensa-esp32-elf }
+          - { name: esp32s3, compiler: xtensa-esp32s3-elf }
+
+    steps:
+    - name: Safe directory
+      run: git config --global --add safe.directory "*"
+
+    - uses: actions/checkout@v6
+      with:
+        submodules: recursive
+
+    - name: Configure CMake
+      run: |
+        . $IDF_PATH/export.sh || true
+        cmake -B build -G Ninja \
+          -D CMAKE_BUILD_TYPE=Release \
+          -D CMAKE_CXX_STANDARD=11 \
+          -D CMAKE_CXX_EXTENSIONS=OFF \
+          -D CMAKE_SYSTEM_NAME=Generic \
+          -D CMAKE_C_COMPILER=${{ matrix.target.compiler }}-gcc \
+          -D CMAKE_CXX_COMPILER=${{ matrix.target.compiler }}-g++ \
+          -D CMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
+          -D FLTK_USE_SYSTEM_LIBJPEG=OFF \
+          -D FLTK_USE_SYSTEM_LIBPNG=OFF \
+          -D FLTK_USE_SYSTEM_ZLIB=OFF \
+          -D FLTK_BUILD_SHARED_LIBS=OFF \
+          -D FLTK_BUILD_TEST=OFF \
+          -D FLTK_BUILD_EXAMPLES=OFF \
+          -D FLTK_BUILD_FORMS=OFF \
+          -D FLTK_BUILD_GL=OFF
+
+    - name: Build
+      run: |
+        . $IDF_PATH/export.sh || true
+        cmake --build build
+
+
+  build-pic:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - { name: pic32-mips, compiler_pkg: "gcc-mipsel-linux-gnu g++-mipsel-linux-gnu", c_compiler: mipsel-linux-gnu-gcc, cxx_compiler: mipsel-linux-gnu-g++, run_tests: true }
+          - { name: pic-sdcc, compiler_pkg: "sdcc gputils gpsim", run_sdcc: true, run_tests: false }
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        submodules: recursive
+
+    - name: Install prerequisites
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y ${{ matrix.target.compiler_pkg }} qemu-user-static ninja-build
+
+    - name: Configure and Build PIC32 (MIPS)
+      if: matrix.target.name == 'pic32-mips'
+      run: |
+        cmake -B build -G Ninja \
+          -D CMAKE_BUILD_TYPE=Release \
+          -D CMAKE_CXX_STANDARD=11 \
+          -D CMAKE_CXX_EXTENSIONS=OFF \
+          -D CMAKE_SYSTEM_NAME=Linux \
+          -D CMAKE_SYSTEM_PROCESSOR=mipsel \
+          -D CMAKE_C_COMPILER=${{ matrix.target.c_compiler }} \
+          -D CMAKE_CXX_COMPILER=${{ matrix.target.cxx_compiler }} \
+          -D FLTK_USE_SYSTEM_LIBJPEG=OFF \
+          -D FLTK_USE_SYSTEM_LIBPNG=OFF \
+          -D FLTK_USE_SYSTEM_ZLIB=OFF \
+          -D FLTK_BUILD_SHARED_LIBS=OFF \
+          -D FLTK_BUILD_TEST=ON \
+          -D FLTK_BUILD_EXAMPLES=OFF \
+          -D FLTK_BUILD_FORMS=ON \
+          -D FLTK_BUILD_GL=OFF \
+          -D FLTK_BACKEND_WAYLAND=OFF
+        cmake --build build
+
+    - name: Run PIC32 unit tests via QEMU
+      if: matrix.target.run_tests == true
+      run: |
+        qemu-mipsel-static -L /usr/mipsel-linux-gnu ./build/bin/test/unittests --core
+
+    - name: Verify SDCC PIC compiler
+      if: matrix.target.run_sdcc == true
+      run: |
+        sdcc --version
+        gpasm --version
+        gpsim --version || true
+
+
+  build-avr:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mcu:
+          - { name: atmega328p, flag: "-mmcu=atmega328p" }
+          - { name: atmega2560, flag: "-mmcu=atmega2560" }
+          - { name: attiny85, flag: "-mmcu=attiny85" }
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        submodules: recursive
+
+    - name: Install prerequisites
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y gcc-avr avr-libc binutils-avr ninja-build
+
+    - name: Configure CMake
+      run: |
+        cmake -B build -G Ninja \
+          -D CMAKE_BUILD_TYPE=Release \
+          -D CMAKE_CXX_STANDARD=11 \
+          -D CMAKE_CXX_EXTENSIONS=OFF \
+          -D CMAKE_SYSTEM_NAME=Generic \
+          -D CMAKE_C_COMPILER=avr-gcc \
+          -D CMAKE_CXX_COMPILER=avr-g++ \
+          -D CMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
+          -D CMAKE_C_FLAGS="${{ matrix.mcu.flag }}" \
+          -D CMAKE_CXX_FLAGS="${{ matrix.mcu.flag }}" \
+          -D FLTK_USE_SYSTEM_LIBJPEG=OFF \
+          -D FLTK_USE_SYSTEM_LIBPNG=OFF \
+          -D FLTK_USE_SYSTEM_ZLIB=OFF \
+          -D FLTK_BUILD_SHARED_LIBS=OFF \
+          -D FLTK_BUILD_TEST=OFF \
+          -D FLTK_BUILD_EXAMPLES=OFF \
+          -D FLTK_BUILD_FORMS=OFF \
+          -D FLTK_BUILD_GL=OFF
+
+    - name: Build
+      run: cmake --build build
