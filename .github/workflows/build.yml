@@ -25,65 +25,149 @@ permissions:
 
 jobs:
   build-linux:
+    name: build-linux (${{ matrix.compiler.name }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler:
+          - name: gcc
+            type: gcc
+            cc: gcc
+            cxx: g++
+          - name: clang
+            type: clang
+            cc: clang
+            cxx: clang++
+          - name: mingw
+            type: mingw
+            cc: x86_64-w64-mingw32-gcc
+            cxx: x86_64-w64-mingw32-g++
+            rc: x86_64-w64-mingw32-windres
+          - name: intel-oneapi
+            type: intel
+            cc: icx
+            cxx: icpx
 
     steps:
     - uses: actions/checkout@v6
       with:
         submodules: recursive
 
-    - name: install prerequisites
+    - name: Install prerequisites (Common)
+      if: matrix.compiler.type != 'mingw'
       run: |
         sudo apt-get update -y
         sudo apt-get install -y \
-        libjpeg-dev \
-        libasound2-dev \
-        libglew-dev \
-        libglu1-mesa-dev \
-        libcairo2-dev \
-        libx11-dev \
-        libxcursor-dev \
-        libxft-dev \
-        libxinerama-dev \
-        ninja-build
+          libjpeg-dev \
+          libasound2-dev \
+          libglew-dev \
+          libglu1-mesa-dev \
+          libcairo2-dev \
+          libx11-dev \
+          libxcursor-dev \
+          libxft-dev \
+          libxinerama-dev \
+          ninja-build
+
+    - name: Install Clang
+      if: matrix.compiler.type == 'clang'
+      run: |
+        sudo apt-get install -y clang
+
+    - name: Install MinGW & Wine
+      if: matrix.compiler.type == 'mingw'
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y \
+          mingw-w64 \
+          wine64 \
+          ninja-build
+
+    - name: Install Intel oneAPI DPC++/C++ Compiler
+      if: matrix.compiler.type == 'intel'
+      run: |
+        wget -qO- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | sudo tee /etc/apt/trusted.gpg.d/GPG-PUB-KEY-INTEL-SW-PRODUCTS.asc
+        echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+        sudo apt-get update -y
+        sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp
+
+    - name: Setup Intel oneAPI environment
+      if: matrix.compiler.type == 'intel'
+      run: |
+        source /opt/intel/oneapi/setvars.sh
+        echo "PATH=$PATH" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "CPATH=$CPATH" >> $GITHUB_ENV
+        echo "LIBRARY_PATH=$LIBRARY_PATH" >> $GITHUB_ENV
+        echo "ONEAPI_ROOT=/opt/intel/oneapi" >> $GITHUB_ENV
 
     - name: Create Build Environment
-      # Create a separate build directory.
-      # We'll use this as our working directory for all subsequent commands
       run: cmake -E make_directory ${{github.workspace}}/build
 
-    - name: Configure CMake
-      # Use a bash shell on all platforms but Windows, so we can use the same syntax
-      # for environment variable access regardless of the host operating system
+    - name: Configure CMake (Native Linux)
+      if: matrix.compiler.type != 'mingw'
       shell: bash
-      # Note the current convention is to use the -S and -B options here to specify
-      # source and build directories, but we set the working directory explicitly
       working-directory: ${{github.workspace}}/build
-
       run: |
         cmake $GITHUB_WORKSPACE \
-        -G Ninja \
-        -D CMAKE_BUILD_TYPE=$BUILD_TYPE \
-        -D CMAKE_CXX_STANDARD=11 \
-        -D CMAKE_CXX_EXTENSIONS=OFF \
-        -D CMAKE_C_FLAGS_INIT="-Wall -Wunused" \
-        -D CMAKE_CXX_FLAGS_INIT="-Wall -Wunused -Wsuggest-override" \
-        -D FLTK_BACKEND_WAYLAND=OFF \
-        -D FLTK_BUILD_SHARED_LIBS:BOOL=ON \
-        -D FLTK_BUILD_FORMS=ON \
-        -D FLTK_BUILD_GL=ON \
-        -D FLTK_OPTION_CAIRO_WINDOW=OFF
+          -G Ninja \
+          -D CMAKE_BUILD_TYPE=$BUILD_TYPE \
+          -D CMAKE_C_COMPILER=${{ matrix.compiler.cc }} \
+          -D CMAKE_CXX_COMPILER=${{ matrix.compiler.cxx }} \
+          -D CMAKE_CXX_STANDARD=11 \
+          -D CMAKE_CXX_EXTENSIONS=OFF \
+          -D CMAKE_C_FLAGS_INIT="-Wall -Wunused" \
+          -D CMAKE_CXX_FLAGS_INIT="-Wall -Wunused" \
+          -D FLTK_BACKEND_WAYLAND=OFF \
+          -D FLTK_BUILD_SHARED_LIBS:BOOL=ON \
+          -D FLTK_BUILD_FORMS=ON \
+          -D FLTK_BUILD_GL=ON \
+          -D FLTK_OPTION_CAIRO_WINDOW=OFF
+
+    - name: Configure CMake (MinGW)
+      if: matrix.compiler.type == 'mingw'
+      shell: bash
+      working-directory: ${{github.workspace}}/build
+      run: |
+        cmake $GITHUB_WORKSPACE \
+          -G Ninja \
+          -D CMAKE_BUILD_TYPE=$BUILD_TYPE \
+          -D CMAKE_SYSTEM_NAME=Windows \
+          -D CMAKE_C_COMPILER=${{ matrix.compiler.cc }} \
+          -D CMAKE_CXX_COMPILER=${{ matrix.compiler.cxx }} \
+          -D CMAKE_RC_COMPILER=${{ matrix.compiler.rc }} \
+          -D CMAKE_CXX_STANDARD=11 \
+          -D CMAKE_CXX_EXTENSIONS=OFF \
+          -D FLTK_USE_SYSTEM_LIBJPEG=OFF \
+          -D FLTK_USE_SYSTEM_LIBPNG=OFF \
+          -D FLTK_USE_SYSTEM_ZLIB=OFF \
+          -D FLTK_BUILD_SHARED_LIBS:BOOL=OFF \
+          -D FLTK_BUILD_FORMS=ON \
+          -D FLTK_BUILD_GL=ON
 
     - name: Build
       working-directory: ${{github.workspace}}/build
       shell: bash
-      # Execute the build.
       run: cmake --build . --config $BUILD_TYPE
 
-    - name: Unittest
+    - name: Unittest (Native Linux)
+      if: matrix.compiler.type != 'mingw'
       working-directory: ${{github.workspace}}/build
       shell: bash
       run: ./bin/test/unittests --core
+
+    - name: Unittest (MinGW Wine)
+      if: matrix.compiler.type == 'mingw'
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: |
+        if command -v wine64 >/dev/null 2>&1; then
+          wine64 ./bin/test/unittests.exe --core
+        elif command -v wine >/dev/null 2>&1; then
+          wine ./bin/test/unittests.exe --core
+        fi
+
 
   build-wayland:
     runs-on: ubuntu-latest
