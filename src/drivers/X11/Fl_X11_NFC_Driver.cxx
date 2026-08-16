@@ -26,7 +26,11 @@
 #endif
 
 Fl_X11_NFC_Driver::Fl_X11_NFC_Driver(Fl_NFC_Manager* m)
-  : Fl_NFC_Driver(m), context_(0) {
+  : Fl_NFC_Driver(m)
+#ifdef HAVE_PCSC_WINSCARD_H
+  , context_(0)
+#endif
+{
 }
 
 Fl_X11_NFC_Driver::~Fl_X11_NFC_Driver() {

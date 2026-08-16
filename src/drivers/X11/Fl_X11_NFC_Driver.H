@@ -17,6 +17,7 @@
 #ifndef Fl_X11_NFC_Driver_H
 #define Fl_X11_NFC_Driver_H
 
+#include <config.h>
 #include "../../Fl_NFC_Driver.H"
 
 class Fl_X11_NFC_Driver : public Fl_NFC_Driver {
@@ -28,7 +29,9 @@ public:
   void stop_target_detection() FL_OVERRIDE;
 
 private:
+#ifdef HAVE_PCSC_WINSCARD_H
   long context_;
+#endif
   static void timer_cb(void*);
 };
 

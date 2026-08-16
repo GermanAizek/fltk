@@ -47,7 +47,6 @@ Fl_XBM_Image::Fl_XBM_Image(const char *name) : Fl_Bitmap((const char *)0,0,0) {
   if (!f.is_open()) return;
 
   char buffer[1024];
-  char junk[1024];
   int wh[2]; // width and height
   int i;
   for (i = 0; i<2; i++) {

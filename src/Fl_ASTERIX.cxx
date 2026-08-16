@@ -13,7 +13,7 @@
 #include <stdio.h>
 
 Fl_ASTERIX::Fl_ASTERIX()
-  : buf_idx_(0), asterix_cb_(nullptr), user_data_(nullptr) {
+  : asterix_cb_(nullptr), user_data_(nullptr), buf_idx_(0) {
   memset(&last_record_, 0, sizeof(last_record_));
   memset(buffer_, 0, sizeof(buffer_));
   Fl_Serial_Port::callback(serial_cb, this);

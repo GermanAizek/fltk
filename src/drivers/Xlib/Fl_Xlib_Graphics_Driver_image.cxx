@@ -70,9 +70,6 @@ static int scanline_mask;
 static void (*converter)(const uchar *from, uchar *to, int w, int delta);
 static void (*mono_converter)(const uchar *from, uchar *to, int w, int delta);
 
-static int dir;         // direction-alternator
-static int ri,gi,bi;    // saved error-diffusion value
-
 #  if USE_COLORMAP
 ////////////////////////////////////////////////////////////////
 // 8-bit converter with error diffusion

@@ -102,6 +102,7 @@ std::string fl_filename_shortened(const std::string &filename, int max_chars) {
  \return a new string, ending with a '/'
  */
 std::string fluid::end_with_slash(const std::string &str) {
+  if (str.empty()) return str;
   char last = str[str.size()-1];
   if (last !='/' && last != '\\')
     return str + "/";

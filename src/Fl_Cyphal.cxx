@@ -12,7 +12,7 @@
 #include <string.h>
 
 Fl_Cyphal::Fl_Cyphal()
-  : buf_idx_(0), cyphal_cb_(nullptr), user_data_(nullptr) {
+  : cyphal_cb_(nullptr), user_data_(nullptr), buf_idx_(0) {
   memset(&last_transfer_, 0, sizeof(last_transfer_));
   memset(buffer_, 0, sizeof(buffer_));
   Fl_Serial_Port::callback(serial_cb, this);

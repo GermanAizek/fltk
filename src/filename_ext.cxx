@@ -50,14 +50,19 @@ const char *fl_filename_ext(const char *buf) {
 
  \see fl_filename_ext(const char*)
  */
+#include <string.h>
+
 const char *Fl_System_Driver::filename_ext(const char *buf) {
-  const char *q = 0;
-  const char *p = buf;
-  for (p=buf; *p; p++) {
-    if (*p == '/') q = 0;
-    else if (*p == '.') q = p;
-  }
-  return q ? q : p;
+  if (!buf) return "";
+  const char *slash = strrchr(buf, '/');
+#if defined(_WIN32) || defined(__EMX__)
+  const char *bslash = strrchr(buf, '\\');
+  if (!slash || (bslash && bslash > slash)) slash = bslash;
+#endif
+  const char *start = slash ? slash + 1 : buf;
+  const char *dot = strrchr(start, '.');
+  if (dot) return dot;
+  return buf + strlen(buf);
 }
 
 /**

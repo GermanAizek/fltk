@@ -18,7 +18,7 @@
 #include <FL/Fl_XBUS.H>
 #include <string.h>
 
-Fl_XBUS::Fl_XBUS() : buf_idx_(0), xbus_cb_(nullptr), xbus_user_data_(nullptr) {
+Fl_XBUS::Fl_XBUS() : xbus_cb_(nullptr), xbus_user_data_(nullptr), buf_idx_(0) {
   memset(channels_, 0, sizeof(channels_));
   memset(buffer_, 0, sizeof(buffer_));
   

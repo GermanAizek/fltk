@@ -23,7 +23,7 @@
 #define SLIP_ESC_END 0xDC
 #define SLIP_ESC_ESC 0xDD
 
-Fl_AFDX::Fl_AFDX() : buf_idx_(0), escape_flag_(false), afdx_cb_(nullptr), afdx_user_data_(nullptr) {
+Fl_AFDX::Fl_AFDX() : afdx_cb_(nullptr), afdx_user_data_(nullptr), buf_idx_(0), escape_flag_(false) {
   memset(buffer_, 0, sizeof(buffer_));
   memset(&last_frame_, 0, sizeof(last_frame_));
   

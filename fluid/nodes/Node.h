@@ -104,6 +104,7 @@ struct TextSpan2 {
 
 int storestring(const char *n, const char * & p, int nostrip=0);
 int storestring(const std::string& n, std::string& p, int nostrip=0);
+int storestring(const char *n, std::string& p, int nostrip=0);
 
 void select_all_cb(Fl_Widget *,void *);
 void select_none_cb(Fl_Widget *,void *);

@@ -45,9 +45,16 @@ public:
   Fl_RGB_Image *image() override { return nullptr; } // TODO: write me
 };
 
+#include <FL/Fl_Copy_Surface.H>
+
 Fl_Image_Surface_Driver *Fl_Image_Surface_Driver::newImageSurfaceDriver(int w, int h, int high_res, Fl_Offscreen off)
 {
   return new Fl_Android_Image_Surface_Driver(w, h, high_res, off);
+}
+
+Fl_Copy_Surface_Driver *Fl_Copy_Surface_Driver::newCopySurfaceDriver(int w, int h)
+{
+  return NULL;
 }
 
 

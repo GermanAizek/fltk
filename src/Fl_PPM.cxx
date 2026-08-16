@@ -28,7 +28,7 @@
 
 Fl_PPM::Fl_PPM() : 
   callback_(nullptr), user_data_(nullptr), 
-  num_channels_(8), frame_length_us_(22500), pulse_width_us_(300) {
+  frame_length_us_(22500), pulse_width_us_(300), num_channels_(8) {
   for (int i = 0; i < 16; i++) channels_[i] = 1500; // default middle position
 #if defined(_WIN32)
   handle_ = INVALID_HANDLE_VALUE;

@@ -758,7 +758,9 @@ int fl_chdir(const char* path) {
 */
 char *fl_getcwd(char *buf, int len) {
   if (buf == NULL) {
-    buf = (char*)malloc(len + 1);
+    buf = (char*)calloc(1, len + 1);
+  } else if (len > 0) {
+    memset(buf, 0, len);
   }
   return Fl::system_driver()->getcwd(buf, len);
 }

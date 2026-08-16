@@ -18,9 +18,9 @@
 #include <FL/Fl_MSP.H>
 #include <string.h>
 
-Fl_MSP::Fl_MSP() : state_(WAIT_HEADER_1), payload_size_(0), cmd_(0), 
-                   current_checksum_(0), buf_idx_(0), 
-                   msp_cb_(nullptr), msp_user_data_(nullptr) {
+Fl_MSP::Fl_MSP() : msp_cb_(nullptr), msp_user_data_(nullptr),
+                   state_(WAIT_HEADER_1), payload_size_(0), cmd_(0), 
+                   current_checksum_(0), buf_idx_(0) {
   memset(payload_buffer_, 0, sizeof(payload_buffer_));
   
   // Register the internal serial callback

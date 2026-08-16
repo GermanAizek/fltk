@@ -18,7 +18,7 @@
 #include <FL/Fl_CRSF.H>
 #include <string.h>
 
-Fl_CRSF::Fl_CRSF() : state_(WAIT_SYNC), current_len_(0), buf_idx_(0), crsf_cb_(nullptr), crsf_user_data_(nullptr) {
+Fl_CRSF::Fl_CRSF() : crsf_cb_(nullptr), crsf_user_data_(nullptr), state_(WAIT_SYNC), current_len_(0), buf_idx_(0) {
   memset(channels_, 0, sizeof(channels_));
   memset(buffer_, 0, sizeof(buffer_));
   

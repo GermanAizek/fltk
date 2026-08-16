@@ -12,7 +12,7 @@
 #include <string.h>
 
 Fl_MAVLink2::Fl_MAVLink2()
-  : buf_idx_(0), mav_cb_(nullptr), user_data_(nullptr) {
+  : mav_cb_(nullptr), user_data_(nullptr), buf_idx_(0) {
   memset(&last_msg_, 0, sizeof(last_msg_));
   memset(buffer_, 0, sizeof(buffer_));
   Fl_Serial_Port::callback(serial_cb, this);

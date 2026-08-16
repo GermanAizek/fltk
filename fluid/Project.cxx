@@ -405,7 +405,6 @@ void Project::write_strings() {
  code files current, 1 to mark it out of date. -2 to ignore changes to mf.
  */
 void Project::set_modflag(int mf, int mfc) {
-  const char *code_ext = nullptr;
   char new_title[FL_PATH_MAX];
 
   // Update the modflag_c to the worst possible condition. We could be a bit
@@ -424,11 +423,11 @@ void Project::set_modflag(int mf, int mfc) {
     std::string basename;
     if (proj_filename.empty()) basename = "Untitled.fl";
     else basename = fl_filename_name_str(proj_filename);
-    code_ext = fl_filename_ext(code_file_name.c_str());
+    std::string code_ext = fl_filename_ext_str(code_file_name);
     char mod_star = modflag ? '*' : ' ';
     char mod_c_star = modflag_c ? '*' : ' ';
     snprintf(new_title, sizeof(new_title), "%s%c  %s%c",
-             basename.c_str(), mod_star, code_ext, mod_c_star);
+             basename.c_str(), mod_star, code_ext.c_str(), mod_c_star);
     const char *old_title = Fluid.main_window->label();
     // only update the title if it actually changed
     if (!old_title || strcmp(old_title, new_title))

@@ -172,6 +172,14 @@ int Fl_Android_System_Driver::ready() {
   return 0;
 }
 
+#include <FL/Fl_Native_File_Chooser.H>
+
+Fl_Native_File_Chooser::Fl_Native_File_Chooser(int val) {
+  platform_fnfc = new Fl_Native_File_Chooser_FLTK_Driver(val);
+}
+
+
+
 
 #if 0
 

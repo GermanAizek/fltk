@@ -18,7 +18,7 @@
 #include <FL/Fl_SBUS.H>
 #include <string.h>
 
-Fl_SBUS::Fl_SBUS() : failsafe_(false), frame_lost_(false), buf_idx_(0), sbus_cb_(nullptr), sbus_user_data_(nullptr) {
+Fl_SBUS::Fl_SBUS() : sbus_cb_(nullptr), sbus_user_data_(nullptr), buf_idx_(0), failsafe_(false), frame_lost_(false) {
   memset(channels_, 0, sizeof(channels_));
   memset(buffer_, 0, sizeof(buffer_));
   

@@ -18,7 +18,7 @@
 #include <FL/Fl_IBUS.H>
 #include <string.h>
 
-Fl_IBUS::Fl_IBUS() : buf_idx_(0), ibus_cb_(nullptr), ibus_user_data_(nullptr) {
+Fl_IBUS::Fl_IBUS() : ibus_cb_(nullptr), ibus_user_data_(nullptr), buf_idx_(0) {
   memset(channels_, 0, sizeof(channels_));
   memset(buffer_, 0, sizeof(buffer_));
   

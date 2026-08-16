@@ -13,7 +13,7 @@
 #include <stdio.h>
 
 Fl_ADSB_1090ES::Fl_ADSB_1090ES()
-  : buf_idx_(0), adsb_cb_(nullptr), user_data_(nullptr) {
+  : adsb_cb_(nullptr), user_data_(nullptr), buf_idx_(0) {
   memset(&last_msg_, 0, sizeof(last_msg_));
   memset(buffer_, 0, sizeof(buffer_));
   Fl_Serial_Port::callback(serial_cb, this);

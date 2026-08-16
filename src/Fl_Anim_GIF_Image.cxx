@@ -72,16 +72,16 @@ class Fl_Anim_GIF_Image::FrameInfo {
     GifFrame() :
       rgb(0),
       scalable(0),
+      delay(0),
       average_color(FL_BLACK),
       average_weight(-1),
-      desaturated(false),
+      dispose(DISPOSE_UNDEF),
+      transparent_color_index(-1),
       x(0),
       y(0),
       w(0),
       h(0),
-      delay(0),
-      dispose(DISPOSE_UNDEF),
-      transparent_color_index(-1) {}
+      desaturated(false) {}
     Fl_RGB_Image *rgb;                // full frame image
     Fl_Shared_Image *scalable;        // used for hardware-accelerated scaling
     double delay;                     // delay (already converted to ms)
@@ -101,16 +101,16 @@ class Fl_Anim_GIF_Image::FrameInfo {
     average_weight(-1),
     average_color(FL_BLACK),
     scaling((Fl_RGB_Scaling)0),
+    valid(false),
+    desaturate(false),
+    optimize_mem(false),
     frames_size(0),
     loop_count(1),
     loop(0),
     background_color_index(-1),
     canvas_w(0),
     canvas_h(0),
-    debug_(0),
-    valid(false),
-    desaturate(false),
-    optimize_mem(false) {}
+    debug_(0) {}
   ~FrameInfo();
   void clear();
   void copy(const FrameInfo& fi);

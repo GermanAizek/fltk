@@ -144,14 +144,12 @@ Fl_Image *Fl_Pixmap::copy(int W, int H) const {
                 **new_row,      // Pointer to row in image data
                 *new_ptr,       // Pointer into new array
                 new_info[255];  // New information line
-  const char    *old_ptr;       // Pointer into old array
   int           i,              // Looping var
-                c,              // Channel number
                 sy,             // Source coordinate
-                dx, dy,         // Destination coordinates
-                xerr, yerr,     // X & Y errors
+                dy,             // Destination coordinate
+                yerr,           // Y error
                 xmod, ymod,     // X & Y moduli
-                xstep, ystep;   // X & Y step increments
+                ystep;          // Y step increment
   int           ncolors,        // Number of colors in image
                 chars_per_pixel,// Characters per color
                 chars_per_line; // Characters per line
@@ -164,7 +162,6 @@ Fl_Image *Fl_Pixmap::copy(int W, int H) const {
 
   // Figure out Bresenham step/modulus values...
   xmod   = data_w() % W;
-  xstep  = (data_w() / W) * chars_per_pixel;
   ymod   = data_h() % H;
   ystep  = data_h() / H;
 
@@ -223,7 +220,7 @@ Fl_Image *Fl_Pixmap::copy(int W, int H) const {
     } else {
       for (int dx = 0; dx < W; dx++) {
         const char *old_ptr = line_ptr + x_offset[dx];
-        for (c = 0; c < chars_per_pixel; c++) *new_ptr++ = old_ptr[c];
+        for (int c = 0; c < chars_per_pixel; c++) *new_ptr++ = old_ptr[c];
       }
     }
 

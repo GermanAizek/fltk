@@ -52,6 +52,11 @@ public:
   ~Fl_DBus();
 
   /**
+    Returns the bus type.
+  */
+  BusType type() const { return type_; }
+
+  /**
     Returns whether the bus is currently connected.
   */
   bool is_connected() const;

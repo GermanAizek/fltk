@@ -708,10 +708,9 @@ int Fl_Unix_System_Driver::utf8locale() {
 
 // returns pointer to the filename, or null if name ends with '/'
 const char *Fl_Unix_System_Driver::filename_name(const char *name) {
-  const char *p,*q;
   if (!name) return (0);
-  for (p=q=name; *p;) if (*p++ == '/') q = p;
-  return q;
+  const char *p = strrchr(name, '/');
+  return p ? p + 1 : name;
 }
 
 

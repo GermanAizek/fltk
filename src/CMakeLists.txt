@@ -481,6 +481,7 @@ elseif (ANDROID)
 
   set (DRIVER_FILES
     drivers/Posix/Fl_Posix_System_Driver.cxx
+    drivers/Posix/Fl_Posix_Printer_Driver.cxx
     drivers/Android/Fl_Android_Application.cxx
     drivers/Android/Fl_Android_System_Driver.cxx
     drivers/Android/Fl_Android_Screen_Driver.cxx
@@ -490,6 +491,7 @@ elseif (ANDROID)
     drivers/Android/Fl_Android_Graphics_Driver.cxx
     drivers/Android/Fl_Android_Graphics_Clipping.cxx
     drivers/Android/Fl_Android_Graphics_Font.cxx
+    Fl_Native_File_Chooser_FLTK.cxx
   )
   set (DRIVER_HEADER_FILES
     drivers/Posix/Fl_Posix_System_Driver.H

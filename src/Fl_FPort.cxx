@@ -18,9 +18,9 @@
 #include <FL/Fl_FPort.H>
 #include <string.h>
 
-Fl_FPort::Fl_FPort() : flags_(0), rssi_(0), state_(WAIT_SYNC), escape_next_(false),
-                       frame_length_(0), frame_type_(0), buf_idx_(0), 
-                       fport_cb_(nullptr), fport_user_data_(nullptr) {
+Fl_FPort::Fl_FPort() : fport_cb_(nullptr), fport_user_data_(nullptr),
+                       state_(WAIT_SYNC), frame_length_(0), frame_type_(0), 
+                       buf_idx_(0), flags_(0), rssi_(0), escape_next_(false) {
   memset(channels_, 0, sizeof(channels_));
   memset(buffer_, 0, sizeof(buffer_));
   

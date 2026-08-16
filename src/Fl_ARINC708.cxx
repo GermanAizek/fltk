@@ -12,7 +12,7 @@
 #include <string.h>
 
 Fl_ARINC708::Fl_ARINC708()
-  : buf_idx_(0), arinc708_cb_(nullptr), user_data_(nullptr) {
+  : arinc708_cb_(nullptr), user_data_(nullptr), buf_idx_(0) {
   memset(&last_radial_, 0, sizeof(last_radial_));
   memset(buffer_, 0, sizeof(buffer_));
   Fl_Serial_Port::callback(serial_cb, this);

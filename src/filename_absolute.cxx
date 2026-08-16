@@ -75,6 +75,13 @@ int fl_filename_absolute(char *to, int tolen, const char *from, const char *base
  \{
  */
 int Fl_System_Driver::filename_absolute(char *to, int tolen, const char *from, const char *base) {
+  if (!to || tolen <= 0) return 0;
+  to[0] = '\0';
+  if (!from) return 0;
+  if (!*from) {
+    if (base) strlcpy(to, base, tolen);
+    return 0;
+  }
   if (isdirsep(*from) || *from == '|' || !base) {
     strlcpy(to, from, tolen);
     return 0;
@@ -85,7 +92,7 @@ int Fl_System_Driver::filename_absolute(char *to, int tolen, const char *from, c
   strlcpy(temp, base, tolen);
   a = temp+strlen(temp);
   /* remove trailing '/' in current working directory */
-  if (isdirsep(*(a-1))) a--;
+  if (a > temp && isdirsep(*(a-1))) a--;
   /* remove intermediate . and .. names: */
   while (*start == '.') {
     if (start[1]=='.' && (isdirsep(start[2]) || start[2]==0) ) {
@@ -298,7 +305,10 @@ int Fl_System_Driver::filename_relative_(char *to, int tolen, const char *dest_d
  \see fl_filename_name(const char *filename)
  */
 std::string fl_filename_name_str(const std::string &filename) {
-  return std::string(fl_filename_name(filename.c_str()));
+  auto pos = filename.find_last_of("/\\");
+  if (pos == std::string::npos)
+    return filename;
+  return filename.substr(pos + 1);
 }
 
 /**
@@ -308,13 +318,10 @@ std::string fl_filename_name_str(const std::string &filename) {
  \see fl_filename_name(const char *filename)
  */
 std::string fl_filename_path_str(const std::string &filename) {
-  const char *base = filename.c_str();
-  const char *name = fl_filename_name(base);
-  if (name) {
-    return std::string(base, (size_t)(name-base));
-  } else {
+  auto pos = filename.find_last_of("/\\");
+  if (pos == std::string::npos)
     return std::string();
-  }
+  return filename.substr(0, pos);
 }
 
 /**
@@ -325,7 +332,12 @@ std::string fl_filename_path_str(const std::string &filename) {
  \see fl_filename_ext(const char *buf)
  */
 std::string fl_filename_ext_str(const std::string &filename) {
-  return std::string(fl_filename_ext(filename.c_str()));
+  auto slash = filename.find_last_of("/\\");
+  auto start = (slash == std::string::npos) ? 0 : slash + 1;
+  auto dot = filename.rfind('.');
+  if (dot == std::string::npos || dot < start)
+    return std::string();
+  return filename.substr(dot);
 }
 
 /**
@@ -336,10 +348,12 @@ std::string fl_filename_ext_str(const std::string &filename) {
  \see fl_filename_setext(char *to, int tolen, const char *ext)
  */
 std::string fl_filename_setext_str(const std::string &filename, const std::string &new_extension) {
-  char buffer[FL_PATH_MAX];
-  fl_strlcpy(buffer, filename.c_str(), FL_PATH_MAX);
-  fl_filename_setext(buffer, FL_PATH_MAX, new_extension.c_str());
-  return std::string(buffer);
+  auto slash = filename.find_last_of("/\\");
+  auto start = (slash == std::string::npos) ? 0 : slash + 1;
+  auto dot = filename.rfind('.');
+  if (dot == std::string::npos || dot < start)
+    return filename + new_extension;
+  return filename.substr(0, dot) + new_extension;
 }
 
 /**
@@ -350,6 +364,7 @@ std::string fl_filename_setext_str(const std::string &filename, const std::strin
 */
 std::string fl_filename_expand_str(const std::string &from) {
   char buffer[FL_PATH_MAX];
+  memset(buffer, 0, sizeof(buffer));
   fl_filename_expand(buffer, FL_PATH_MAX, from.c_str());
   return std::string(buffer);
 }
@@ -362,6 +377,7 @@ std::string fl_filename_expand_str(const std::string &from) {
  */
 std::string fl_filename_absolute_str(const std::string &from) {
   char buffer[FL_PATH_MAX];
+  memset(buffer, 0, sizeof(buffer));
   fl_filename_absolute(buffer, FL_PATH_MAX, from.c_str());
   return std::string(buffer);
 }
@@ -376,6 +392,7 @@ std::string fl_filename_absolute_str(const std::string &from) {
  */
 std::string fl_filename_absolute_str(const std::string &from, const std::string &base) {
   char buffer[FL_PATH_MAX];
+  memset(buffer, 0, sizeof(buffer));
   fl_filename_absolute(buffer, FL_PATH_MAX, from.c_str(), base.c_str());
   return std::string(buffer);
 }
@@ -388,6 +405,7 @@ std::string fl_filename_absolute_str(const std::string &from, const std::string 
  */
 std::string fl_filename_relative_str(const std::string &from) {
   char buffer[FL_PATH_MAX];
+  memset(buffer, 0, sizeof(buffer));
   fl_filename_relative(buffer, FL_PATH_MAX, from.c_str());
   return std::string(buffer);
 }
@@ -401,6 +419,7 @@ std::string fl_filename_relative_str(const std::string &from) {
  */
 std::string fl_filename_relative_str(const std::string &from, const std::string &base) {
   char buffer[FL_PATH_MAX];
+  memset(buffer, 0, sizeof(buffer));
   fl_filename_relative(buffer, FL_PATH_MAX, from.c_str(), base.c_str());
   return std::string(buffer);
 }
@@ -411,7 +430,7 @@ std::string fl_filename_relative_str(const std::string &from, const std::string 
  */
 std::string fl_getcwd_str() {
   char buffer[FL_PATH_MAX];
-  buffer[0] = 0;
+  memset(buffer, 0, sizeof(buffer));
   fl_getcwd(buffer, FL_PATH_MAX);
   return std::string(buffer);
 }

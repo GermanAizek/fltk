@@ -18,7 +18,7 @@
 #include <FL/Fl_MIL_STD_1553.H>
 #include <string.h>
 
-Fl_MIL_STD_1553::Fl_MIL_STD_1553() : buf_idx_(0), mil1553_cb_(nullptr), mil1553_user_data_(nullptr) {
+Fl_MIL_STD_1553::Fl_MIL_STD_1553() : mil1553_cb_(nullptr), mil1553_user_data_(nullptr), buf_idx_(0) {
   memset(buffer_, 0, sizeof(buffer_));
   memset(&last_word_, 0, sizeof(last_word_));
   

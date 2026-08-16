@@ -12,7 +12,7 @@
 #include <string.h>
 
 Fl_IRIG106_Ch10::Fl_IRIG106_Ch10()
-  : buf_idx_(0), payload_len_(0), irig_cb_(nullptr), user_data_(nullptr) {
+  : irig_cb_(nullptr), user_data_(nullptr), buf_idx_(0), payload_len_(0) {
   memset(&last_header_, 0, sizeof(last_header_));
   memset(buffer_, 0, sizeof(buffer_));
   memset(payload_, 0, sizeof(payload_));

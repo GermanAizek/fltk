@@ -920,9 +920,9 @@ void Fl_Tile::init_size_range(int default_min_w, int default_min_h) {
 */
 Fl_Tile::Fl_Tile(int X,int Y,int W,int H,const char*L)
 : Fl_Group(X,Y,W,H,L),
-  cursor_(0),
   cursors_(Fl_Tile_cursors),
   size_range_(NULL),
+  cursor_(0),
   size_range_size_(0),
   size_range_capacity_(0),
   default_min_w_(GRABAREA),

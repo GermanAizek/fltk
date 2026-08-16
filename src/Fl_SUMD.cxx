@@ -18,9 +18,9 @@
 #include <FL/Fl_SUMD.H>
 #include <string.h>
 
-Fl_SUMD::Fl_SUMD() : num_channels_(0), status_(0), state_(WAIT_HEADER), 
-                     buf_idx_(0), current_len_(0), 
-                     sumd_cb_(nullptr), sumd_user_data_(nullptr) {
+Fl_SUMD::Fl_SUMD() : sumd_cb_(nullptr), sumd_user_data_(nullptr),
+                     state_(WAIT_HEADER), num_channels_(0), status_(0), 
+                     buf_idx_(0), current_len_(0) {
   memset(channels_, 0, sizeof(channels_));
   memset(buffer_, 0, sizeof(buffer_));
   

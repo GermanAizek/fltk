@@ -248,37 +248,58 @@ int storestring(const char *n, const char * & p, int nostrip) {
   Fluid.proj.undo.checkpoint();
   int length = 0;
   if (n) { // see if blank, strip leading & trailing blanks
-    if (!nostrip) while (fl_ascii_isspace(*n)) n++;
+    if (!nostrip) while (*n && fl_ascii_isspace(*n)) n++;
     const char *e = n + strlen(n);
     if (!nostrip) while (e > n && fl_ascii_isspace(*(e-1))) e--;
     length = int(e-n);
     if (!length) n = nullptr;
   }
   if (n == p) return 0;
-  if (n && p && !strncmp(n,p,length) && !p[length]) return 0;
+  if (n && p && (int)strlen(p) == length && !strncmp(n, p, length)) return 0;
   if (p) free((void *)p);
   if (!n || !*n) {
     p = nullptr;
   } else {
     char *q = (char *)malloc(length+1);
-    strlcpy(q,n,length+1);
+    memcpy(q, n, length);
+    q[length] = '\0';
     p = q;
   }
   Fluid.proj.set_modflag(1);
   return 1;
 }
 
-// C++11 version, still using the original to copy all the side effects.
+// C++11 version, manipulating std::string directly.
 int storestring(const std::string& n, std::string& p, int nostrip) {
-  const char *buffer { nullptr };
-  int ret = storestring(n.c_str(), buffer);
-  if (buffer) {
-    p = buffer;
-    free((void*)buffer);
-  } else {
-    p.clear();
+  Fluid.proj.undo.checkpoint();
+  size_t start = 0;
+  size_t end = n.size();
+  if (!nostrip) {
+    while (start < end && fl_ascii_isspace(static_cast<unsigned char>(n[start]))) start++;
+    while (end > start && fl_ascii_isspace(static_cast<unsigned char>(n[end - 1]))) end--;
   }
-  return ret;
+  if (start >= end) {
+    if (p.empty()) return 0;
+    p.clear();
+    Fluid.proj.set_modflag(1);
+    return 1;
+  }
+  if (p.size() == end - start && p.compare(0, p.size(), n, start, end - start) == 0)
+    return 0;
+  p.assign(n, start, end - start);
+  Fluid.proj.set_modflag(1);
+  return 1;
+}
+
+int storestring(const char *n, std::string& p, int nostrip) {
+  if (!n) {
+    if (p.empty()) return 0;
+    Fluid.proj.undo.checkpoint();
+    p.clear();
+    Fluid.proj.set_modflag(1);
+    return 1;
+  }
+  return storestring(std::string(n), p, nostrip);
 }
 
 /**

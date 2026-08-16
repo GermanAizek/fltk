@@ -29,6 +29,27 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <string.h>
+
+#if defined(__has_feature)
+#  if __has_feature(memory_sanitizer)
+#    define FLTK_USE_MSAN 1
+#  endif
+#elif defined(__MEMORY_SANITIZER__)
+#  define FLTK_USE_MSAN 1
+#endif
+
+#if defined(FLTK_USE_MSAN)
+#  if defined(__has_include)
+#    if __has_include(<sanitizer/msan_interface.h>)
+#      include <sanitizer/msan_interface.h>
+#    else
+extern "C" void __msan_unpoison(const volatile void *a, size_t size);
+#    endif
+#  else
+extern "C" void __msan_unpoison(const volatile void *a, size_t size);
+#  endif
+#endif
 
 /*
  Move everything here that manages the system interface.
@@ -51,14 +72,32 @@ public:
   int open(const char* f, int oflags, int pmode) FL_OVERRIDE {
     return pmode == -1 ?  ::open(f, oflags) : ::open(f, oflags, pmode);
   }
-  char *getenv(const char *v) FL_OVERRIDE { return ::getenv(v); }
+  char *getenv(const char *v) FL_OVERRIDE {
+    char *ret = ::getenv(v);
+#if defined(FLTK_USE_MSAN)
+    if (ret) __msan_unpoison(ret, strlen(ret) + 1);
+#endif
+    return ret;
+  }
   int putenv(const char *var) FL_OVERRIDE {return ::putenv(strdup(var));}
   int system(const char* cmd) FL_OVERRIDE {return ::system(cmd);}
   int execvp(const char *file, char *const *argv) FL_OVERRIDE {return ::execvp(file, argv);}
   int chmod(const char* f, int mode) FL_OVERRIDE {return ::chmod(f, mode);}
   int access(const char* f, int mode) FL_OVERRIDE { return ::access(f, mode);}
-  int flstat(const char* f, struct stat *b) FL_OVERRIDE { return ::stat(f, b);}
-  char *getcwd(char* b, int l) FL_OVERRIDE {return ::getcwd(b, l);}
+  int flstat(const char* f, struct stat *b) FL_OVERRIDE {
+    int ret = ::stat(f, b);
+#if defined(FLTK_USE_MSAN)
+    if (ret == 0 && b) __msan_unpoison(b, sizeof(struct stat));
+#endif
+    return ret;
+  }
+  char *getcwd(char* b, int l) FL_OVERRIDE {
+    char *ret = ::getcwd(b, l);
+#if defined(FLTK_USE_MSAN)
+    if (ret) __msan_unpoison(b, strlen(b) + 1);
+#endif
+    return ret;
+  }
   int chdir(const char* path) FL_OVERRIDE {return ::chdir(path);}
   int unlink(const char* f) FL_OVERRIDE {return ::unlink(f);}
   int rmdir(const char* f) FL_OVERRIDE {return ::rmdir(f);}

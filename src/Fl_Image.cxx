@@ -504,8 +504,7 @@ Fl_RGB_Image *Fl_RGB_Image::copy_optimize_(int W, int H) const {
  */
 Fl_RGB_Image *Fl_RGB_Image::copy_nearest_neighbor_(int W, int H) const {
   uchar         *new_ptr;       // Pointer into new array
-  const uchar   *old_ptr;       // Pointer into old array
-  int           dx, dy,         // Destination coordinates
+  int           dy,             // Destination coordinate
                 line_d;         // stride from line to line
 
   // Allocate memory for the new image...
@@ -515,15 +514,13 @@ Fl_RGB_Image *Fl_RGB_Image::copy_nearest_neighbor_(int W, int H) const {
 
   line_d = ld() ? ld() : data_w() * d();
 
-  int         c,              // Channel number
-              sy,             // Source coordinate
-              xerr, yerr,     // X & Y errors
+  int         sy,             // Source coordinate
+              yerr,           // Y error
               xmod, ymod,     // X & Y moduli
-              xstep, ystep;   // X & Y step increments
+              ystep;          // Y step increment
 
   // Figure out Bresenham step/modulus values...
   xmod   = data_w() % W;
-  xstep  = (data_w() / W) * d();
   ymod   = data_h() % H;
   ystep  = data_h() / H;
 
@@ -575,7 +572,7 @@ Fl_RGB_Image *Fl_RGB_Image::copy_nearest_neighbor_(int W, int H) const {
       default:
         for (int dx = 0; dx < W; dx++) {
           const uchar* old_ptr = line_ptr + x_offset[dx];
-          for (c = 0; c < d(); c++) {
+          for (int c = 0; c < d(); c++) {
             *new_ptr++ = old_ptr[c];
           }
         }

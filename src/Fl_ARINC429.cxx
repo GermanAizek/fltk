@@ -18,7 +18,7 @@
 #include <FL/Fl_ARINC429.H>
 #include <string.h>
 
-Fl_ARINC429::Fl_ARINC429() : buf_idx_(0), arinc429_cb_(nullptr), arinc429_user_data_(nullptr) {
+Fl_ARINC429::Fl_ARINC429() : arinc429_cb_(nullptr), arinc429_user_data_(nullptr), buf_idx_(0) {
   memset(buffer_, 0, sizeof(buffer_));
   memset(&last_word_, 0, sizeof(last_word_));
   

@@ -71,6 +71,7 @@ jobs:
         -D FLTK_BACKEND_WAYLAND=OFF \
         -D FLTK_BUILD_SHARED_LIBS:BOOL=ON \
         -D FLTK_BUILD_FORMS=ON \
+        -D FLTK_BUILD_GL=ON \
         -D FLTK_OPTION_CAIRO_WINDOW=OFF
 
     - name: Build
@@ -130,6 +131,7 @@ jobs:
         -D CMAKE_CXX_FLAGS_INIT="-Wall -Wunused -Wsuggest-override" \
         -D FLTK_BUILD_SHARED_LIBS:BOOL=ON \
         -D FLTK_BUILD_FORMS=ON \
+        -D FLTK_BUILD_GL=ON \
         -D FLTK_OPTION_CAIRO_WINDOW=ON
 
     - name: Build
@@ -188,6 +190,7 @@ jobs:
         -D CMAKE_CXX_FLAGS_INIT="-Wall -Wunused -Wsuggest-override" \
         -D FLTK_BUILD_SHARED_LIBS:BOOL=ON \
         -D FLTK_BUILD_FORMS=ON \
+        -D FLTK_BUILD_GL=ON \
         -D FLTK_OPTION_CAIRO_WINDOW=ON
 
     - name: Build
@@ -232,6 +235,7 @@ jobs:
         -D CMAKE_C_FLAGS_INIT="-Wall -Wunused" \
         -D CMAKE_CXX_FLAGS_INIT="-Wall -Wunused -Wsuggest-override" \
         -D FLTK_BUILD_SHARED_LIBS:BOOL=ON \
+        -D FLTK_BUILD_GL=ON \
         -D FLTK_BUILD_FORMS=ON
 
     - name: Build
@@ -273,6 +277,7 @@ jobs:
         -D FLTK_USE_SYSTEM_LIBPNG:BOOL=OFF `
         -D FLTK_USE_SYSTEM_ZLIB:BOOL=OFF `
         -D FLTK_BUILD_FORMS=ON `
+        -D FLTK_BUILD_GL=ON `
         -D FLTK_BUILD_SHARED_LIBS:BOOL=ON
 
     - name: Build
@@ -309,6 +314,7 @@ jobs:
         -D FLTK_USE_SYSTEM_LIBPNG:BOOL=OFF `
         -D FLTK_USE_SYSTEM_ZLIB:BOOL=OFF `
         -D FLTK_BUILD_FORMS=ON `
+        -D FLTK_BUILD_GL=ON `
         -D FLTK_BUILD_SHARED_LIBS:BOOL=ON
 
     - name: Build
@@ -360,17 +366,25 @@ jobs:
             sudo pkgin -y install git cmake ninja-build pkgconf libXft libXcursor libXrender
           elif [ "${{ matrix.os.name }}" = "haiku" ]; then
             for i in 1 2 3 4 5; do
-              pkgman refresh && pkgman install -y cmd:cmake cmd:ninja cmd:gcc cmd:make cmd:pkg_config xlibe_devel mesa_devel glu_devel && break || sleep 3
+              pkgman refresh && break || sleep 3
             done
+            pkgman install -y cmake || true
+            pkgman install -y ninja || true
           fi
 
-          cmake -B build -G Ninja \
+          GENERATOR=""
+          if command -v ninja >/dev/null 2>&1; then
+            GENERATOR="-G Ninja"
+          fi
+
+          cmake -B build $GENERATOR \
             -D CMAKE_BUILD_TYPE=Release \
             -D CMAKE_CXX_STANDARD=11 \
             -D FLTK_USE_SYSTEM_LIBJPEG=OFF \
             -D FLTK_USE_SYSTEM_LIBPNG=OFF \
             -D FLTK_USE_SYSTEM_ZLIB=OFF \
             -D FLTK_BUILD_FORMS=ON \
+            -D FLTK_BUILD_GL=ON \
             -D FLTK_BUILD_SHARED_LIBS=OFF
 
           cmake --build build
@@ -430,11 +444,14 @@ jobs:
         -D FLTK_BACKEND_WAYLAND=OFF \
         -D FLTK_BUILD_SHARED_LIBS:BOOL=OFF \
         -D FLTK_BUILD_FORMS=ON \
+        -D FLTK_BUILD_GL=ON \
         -D FLTK_OPTION_CAIRO_WINDOW=OFF
 
     - name: Build
       working-directory: ${{github.workspace}}/build
       shell: bash
+      env:
+        MSAN_OPTIONS: "poison_in_dtor=0"
       run: cmake --build .
 
     - name: Unittest
@@ -442,6 +459,7 @@ jobs:
       shell: bash
       env:
         ASAN_OPTIONS: "detect_leaks=0"
+        MSAN_OPTIONS: "poison_in_dtor=0"
       run: ./bin/test/unittests --core
 
   build-alpine:
@@ -450,6 +468,7 @@ jobs:
     steps:
     - name: Install prerequisites
       run: |
+        sed -i 's/^#//g' /etc/apk/repositories || true
         apk update
         apk add --no-cache \
           bash \
@@ -482,6 +501,7 @@ jobs:
           libxkbcommon-dev \
           dbus-dev \
           libdecor-dev
+        git config --global --add safe.directory "*"
 
     - uses: actions/checkout@v6
       with:
@@ -496,6 +516,7 @@ jobs:
         -D CMAKE_C_FLAGS_INIT="-Wall -Wunused" \
         -D CMAKE_CXX_FLAGS_INIT="-Wall -Wunused -Wsuggest-override" \
         -D FLTK_BUILD_SHARED_LIBS:BOOL=ON \
+        -D FLTK_BUILD_GL=ON \
         -D FLTK_BUILD_FORMS=ON
 
     - name: Build
@@ -503,6 +524,32 @@ jobs:
 
     - name: Unittest
       run: ./build/bin/test/unittests --core
+
+  build-tinycore:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        submodules: recursive
+
+    - name: Build and Test in Tiny Core Linux
+      run: |
+        chmod -R a+rwX ${{ github.workspace }}
+        docker run --rm -v ${{ github.workspace }}:/work -w /work tatsushid/tinycore:11.0-x86_64 sh -c '
+          tce-load -wic compiletc cmake \
+            Xorg-7.7-dev \
+            libX11-dev libXext-dev libXft-dev libXinerama-dev libXcursor-dev \
+            libXfixes-dev libXrender-dev fontconfig-dev freetype-dev \
+            libGL-dev mesa-dev glu-dev || true
+          cmake -B build-tc \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D CMAKE_CXX_STANDARD=11 \
+            -D FLTK_BUILD_SHARED_LIBS=OFF \
+            -D FLTK_BUILD_GL=OFF \
+            -D FLTK_BUILD_FORMS=ON
+          cmake --build build-tc
+          XDG_CONFIG_HOME=/work/build-tc/.config HOME=/work/build-tc ./build-tc/bin/test/unittests --core
+        '
 
 
   build-android:

@@ -12,7 +12,7 @@
 #include <string.h>
 
 Fl_SpaceWire::Fl_SpaceWire()
-  : buf_idx_(0), spacewire_cb_(nullptr), user_data_(nullptr) {
+  : spacewire_cb_(nullptr), user_data_(nullptr), buf_idx_(0) {
   memset(&last_packet_, 0, sizeof(last_packet_));
   memset(buffer_, 0, sizeof(buffer_));
   Fl_Serial_Port::callback(serial_cb, this);
