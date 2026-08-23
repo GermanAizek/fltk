@@ -357,7 +357,6 @@ void handle_option(Fo_Context ctx, const char *name, int ival) {
 static int read_command_line_args(int argc, char** argv, int& i) {
   char cmd = 0;
   char opt[64] = "";
-  char val[32] = "";
   int ival = FO_PRINT_VALUE;
   const char *arg = argv[i++];
 
@@ -399,6 +398,7 @@ static int read_command_line_args(int argc, char** argv, int& i) {
     if (cmd == 'U' || cmd == 'S') {
       const char *eq = strchr(arg+2, '=');
       if (eq) {
+        char val[32] = "";
         size_t n = (eq - (arg+2));
         if (n == 0) {
           i--;

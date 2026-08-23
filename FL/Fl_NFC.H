@@ -41,7 +41,7 @@ public:
 class FL_EXPORT Fl_NFC_Message {
   std::vector<Fl_NFC_Record> records_;
 public:
-  Fl_NFC_Message() {}
+  Fl_NFC_Message() = default;
   void add_record(const Fl_NFC_Record& record) { records_.push_back(record); }
   const std::vector<Fl_NFC_Record>& records() const { return records_; }
 };

@@ -35,15 +35,13 @@ using namespace fluid;
 /**
  Initialize a new project.
  */
-Project::Project() {
-}
+Project::Project()  = default;
 
 /**
  Clear all project resources.
  Not implemented.
  */
-Project::~Project() {
-}
+Project::~Project() = default;
 
 /**
  Reset all project setting to create a new empty project.
@@ -478,11 +476,11 @@ bool Project::confirm_clear() {
  */
 bool Project::load_or_merge(const std::string &filename_arg) {
   bool is_a_merge = (!tree.empty());
-  std::string title = is_a_merge ? "Merge Project File" : "Load Project File";
 
   // ask for a filename if none was given
   std::string new_filename = filename_arg;
   if (new_filename.empty()) {
+    const std::string& title = is_a_merge ? "Merge Project File" : "Load Project File";
     new_filename = fluid::io::filechooser(
       fluid::io::FileChooserType::LOAD_FILE,
       fluid::io::FileChooserPath::ABSOLUTE_PATH,

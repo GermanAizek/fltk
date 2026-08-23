@@ -162,7 +162,7 @@ int main(int argc, char *argv[]) {
             save_snapshot(code.c_str(), filename.c_str());
           }
           in_code_block = false;
-          code = "";
+          code.clear();
         } else {
           code += line;
         }

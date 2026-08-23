@@ -60,9 +60,7 @@ Project_Writer::Project_Writer(Project &proj)
 }
 
 /** \brief Release project writer resources. */
-Project_Writer::~Project_Writer()
-{
-}
+Project_Writer::~Project_Writer() = default;
 
 /**
  Open the .fl design file for writing.
