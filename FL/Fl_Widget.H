@@ -120,16 +120,16 @@ class FL_EXPORT Fl_Widget {
   friend class Fl_Group;
 
   Fl_Group* parent_;
-  short x_,y_,w_,h_;
   Fl_Label* label_;
+  Fl_Widget_Ext* ext_;
   void alloc_label();
+  void alloc_ext();
+  short x_,y_,w_,h_;
   unsigned int flags_;
   Fl_Color color_;
   uchar type_;
   uchar damage_;
   uchar box_;
-  Fl_Widget_Ext* ext_;
-  void alloc_ext();
 
   /** unimplemented copy ctor */
   Fl_Widget(const Fl_Widget &);

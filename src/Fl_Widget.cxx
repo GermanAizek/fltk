@@ -21,39 +21,113 @@
 #include <FL/fl_string_functions.h>
 #include <stdlib.h>
 #include "flstring.h"
-#include <unordered_map>
 #include <mutex>
-#include <string>
+#include <stdint.h>
 
-static std::unordered_map<std::string, std::pair<char*, int>> fl_string_pool;
+struct Fl_Pooled_String {
+  Fl_Pooled_String* next;
+  uint32_t refcount;
+  uint32_t hash;
+  uint32_t len;
+  char data[1];
+};
+
+static Fl_Pooled_String** fl_pool_buckets = nullptr;
+static size_t fl_pool_bucket_count = 0;
+static size_t fl_pool_entry_count = 0;
 static std::mutex fl_string_pool_mutex;
 
-static const char* fl_get_pooled_string(const char* s) {
-    if (!s) return 0;
-    std::lock_guard<std::mutex> lock(fl_string_pool_mutex);
-    auto it = fl_string_pool.find(s);
-    if (it != fl_string_pool.end()) {
-        it->second.second++;
-        return it->second.first;
+static inline uint32_t fl_hash_str(const char* s, uint32_t len) {
+  uint32_t h = 2166136261u;
+  for (uint32_t i = 0; i < len; i++) {
+    h = (h ^ (uint8_t)s[i]) * 16777619u;
+  }
+  return h;
+}
+
+static void fl_pool_rehash() {
+  size_t new_count = fl_pool_bucket_count ? (fl_pool_bucket_count * 2) : 64;
+  Fl_Pooled_String** new_buckets = (Fl_Pooled_String**)calloc(new_count, sizeof(Fl_Pooled_String*));
+  if (!new_buckets) return;
+
+  for (size_t i = 0; i < fl_pool_bucket_count; i++) {
+    Fl_Pooled_String* curr = fl_pool_buckets[i];
+    while (curr) {
+      Fl_Pooled_String* next = curr->next;
+      size_t b = curr->hash & (new_count - 1);
+      curr->next = new_buckets[b];
+      new_buckets[b] = curr;
+      curr = next;
     }
-    char* dup = fl_strdup(s);
-    fl_string_pool[s] = std::make_pair(dup, 1);
-    return dup;
+  }
+
+  free(fl_pool_buckets);
+  fl_pool_buckets = new_buckets;
+  fl_pool_bucket_count = new_count;
+}
+
+static const char* fl_get_pooled_string(const char* s) {
+  if (!s) return 0;
+  uint32_t len = (uint32_t)strlen(s);
+  uint32_t hash = fl_hash_str(s, len);
+
+  std::lock_guard<std::mutex> lock(fl_string_pool_mutex);
+  if (fl_pool_bucket_count > 0) {
+    size_t b = hash & (fl_pool_bucket_count - 1);
+    for (Fl_Pooled_String* curr = fl_pool_buckets[b]; curr; curr = curr->next) {
+      if (curr->hash == hash && curr->len == len && memcmp(curr->data, s, len) == 0) {
+        curr->refcount++;
+        return curr->data;
+      }
+    }
+  }
+
+  if (fl_pool_entry_count >= fl_pool_bucket_count || !fl_pool_buckets) {
+    fl_pool_rehash();
+  }
+
+  Fl_Pooled_String* entry = (Fl_Pooled_String*)malloc(sizeof(Fl_Pooled_String) + len);
+  if (!entry) return fl_strdup(s);
+
+  entry->refcount = 1;
+  entry->hash = hash;
+  entry->len = len;
+  memcpy(entry->data, s, len + 1);
+
+  size_t b = hash & (fl_pool_bucket_count - 1);
+  entry->next = fl_pool_buckets[b];
+  fl_pool_buckets[b] = entry;
+  fl_pool_entry_count++;
+
+  return entry->data;
 }
 
 static void fl_release_pooled_string(const char* s) {
-    if (!s) return;
-    std::lock_guard<std::mutex> lock(fl_string_pool_mutex);
-    auto it = fl_string_pool.find(s);
-    if (it != fl_string_pool.end()) {
-        it->second.second--;
-        if (it->second.second <= 0) {
-            free(it->second.first);
-            fl_string_pool.erase(it);
-        }
-    } else {
-        free((void*)s);
+  if (!s) return;
+  std::lock_guard<std::mutex> lock(fl_string_pool_mutex);
+  if (!fl_pool_buckets || fl_pool_bucket_count == 0) {
+    free((void*)s);
+    return;
+  }
+
+  uint32_t len = (uint32_t)strlen(s);
+  uint32_t hash = fl_hash_str(s, len);
+  size_t b = hash & (fl_pool_bucket_count - 1);
+
+  Fl_Pooled_String* prev = nullptr;
+  for (Fl_Pooled_String* curr = fl_pool_buckets[b]; curr; prev = curr, curr = curr->next) {
+    if (curr->data == s || (curr->hash == hash && curr->len == len && memcmp(curr->data, s, len) == 0)) {
+      curr->refcount--;
+      if (curr->refcount == 0) {
+        if (prev) prev->next = curr->next;
+        else fl_pool_buckets[b] = curr->next;
+        free(curr);
+        fl_pool_entry_count--;
+      }
+      return;
     }
+  }
+  free((void*)s);
 }
 
 /*
@@ -469,6 +543,7 @@ void Fl_Widget::copy_label(const char *a) {
   if (flags() & COPIED_LABEL) {
     const char *old = (flags() & SIMPLE_LABEL) ? (const char*)label_ : (label_ ? label_->value : 0);
     if (old == a) return;
+    if (old && a && strcmp(old, a) == 0) return;
   }
   if (a) {
     label(fl_get_pooled_string(a));

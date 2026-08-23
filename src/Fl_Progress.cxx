@@ -64,15 +64,31 @@ void Fl_Progress::draw()
 
   // Draw the box and label...
   if (progress > 0) {
-    Fl_Color c = labelcolor();
-    labelcolor(fl_contrast(labelcolor(), selection_color()));
+    Fl_Color contrast_color = fl_contrast(labelcolor(), selection_color());
 
     fl_push_clip(x(), y(), progress + bx, h());
       draw_box(box(), x(), y(), w(), h(), active_r() ? selection_color() : fl_inactive(selection_color()));
-      draw_label(tx, y() + by, tw, h() - bh);
+      if (contrast_color == labelcolor()) {
+        draw_label(tx, y() + by, tw, h() - bh);
+      } else {
+        Fl_Label l1;
+        l1.value = label();
+        l1.image = image();
+        l1.deimage = deimage();
+        l1.type = (Fl_Labeltype)labeltype();
+        l1.font = labelfont();
+        l1.size = labelsize();
+        l1.color = contrast_color;
+        l1.align_ = align();
+        l1.h_margin_ = l1.v_margin_ = 0;
+        l1.spacing = 0;
+        if (!active_r()) {
+          l1.color = fl_inactive(contrast_color);
+          if (l1.deimage) l1.image = l1.deimage;
+        }
+        l1.draw(tx, y() + by, tw, h() - bh, align());
+      }
     fl_pop_clip();
-
-    labelcolor(c);
 
     if (progress<w()) {
       fl_push_clip(tx + progress, y(), w() - progress, h());

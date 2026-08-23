@@ -1704,7 +1704,7 @@ void Fl_Preferences::Node::set( const char *name, const char *value )
     }
   }
   if ( NEntry_==nEntry_ ) {
-    NEntry_ = NEntry_ ? NEntry_*2 : 10;
+    NEntry_ = NEntry_ ? NEntry_*2 : 4;
     entry_ = (Entry*)realloc( entry_, NEntry_ * sizeof(Entry) );
   }
   entry_[ nEntry_ ].name = fl_strdup( name );
@@ -1767,6 +1767,14 @@ int Fl_Preferences::Node::getEntry( const char *name ) const {
 char Fl_Preferences::Node::deleteEntry( const char *name ) {
   int ix = getEntry( name );
   if ( ix == -1 ) return 0;
+  if ( entry_[ix].name ) {
+    ::free( entry_[ix].name );
+    entry_[ix].name = NULL;
+  }
+  if ( entry_[ix].value ) {
+    ::free( entry_[ix].value );
+    entry_[ix].value = NULL;
+  }
   memmove( entry_+ix, entry_+ix+1, (nEntry_-ix-1) * sizeof(Entry) );
   nEntry_--;
   dirty_ = 1;
@@ -1916,7 +1924,7 @@ void Fl_Preferences::Node::createIndex() {
   if (indexed_) return;
   int n = nChildren();
   if (n>NIndex_) {
-    NIndex_ = n + 16;
+    NIndex_ = n + 4;
     index_ = (Node**)realloc(index_, NIndex_*sizeof(Node*));
   }
   Node *nd;

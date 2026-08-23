@@ -29,24 +29,92 @@
 
 /* Test additions to Fl_Preferences. */
 TEST(Fl_Preferences, Strings) {
-  {
-    Fl_Preferences prefs(Fl_Preferences::USER_L, "fltk.org", "unittests");
-    prefs.set("a", std::string());
-    prefs.set("b", std::string("Hello"));
-    prefs.set("c", std::string("Hel\\l\nö"));
-  }
-  {
-    Fl_Preferences prefs(Fl_Preferences::USER_L, "fltk.org", "unittests");
-    std::string r;
-    prefs.get("a", r, "x");
-    EXPECT_STREQ(r.c_str(), "");
-    prefs.get("b", r, "x");
-    EXPECT_STREQ(r.c_str(), "Hello");
-    prefs.get("c", r, "x");
-    EXPECT_STREQ(r.c_str(), "Hel\\l\nö");
-    prefs.get("d", r, "x");
-    EXPECT_STREQ(r.c_str(), "x");
-  }
+  Fl_Preferences prefs(Fl_Preferences::MEMORY, "fltk.org", "unittests");
+  prefs.set("a", std::string());
+  prefs.set("b", std::string("Hello"));
+  prefs.set("c", std::string("Hel\\l\nö"));
+
+  std::string r;
+  prefs.get("a", r, "x");
+  EXPECT_STREQ(r.c_str(), "");
+  prefs.get("b", r, "x");
+  EXPECT_STREQ(r.c_str(), "Hello");
+  prefs.get("c", r, "x");
+  EXPECT_STREQ(r.c_str(), "Hel\\l\nö");
+  prefs.get("d", r, "x");
+  EXPECT_STREQ(r.c_str(), "x");
+  return true;
+}
+
+TEST(Fl_Widget, MemoryLayout) {
+#if defined(__LP64__) || defined(_WIN64) || (defined(__WORDSIZE) && __WORDSIZE == 64)
+  EXPECT_EQ((int)sizeof(Fl_Widget), 56);
+#endif
+  return true;
+}
+
+TEST(Fl_Widget, StringPoolAndCopyLabel) {
+  Fl_Group::current(NULL);
+  Fl_Button *b1 = new Fl_Button(0, 0, 100, 30);
+  Fl_Button *b2 = new Fl_Button(0, 40, 100, 30);
+
+  b1->copy_label("Status 100%");
+  b2->copy_label("Status 100%");
+  EXPECT_STREQ(b1->label(), "Status 100%");
+  EXPECT_STREQ(b2->label(), "Status 100%");
+  EXPECT_TRUE(b1->label() == b2->label()); // Shared pooled string pointer
+
+  // Identical string re-assignment should keep same pointer without reallocating
+  const char *prev_ptr = b1->label();
+  b1->copy_label("Status 100%");
+  EXPECT_TRUE(b1->label() == prev_ptr);
+
+  // Changing label updates text
+  b1->copy_label("Status 50%");
+  EXPECT_STREQ(b1->label(), "Status 50%");
+  EXPECT_STREQ(b2->label(), "Status 100%");
+
+  delete b1;
+  EXPECT_STREQ(b2->label(), "Status 100%");
+  delete b2;
+  return true;
+}
+
+TEST(Fl_Preferences, DeleteEntryAndMemory) {
+  Fl_Preferences prefs(Fl_Preferences::MEMORY, "fltk.org", "memtest");
+  prefs.set("key1", "val1");
+  prefs.set("key2", 42);
+  prefs.set("key3", 3.14);
+
+  EXPECT_TRUE(prefs.entry_exists("key1"));
+  EXPECT_TRUE(prefs.entry_exists("key2"));
+  EXPECT_TRUE(prefs.entry_exists("key3"));
+
+  EXPECT_TRUE(prefs.delete_entry("key2"));
+  EXPECT_TRUE(!prefs.entry_exists("key2"));
+
+  int val = 0;
+  prefs.get("key2", val, -1);
+  EXPECT_EQ(val, -1);
+  return true;
+}
+
+TEST(Fl_Group, ClearMemory) {
+  Fl_Group::current(NULL);
+  Fl_Group *grp = new Fl_Group(0, 0, 200, 200);
+  new Fl_Button(0, 0, 50, 20);
+  new Fl_Button(0, 30, 50, 20);
+  new Fl_Button(0, 60, 50, 20);
+  grp->end();
+
+  EXPECT_EQ(grp->children(), 3);
+  EXPECT_TRUE(grp->array() != nullptr);
+
+  grp->clear();
+  EXPECT_EQ(grp->children(), 0);
+  EXPECT_TRUE(grp->array() == nullptr);
+
+  delete grp;
   return true;
 }
 

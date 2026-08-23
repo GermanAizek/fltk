@@ -417,6 +417,12 @@ void Fl_Group::clear() {
     delete_child(i);
   }
 
+  if (array_) {
+    free(array_);
+    array_ = 0;
+    capacity_ = 0;
+  }
+
   if (pushed != this)
     Fl::pushed(pushed);       // reset pushed() widget
 }
