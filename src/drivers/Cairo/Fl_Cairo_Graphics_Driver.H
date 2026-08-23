@@ -63,16 +63,16 @@ public:
   Clip * clip_;
 
   int gap_;
-  cairo_t *cr() { return cairo_; }
-  PangoLayout *pango_layout() {return pango_layout_;}
+  cairo_t *cr() const { return cairo_; }
+  PangoLayout *pango_layout() const { return pango_layout_;}
   void set_cairo(cairo_t *c, float f = 0);
   static cairo_pattern_t *calc_cairo_mask(const Fl_RGB_Image *rgb);
   static const char *clean_utf8(const char* str, int &n);
 
   unsigned char cr_,cg_,cb_;
   char  linedash_[256];//should be enough
-  void concat();  // transform ror scalable dradings...
-  void reconcat(); //invert
+  void concat() const;  // transform ror scalable dradings...
+  void reconcat() const; //invert
   void recover(); //recovers the state after grestore (such as line styles...)
   void reset();
 
@@ -84,7 +84,8 @@ public:
   int top_margin;
   static const cairo_format_t cairo_format;
 
-  void surface_needs_commit() {
+  void surface_needs_commit() const
+  {
     if (needs_commit_tag_) *needs_commit_tag_ = true;
   }
   void needs_commit_tag(bool *tag) { needs_commit_tag_ = tag; }
@@ -98,7 +99,7 @@ public:
   void push_no_clip() FL_OVERRIDE;
   void pop_clip() FL_OVERRIDE;
 
-  void line_style(int style, int width=0, char* dashes=0) FL_OVERRIDE;
+  void line_style(int style, int width=0, char* dashes=nullptr) FL_OVERRIDE;
 
   void rect(int x, int y, int w, int h) FL_OVERRIDE;
   void rectf(int x, int y, int w, int h) FL_OVERRIDE;
@@ -146,9 +147,9 @@ public:
   void draw_image(Fl_Draw_Image_Cb call, void* data, int x,int y, int w, int h, int delta=3) FL_OVERRIDE;
   void draw_image_mono(Fl_Draw_Image_Cb call, void* data, int x,int y, int w, int h, int delta=1) FL_OVERRIDE;
 
-  void ps_origin(int x, int y);
-  void ps_translate(int, int);
-  void ps_untranslate();
+  void ps_origin(int x, int y) const;
+  void ps_translate(int, int) const;
+  void ps_untranslate() const;
 
   void draw_cached_pattern_(Fl_Image *img, cairo_pattern_t *pat, int X, int Y, int W, int H, int cx, int cy, int cache_w, int cache_h);
   void draw_image(const uchar *data, int ix, int iy, int iw, int ih, int D, int LD) FL_OVERRIDE;

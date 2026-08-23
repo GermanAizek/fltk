@@ -22,7 +22,7 @@
 #include <FL/platform.H>
 #include <cairo/cairo.h>
 #include <pango/pangocairo.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 
 void *Fl_X11_Cairo_Graphics_Driver::gc_ = NULL;

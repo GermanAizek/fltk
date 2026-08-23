@@ -25,7 +25,7 @@
 class Fl_Cocoa_Screen_Capture_Driver : public Fl_Screen_Capture_Driver {
 public:
   Fl_Cocoa_Screen_Capture_Driver(Fl_Screen_Capture *capture);
-  virtual ~Fl_Cocoa_Screen_Capture_Driver();
+  ~Fl_Cocoa_Screen_Capture_Driver() override;
 
   virtual int start() FL_OVERRIDE;
   virtual void stop() FL_OVERRIDE;

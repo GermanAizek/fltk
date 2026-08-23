@@ -22,7 +22,7 @@
 class Fl_Cocoa_NFC_Driver : public Fl_NFC_Driver {
 public:
   Fl_Cocoa_NFC_Driver(Fl_NFC_Manager* m);
-  virtual ~Fl_Cocoa_NFC_Driver();
+  ~Fl_Cocoa_NFC_Driver() override;
 
   int start_target_detection() FL_OVERRIDE;
   void stop_target_detection() FL_OVERRIDE;

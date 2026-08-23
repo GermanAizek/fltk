@@ -28,7 +28,7 @@ private:
   static void *gc_;
 public:
   void scale(float f) FL_OVERRIDE;
-  float scale() {return Fl_Graphics_Driver::scale();}
+  float scale() const { return Fl_Graphics_Driver::scale();}
   void gc(void *value) FL_OVERRIDE;
   void* gc() FL_OVERRIDE;
   void copy_offscreen(int x, int y, int w, int h, Fl_Offscreen pixmap, int srcx, int srcy) FL_OVERRIDE;

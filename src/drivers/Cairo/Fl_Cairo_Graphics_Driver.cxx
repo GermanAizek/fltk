@@ -34,10 +34,10 @@
 #if CAIRO_VERSION < CAIRO_VERSION_ENCODE(1,10,0)
 #  error "Requires Cairo 1.10 or higher"
 #endif
-#include <math.h>
-#include <stdlib.h>  // abs(int)
-#include <string.h>  // memcpy()
-#include <stdint.h>  // uint32_t
+#include <cmath>
+#include <cstdlib>  // abs(int)
+#include <cstring>  // memcpy()
+#include <cstdint>  // uint32_t
 
 extern unsigned fl_cmap[256]; // defined in fl_color.cxx
 
@@ -396,12 +396,14 @@ void Fl_Cairo_Graphics_Driver::color(Fl_Color i) {
 Fl_Color Fl_Cairo_Graphics_Driver::color() { return Fl_Graphics_Driver::color(); }
 
 
-void Fl_Cairo_Graphics_Driver::concat(){
+void Fl_Cairo_Graphics_Driver::concat() const
+{
   cairo_matrix_t mat = {m.a , m.b , m.c , m.d , m.x , m.y};
   cairo_transform(cairo_, &mat);
 }
 
-void Fl_Cairo_Graphics_Driver::reconcat(){
+void Fl_Cairo_Graphics_Driver::reconcat() const
+{
   cairo_matrix_t mat = {m.a , m.b , m.c , m.d , m.x , m.y};
   cairo_status_t stat = cairo_matrix_invert(&mat);
   if (stat != CAIRO_STATUS_SUCCESS) {
@@ -593,7 +595,8 @@ void Fl_Cairo_Graphics_Driver::pop_clip() {
   cairo_restore(cairo_);
 }
 
-void Fl_Cairo_Graphics_Driver::ps_origin(int x, int y) {
+void Fl_Cairo_Graphics_Driver::ps_origin(int x, int y) const
+{
   cairo_restore(cairo_);
   cairo_restore(cairo_);
   cairo_save(cairo_);
@@ -603,14 +606,14 @@ void Fl_Cairo_Graphics_Driver::ps_origin(int x, int y) {
   cairo_save(cairo_);
 }
 
-void Fl_Cairo_Graphics_Driver::ps_translate(int x, int y)
+void Fl_Cairo_Graphics_Driver::ps_translate(int x, int y) const
 {
   cairo_save(cairo_);
   cairo_translate(cairo_, x, y);
   cairo_save(cairo_);
 }
 
-void Fl_Cairo_Graphics_Driver::ps_untranslate(void)
+void Fl_Cairo_Graphics_Driver::ps_untranslate(void) const
 {
   cairo_restore(cairo_);
   cairo_restore(cairo_);
@@ -771,7 +774,7 @@ void Fl_Cairo_Graphics_Driver::draw_cached_pattern_(Fl_Image *img, cairo_pattern
   if (img->d() >= 1) cairo_set_source(cairo_, pat);
   if (need_extend) {
     bool condition = Fl_RGB_Image::scaling_algorithm() == FL_RGB_SCALING_BILINEAR &&
-      (fabs(Ws/float(cache_w) - 1) > 0.02 || fabs(Hs/float(cache_h) - 1) > 0.02);
+      (std::fabs(Ws/float(cache_w) - 1) > 0.02 || std::fabs(Hs/float(cache_h) - 1) > 0.02);
     cairo_pattern_set_filter(pat, condition ? CAIRO_FILTER_GOOD : CAIRO_FILTER_FAST);
     cairo_pattern_set_extend(pat, CAIRO_EXTEND_PAD);
   }
@@ -878,8 +881,7 @@ void Fl_Cairo_Graphics_Driver::uncache(Fl_RGB_Image *img, fl_uintptr_t &id_, fl_
 
 void Fl_Cairo_Graphics_Driver::draw_fixed(Fl_Bitmap *bm,int XP, int YP, int WP, int HP,
                                           int cx, int cy) {
-  cairo_pattern_t *pat = NULL;
-  float s = wld_scale * scale();
+  const float s = wld_scale * scale();
   XP = Fl_Scalable_Graphics_Driver::floor(XP, s);
   YP = Fl_Scalable_Graphics_Driver::floor(YP, s);
   cache_size(bm, WP, HP);
@@ -892,7 +894,7 @@ void Fl_Cairo_Graphics_Driver::draw_fixed(Fl_Bitmap *bm,int XP, int YP, int WP, 
   if (!bm->array) {
     draw_empty(bm, XP, YP);
   } else {
-    pat = (cairo_pattern_t*)*Fl_Graphics_Driver::id(bm);
+    cairo_pattern_t *pat = (cairo_pattern_t*)*Fl_Graphics_Driver::id(bm);
     color(color());
     int old_w = bm->w(), old_h = bm->h();
     bm->scale(bm->cache_w(), bm->cache_h(), 0, 1); // transiently
@@ -967,7 +969,6 @@ void Fl_Cairo_Graphics_Driver::cache(Fl_Bitmap *bm) {
 
 void Fl_Cairo_Graphics_Driver::draw_fixed(Fl_Pixmap *pxm,int XP, int YP, int WP, int HP,
                                           int cx, int cy) {
-  cairo_pattern_t *pat = NULL;
   float s = wld_scale * scale();
   XP = Fl_Scalable_Graphics_Driver::floor(XP, s);
   YP = Fl_Scalable_Graphics_Driver::floor(YP, s);
@@ -982,7 +983,7 @@ void Fl_Cairo_Graphics_Driver::draw_fixed(Fl_Pixmap *pxm,int XP, int YP, int WP,
   if (!pxm->data() || !pxm->w()) {
     Fl_Graphics_Driver::draw_empty(pxm, XP, YP);
   } else {
-    pat = (cairo_pattern_t*)*Fl_Graphics_Driver::id(pxm);
+    cairo_pattern_t *pat = (cairo_pattern_t*)*Fl_Graphics_Driver::id(pxm);
     int old_w = pxm->w(), old_h = pxm->h();
     pxm->scale(pxm->cache_w(), pxm->cache_h(), 0, 1); // transiently
     draw_cached_pattern_(pxm, pat, XP, YP, WP, HP, cx, cy, pxm->cache_w(), pxm->cache_h());
@@ -1514,7 +1515,7 @@ cairo_pattern_t *Fl_Cairo_Graphics_Driver::calc_cairo_mask(const Fl_RGB_Image *r
   uchar* bits = new uchar[h*bytesperrow]; // to store the surface data
   for (i = 0; i < h; i++) {
     const uchar* alpha = (const uchar*)*rgb->data() + i * ld;
-    uchar *p = (uchar*)bits + i * bytesperrow;
+    uchar *p = bits + i * bytesperrow;
     byte = 0;
     onebit = 1;
     for (j = 0; j < w; j++) {
