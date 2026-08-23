@@ -185,9 +185,8 @@ void Fl_Unix_Camera_Driver::process_frame() {
   yuyv_to_rgb((unsigned char*)buffers_[buf.index].start, rgb, width, height);
 
   Fl::lock();
-  if (frame_image_) {
-    delete frame_image_;
-  }
+  delete frame_image_;
+
   frame_image_ = new Fl_RGB_Image(rgb, width, height, 3);
   frame_image_->alloc_array = 1;
   

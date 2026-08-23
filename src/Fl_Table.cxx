@@ -30,7 +30,7 @@ class Fl_Table_Dimensions {
 public:
   Fl_Table_Dimensions(int def) : default_val(def) {}
   ~Fl_Table_Dimensions() {
-    for (size_t i=0; i<blocks.size(); i++) if (blocks[i]) delete[] blocks[i];
+    for (size_t i=0; i<blocks.size(); i++) delete[] blocks[i];
   }
   int get(int index) const {
     int b = index >> 10;
@@ -55,7 +55,7 @@ public:
   }
   void set_all(int val) {
     default_val = val;
-    for (size_t i=0; i<blocks.size(); i++) if (blocks[i]) delete[] blocks[i];
+    for (size_t i=0; i<blocks.size(); i++) delete[] blocks[i];
     blocks.clear();
   }
   long scroll_position(int index) const {

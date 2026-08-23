@@ -1636,7 +1636,7 @@ void Fl_Wayland_Screen_Driver::close_display() {
   fl_wayland_tablet_cleanup();
 #endif
   wl_seat_destroy(seat->wl_seat); seat->wl_seat = NULL;
-  if (seat->name) free(seat->name);
+  free(seat->name);
   free(seat); seat = NULL;
   xdg_wm_base_destroy(xdg_wm_base); xdg_wm_base = NULL;
   Fl_Wayland_Plugin *plugin = Fl_Wayland_Window_Driver::gl_plugin();

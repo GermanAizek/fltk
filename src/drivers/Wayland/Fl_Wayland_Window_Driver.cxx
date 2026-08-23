@@ -117,7 +117,7 @@ Fl_Wayland_Window_Driver::~Fl_Wayland_Window_Driver()
     delete[] data;
     delete shape_data_;
   }
-  if (subRect_) delete subRect_;
+  delete subRect_;
   if (gl_start_support_) { // occurs only if gl_start/gl_finish was used
     gl_plugin()->destroy(gl_start_support_);
   }
@@ -2094,7 +2094,7 @@ void Fl_Wayland_Window_Driver::checkSubwindowFrame() {
 
 
 void Fl_Wayland_Window_Driver::subRect(cairo_rectangle_int_t *r) {
-  if (subRect_) delete subRect_;
+  delete subRect_;
   cairo_rectangle_int_t *r2 = NULL;
   if (r) {
     r2 = new cairo_rectangle_int_t;

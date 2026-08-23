@@ -29,9 +29,9 @@ Fl_Media_Recorder::Fl_Media_Recorder()
 
 Fl_Media_Recorder::~Fl_Media_Recorder() {
   stop();
-  if (output_location_) free(output_location_);
-  if (actual_location_) free(actual_location_);
-  if (error_string_) free(error_string_);
+  free(output_location_);
+  free(actual_location_);
+  free(error_string_);
 }
 
 void Fl_Media_Recorder::set_capture_session(Fl_Media_Capture_Session *session) {
@@ -39,7 +39,7 @@ void Fl_Media_Recorder::set_capture_session(Fl_Media_Capture_Session *session) {
 }
 
 void Fl_Media_Recorder::set_output_location(const char *path) {
-  if (output_location_) free(output_location_);
+  free(output_location_);
   output_location_ = path ? strdup(path) : 0;
 }
 

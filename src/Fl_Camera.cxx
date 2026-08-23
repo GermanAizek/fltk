@@ -28,11 +28,11 @@ Fl_Camera_Driver::Fl_Camera_Driver(Fl_Camera *widget)
 }
 
 Fl_Camera_Driver::~Fl_Camera_Driver() {
-  if (device_name_) free(device_name_);
+  free(device_name_);
 }
 
 void Fl_Camera_Driver::set_device(const char *name) {
-  if (device_name_) free(device_name_);
+  free(device_name_);
   if (name) {
     device_name_ = strdup(name);
   } else {
@@ -53,7 +53,7 @@ Fl_Camera::Fl_Camera(int X, int Y, int W, int H, const char *L)
 
 Fl_Camera::~Fl_Camera() {
   stop();
-  if (driver_) delete driver_;
+  delete driver_;
 }
 
 int Fl_Camera::start() {

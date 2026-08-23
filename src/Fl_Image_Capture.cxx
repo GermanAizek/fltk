@@ -82,9 +82,7 @@ int Fl_Image_Capture::capture_to_file(const char *file_path) {
 }
 
 void Fl_Image_Capture::set_captured_frame(Fl_RGB_Image *frame, int id, const char *saved_file) {
-  if (last_image_) {
-    delete last_image_;
-  }
+  delete last_image_;
   last_image_ = frame;
 
   if (captured_cb_ && last_image_) {

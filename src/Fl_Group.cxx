@@ -445,7 +445,7 @@ Fl_Group::~Fl_Group() {
   if (current_ == this)
     end();
   clear();
-  if (array_) free(array_);
+  free(array_);
 }
 
 /**
@@ -561,7 +561,7 @@ void Fl_Group::insert(Fl_Widget &o, int index) {
 void Fl_Group::shrink_to_fit() {
   if (capacity_ > children_) {
     if (children_ == 0) {
-      if (array_) free(array_);
+      free(array_);
       array_ = 0;
       capacity_ = 0;
     } else {

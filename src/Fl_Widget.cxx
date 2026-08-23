@@ -413,7 +413,7 @@ Fl_Widget::~Fl_Widget() {
   if (callback() == default_callback) cleanup_readqueue(this);
   if ( (flags_ & AUTO_DELETE_USER_DATA) && user_data())
     delete (Fl_Callback_User_Data*)user_data();
-  if (ext_) delete ext_;
+  delete ext_;
 }
 
 /**
