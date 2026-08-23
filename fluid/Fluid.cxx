@@ -381,7 +381,7 @@ void Application::create_tmpdir() {
     end_with_slash(path);
     path += name;
     fl_make_path(path.c_str());
-    if (fl_access(path.c_str(), 6) == 0) tmpdir_path = path;
+    if (fl_access(path.c_str(), 6) == 0) tmpdir_path = std::move(path);
   }
   if (tmpdir_path.empty()) {
     fluid_alert("Can't create directory for temporary data storage.");

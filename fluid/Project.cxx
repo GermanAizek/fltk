@@ -307,9 +307,8 @@ void Project::save(SaveOption option) {
   Fluid.flush_text_widgets();
 
   std::string c = proj_filename;
-  std::string new_filename;
   if (option == SaveOption::ASK_FOR_FILENAME || option == SaveOption::SAVE_COPY || c.empty()) {
-    new_filename = fluid::io::filechooser(
+    const std::string& new_filename = fluid::io::filechooser(
       fluid::io::FileChooserType::SAVE_FILE,
       fluid::io::FileChooserPath::ABSOLUTE_PATH,
       "Save Project File As",

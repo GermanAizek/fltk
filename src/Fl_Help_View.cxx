@@ -2340,7 +2340,7 @@ Fl_Shared_Image *Fl_Help_View::Impl::get_image(const char *name, int W, int H) c
     // No image name given, return broken image
     return (Fl_Shared_Image *)&broken_image;
   }
-  std::string imagename = name;
+  const std::string& imagename = name;
 
   size_t directory_scheme_length = url_scheme(directory_);
   size_t imagename_scheme_length = url_scheme(imagename);
@@ -3477,7 +3477,7 @@ int Fl_Help_View::Impl::load(const char *f)
 
       // Note: We do not support Windows backslashes, since they are illegal
       //       in URLs...
-      directory_ = newname;
+      directory_ = std::move(newname);
       size_t slash_pos = directory_.rfind('/');
       if (slash_pos == std::string::npos) {
         directory_.clear();

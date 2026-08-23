@@ -62,7 +62,7 @@ std::string fluid::io::filechooser(
     } else {
       preset = fl_filename_absolute_str(Fluid.launch_path());
     }
-    preset_directory = preset;
+    preset_directory = std::move(preset);
     preset_filename.clear();
   }
   fnfc.directory(preset_directory.c_str());

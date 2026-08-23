@@ -39,7 +39,7 @@ public:
   // Load the project history from the preferences database.
   void load();
   // Add a new file to the project history using absolute paths.
-  void update(std::string project_file);
+  void update(const std::string& project_file);
   // Return the path to the last opened project file, or an empty string if none.
   std::string latest_project_path() const { return latest_project_path_; }
 };

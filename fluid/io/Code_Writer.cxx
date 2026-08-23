@@ -1036,7 +1036,7 @@ std::string Code_Writer::header_guard_macro()
       }
       a += len;
     }
-    header_guard_macro_ = macro_name;
+    header_guard_macro_ = std::move(macro_name);
   }
   return header_guard_macro_;
 }
