@@ -19,8 +19,8 @@
   Public header for FLTK's platform-agnostic string handling.
 */
 
-#ifndef _FL_fl_string_functions_h_
-#define _FL_fl_string_functions_h_
+#ifndef FL_FL_STRING_FUNCTIONS_H_
+#define FL_FL_STRING_FUNCTIONS_H_
 
 #include "Fl_Export.H"
 
@@ -46,4 +46,4 @@ FL_EXPORT size_t fl_strlcpy(char *, const char *, size_t);
 #endif /* __cplusplus */
 
 
-#endif /* _FL_fl_string_functions_h_ */
+#endif /* FL_FL_STRING_FUNCTIONS_H_ */

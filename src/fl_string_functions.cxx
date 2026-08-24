@@ -1,7 +1,7 @@
 /*
- * Platform agnostic string portability functions for the Fast Light Tool Kit (FLTK).
+* Platform agnostic string portability functions for the Fast Light Tool Kit (FLTK).
  *
- * Copyright 2020 by Bill Spitzak and others.
+ * Copyright 2020-2026 by Bill Spitzak and others.
  *
  * This library is free software. Distribution and use rights are outlined in
  * the file "COPYING" which should have been included with this file.  If this
@@ -15,8 +15,10 @@
  */
 
 #include <FL/fl_string_functions.h>
-#include <string.h>  // strdup/_strdup
 #include "Fl_System_Driver.H"
+
+#include <algorithm>
+#include <cstddef>
 
 /**
   Cross platform interface to POSIX function strdup().
@@ -30,6 +32,9 @@
     - WinAPI: _strdup()
  */
 char *fl_strdup(const char *s) {
+  if (s == nullptr) {
+    return nullptr;
+  }
   return Fl::system_driver()->strdup(s);
 }
 
@@ -39,16 +44,26 @@ char *fl_strdup(const char *s) {
 size_t                          /* O - Length of source string */
 fl_strlcpy(char       *dst,     /* O - Destination string */
            const char *src,     /* I - Source string */
-           size_t      size) {  /* I - Size of destination string buffer */
-  size_t        srclen = strlen(src);
+           const size_t size) { /* I - Size of destination string buffer */
+  if (src == nullptr) {
+    if (dst != nullptr && size != 0U) {
+      dst[0] = '\0';
+    }
+    return 0U;
+  }
 
-  if (size != 0) {
-    size_t copylen = (srclen >= size) ? size - 1 : srclen;
-    memcpy(dst, src, copylen);
+  // Calculate string length without <cstring> strlen
+  const char *src_end = src;
+  while (*src_end != '\0') {
+    ++src_end;
+  }
+  const auto srclen = static_cast<size_t>(src_end - src);
+
+  if (dst != nullptr && size != 0U) {
+    const size_t copylen = srclen >= size ? size - 1U : srclen;
+    (void)std::copy_n(src, copylen, dst);
     dst[copylen] = '\0';
   }
 
-  return (srclen);
+  return srclen;
 }
-
-

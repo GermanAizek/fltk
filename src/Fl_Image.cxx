@@ -22,9 +22,9 @@
 #include <FL/Fl_Image.H>
 #include "flstring.h"
 
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 #include <cstdint>
-
 //
 // Base image class...
 //
@@ -40,15 +40,14 @@ Fl_RGB_Scaling Fl_Image::scaling_algorithm_ = FL_RGB_SCALING_BILINEAR;
  1 to 4 for color images.
  */
 Fl_Image::Fl_Image(int W, int H, int D) :
-  w_(W), h_(H), d_(D), ld_(0), count_(0), data_w_(W), data_h_(H), data_(0L)
+  w_(W), h_(H), d_(D), ld_(0), count_(0), data_w_(W), data_h_(H), data_(nullptr)
 {}
 
 /**
   The destructor is a virtual method that frees all memory used
   by the image.
 */
-Fl_Image::~Fl_Image() {
-}
+Fl_Image::~Fl_Image() = default;
 
 /**
   If the image has been cached for display, delete the cache
@@ -56,11 +55,13 @@ Fl_Image::~Fl_Image() {
   then redraw it without recreating an image object.
 */
 void Fl_Image::uncache() {
-  static Fl_Device_Plugin *plugin = Fl_Device_Plugin::opengl_plugin();
-  if (plugin) plugin->delete_image_texture(this);
+  static auto *plugin = Fl_Device_Plugin::opengl_plugin();
+  if (plugin != nullptr) {
+    plugin->delete_image_texture(this);
+  }
 }
 
-void Fl_Image::draw(int XP, int YP, int, int, int, int) {
+void Fl_Image::draw(int XP, int YP, int /*w*/, int /*h*/, int /*cx*/, int /*cy*/) {
   draw_empty(XP, YP);
 }
 
@@ -130,7 +131,7 @@ Fl_Image *Fl_Image::copy(int W, int H) const {
   An internal copy is made of the original image data before changes are
   applied, to avoid modifying the original image data in memory.
 */
-void Fl_Image::color_average(Fl_Color, float) {
+void Fl_Image::color_average(Fl_Color /*color*/, float /*weight*/) {
 }
 
 /**
@@ -171,7 +172,7 @@ void Fl_Image::label(Fl_Widget* widget) {
   \deprecated Please use Fl_Menu_Item::image() instead.
 */
 void Fl_Image::label(Fl_Menu_Item* m) {
-  m->label(FL_IMAGE_LABEL, (const char*)this);
+  m->label(FL_IMAGE_LABEL, reinterpret_cast<const char*>(this));
 }
 
 /**
@@ -202,48 +203,54 @@ void Fl_Image::label(Fl_Menu_Item* m) {
   \retval ERR_MEMORY_ACCESS image decoder tried to access memory outside of given memory block
 */
 int Fl_Image::fail() const {
-  // if no image exists, ld_ may contain a simple error code
   if ((w_ <= 0) || (h_ <= 0) || (d_ <= 0 && count_ == 0)) {
-    if (ld_ == 0)
+    if (ld_ == 0) {
       return ERR_NO_IMAGE;
-    else
-      return ld_;
+    }
+    return ld_;
   }
   return 0;
 }
 
 void
-Fl_Image::labeltype(const Fl_Label *lo,         // I - Label
-                    int            lx,          // I - X position
-                    int            ly,          // I - Y position
-                    int            lw,          // I - Width of label
-                    int            lh,          // I - Height of label
-                    Fl_Align       la) {        // I - Alignment
-  Fl_Image      *img;                           // Image pointer
-  int           cx, cy;                         // Image position
+Fl_Image::labeltype(const Fl_Label *lo,
+                    int            lx,
+                    int            ly,
+                    int            lw,
+                    int            lh,
+                    Fl_Align       la) {
+  auto *img = const_cast<Fl_Image *>(reinterpret_cast<const Fl_Image *>(lo->value));
+  if (!img) return;
 
-  img = (Fl_Image *)(lo->value);
+  int cx = 0;
+  int cy = 0;
 
-  if (la & FL_ALIGN_LEFT) cx = 0;
-  else if (la & FL_ALIGN_RIGHT) cx = img->w() - lw;
-  else cx = (img->w() - lw) / 2;
+  if ((la & FL_ALIGN_LEFT) != 0) {
+    cx = 0;
+  } else if ((la & FL_ALIGN_RIGHT) != 0) {
+    cx = img->w() - lw;
+  } else {
+    cx = (img->w() - lw) / 2;
+  }
 
-  if (la & FL_ALIGN_TOP) cy = 0;
-  else if (la & FL_ALIGN_BOTTOM) cy = img->h() - lh;
-  else cy = (img->h() - lh) / 2;
+  if ((la & FL_ALIGN_TOP) != 0) {
+    cy = 0;
+  } else if ((la & FL_ALIGN_BOTTOM) != 0) {
+    cy = img->h() - lh;
+  } else {
+    cy = (img->h() - lh) / 2;
+  }
 
-  fl_color((Fl_Color)lo->color);
+  fl_color(lo->color);
 
   img->draw(lx, ly, lw, lh, cx, cy);
 }
 
 void
-Fl_Image::measure(const Fl_Label *lo,           // I - Label
-                  int            &lw,           // O - Width of image
-                  int            &lh) {         // O - Height of image
-  Fl_Image *img;                                // Image pointer
-
-  img = (Fl_Image *)(lo->value);
+Fl_Image::measure(const Fl_Label *lo,
+                  int            &lw,
+                  int            &lh) {
+  const auto *img = (const Fl_Image *)(lo->value);
 
   lw = img->w();
   lh = img->h();
@@ -292,37 +299,45 @@ Fl_RGB_Scaling Fl_Image::RGB_scaling() {
  */
 void Fl_Image::scale(int width, int height, int proportional, int can_expand)
 {
-  if ((width <= data_w() && height <= data_h()) || can_expand) {
+  if ((width <= data_w() && height <= data_h()) || can_expand != 0) {
     w_ = width;
     h_ = height;
   }
-  if (fail()) return;
-  if (!proportional && can_expand) return;
-  if (!proportional && width <= data_w() && height <= data_h()) return;
-  float fw = data_w() / float(width);
-  float fh = data_h() / float(height);
-  if (proportional) {
-    if (fh > fw) fw = fh;
-    else fh = fw;
+  if (fail() != 0) {
+    return;
   }
-  if (!can_expand) {
-    if (fw < 1) fw = 1;
-    if (fh < 1) fh = 1;
+  if (proportional == 0 && can_expand != 0) {
+    return;
   }
-  w_ = int((data_w() / fw) + 0.5);
-  h_ = int((data_h() / fh) + 0.5);
+  if (proportional == 0 && width <= data_w() && height <= data_h()) {
+    return;
+  }
+
+  float fw = static_cast<float>(data_w()) / static_cast<float>(width);
+  float fh = static_cast<float>(data_h()) / static_cast<float>(height);
+
+  if (proportional != 0) {
+    if (fh > fw) {
+      fw = fh;
+    } else {
+      fh = fw;
+    }
+  }
+  if (can_expand == 0) {
+    if (fw < 1.0F) {
+      fw = 1.0F;
+    }
+    if (fh < 1.0F) {
+      fh = 1.0F;
+    }
+  }
+  w_ = static_cast<int>(std::lround(static_cast<float>(data_w()) / fw));
+  h_ = static_cast<int>(std::lround(static_cast<float>(data_h()) / fh));
 }
 
-/** Draw the image to the current drawing surface rescaled to a given width and height.
- Intended for internal use by the FLTK library.
- \param X,Y position of the image's top-left
- \param W,H width and height for the drawn image
- \return 1
- \deprecated Only for API compatibility with FLTK 1.3.4.
- */
 int Fl_Image::draw_scaled(int X, int Y, int W, int H) {
-  // transiently set image drawing size to WxH
-  int width = w(), height = h();
+  const int width = w();
+  const int height = h();
   scale(W, H, 0, 1);
   draw(X, Y, W, H, 0, 0);
   scale(width, height, 0, 1);
@@ -335,47 +350,10 @@ bool Fl_Image::register_images_done = false;
 //
 // RGB image class...
 //
-size_t Fl_RGB_Image::max_size_ = ~((size_t)0);
+size_t Fl_RGB_Image::max_size_ = ~static_cast<size_t>(0);
 
-int fl_convert_pixmap(const char*const* cdata, uchar* out, Fl_Color bg);
-
-
-/**
-  The constructor creates a new image from the specified data.
-
-  The data array \p bits must contain sufficient data to provide
-  \p W * \p H * \p D image bytes and optional line padding, see \p LD.
-
-  \p W and \p H are the width and height of the image in pixels, resp.
-
-  \p D is the image depth and can be:
-    - D=1: each uchar in \p bits[] is a grayscale pixel value
-    - D=2: each uchar pair in \p bits[] is a grayscale + alpha pixel value
-    - D=3: each uchar triplet in \p bits[] is an R/G/B pixel value
-    - D=4: each uchar quad in \p bits[] is an R/G/B/A pixel value
-
-  \p LD specifies the line data size of the array, see Fl_Image::ld(int).
-  If \p LD is zero, then \p W * \p D is assumed, otherwise \p LD must be
-  greater than or equal to \p W * \p D to account for (unused) extra data
-  per line (padding).
-
-  The caller is responsible that the image data array \p bits persists as
-  long as the image is used.
-
-  This constructor sets Fl_RGB_Image::alloc_array to 0.
-  To have the image object control the deallocation of the data array
-  \p bits, set alloc_array to non-zero after construction.
-
-  \param[in] bits   The image data array.
-  \param[in] W      The width of the image in pixels.
-  \param[in] H      The height of the image in pixels.
-  \param[in] D      The image depth, or 'number of channels' (default=3).
-  \param[in] LD     Line data size (default=0).
-
-  \see Fl_Image::data(), Fl_Image::w(), Fl_Image::h(), Fl_Image::d(), Fl_Image::ld(int)
-*/
 Fl_RGB_Image::Fl_RGB_Image(const uchar *bits, int W, int H, int D, int LD) :
-  Fl_Image(W,H,D),
+  Fl_Image(W, H, D),
   array(bits),
   alloc_array(0),
   id_(0),
@@ -405,26 +383,31 @@ Fl_RGB_Image::Fl_RGB_Image(const uchar *bits, int W, int H, int D, int LD) :
  \see Fl_RGB_Image(const uchar *bits, int W, int H, int D, int LD)
  */
 Fl_RGB_Image::Fl_RGB_Image(const uchar *bits, int bits_length, int W, int H, int D, int LD) :
-  Fl_Image(W,H,D),
+  Fl_Image(W, H, D),
   array(bits),
   alloc_array(0),
   id_(0),
   mask_(0),
   cache_w_(0), cache_h_(0)
 {
-  if (D == 0) D = 3;
-  if (LD == 0) LD = W*D;
-  int min_length = LD*(H-1) + W*D;
+  if (D == 0) {
+    D = 3;
+  }
+  if (LD == 0) {
+    LD = W * D;
+  }
+  const int min_length = LD * (H - 1) + W * D;
   if (bits_length >= min_length) {
     data((const char **)&array, 1);
     ld(LD);
   } else {
-    array = NULL;
-    data(NULL, 0);
+    array = nullptr;
+    data(nullptr, 0);
     ld(ERR_MEMORY_ACCESS);
   }
 }
 
+int fl_convert_pixmap(const char* const* cdata, uchar* out, Fl_Color bg);
 
 /**
   The constructor creates a new RGBA image from the specified Fl_Pixmap.
@@ -436,18 +419,18 @@ Fl_RGB_Image::Fl_RGB_Image(const uchar *bits, int bits_length, int W, int H, int
   Fl_RGB_Image::alloc_array to 1 so the data array is deleted when the
   image is destroyed.
 */
-Fl_RGB_Image::Fl_RGB_Image(const Fl_Pixmap *pxm, Fl_Color bg):
+Fl_RGB_Image::Fl_RGB_Image(const Fl_Pixmap *pxm, const Fl_Color bg):
   Fl_Image(pxm->data_w(), pxm->data_h(), 4),
-  array(0),
+  array(nullptr),
   alloc_array(0),
   id_(0),
   mask_(0),
   cache_w_(0), cache_h_(0)
 {
-  if (pxm && pxm->data_w() > 0 && pxm->data_h() > 0) {
-    array = new uchar[data_w() * data_h() * d()];
+  if (pxm != nullptr && pxm->data_w() > 0 && pxm->data_h() > 0) {
+    array = new uchar[static_cast<size_t>(data_w()) * data_h() * d()];
     alloc_array = 1;
-    fl_convert_pixmap(pxm->data(), (uchar*)array, bg);
+    fl_convert_pixmap(pxm->data(), const_cast<uchar*>(array), bg);
   }
   data((const char **)&array, 1);
   scale(pxm->w(), pxm->h(), 0, 1);
@@ -459,8 +442,10 @@ Fl_RGB_Image::Fl_RGB_Image(const Fl_Pixmap *pxm, Fl_Color bg):
   the image.
 */
 Fl_RGB_Image::~Fl_RGB_Image() {
-  uncache();
-  if (alloc_array) delete[] (uchar *)array;
+  Fl_RGB_Image::uncache();
+  if (alloc_array != 0) {
+    delete[] array;
+  }
 }
 
 void Fl_RGB_Image::uncache() {
@@ -468,64 +453,51 @@ void Fl_RGB_Image::uncache() {
   Fl_Image::uncache();
 }
 
-
 /**
  Optimize the simple copy where the width and height are the same,
  or when we are copying an empty image.
  */
 Fl_RGB_Image *Fl_RGB_Image::copy_optimize_(int W, int H) const {
-  Fl_RGB_Image  *new_image;     // New RGB image
-  uchar         *new_array;     // New array for image data
-  if (array) {
-    // Make a copy of the image data and return a new Fl_RGB_Image...
-    new_array = new uchar[((long)W) * H * d()];
-    if (ld() && (ld() != W*d())) {
+  if (array != nullptr) {
+    const size_t total_size = static_cast<size_t>(W) * H * d();
+    auto *new_array = new uchar[total_size];
+    if (ld() != 0 && (ld() != W * d())) {
       const uchar *src = array;
       uchar *dst = new_array;
-      int dy, dh = H, wd = W*d(), wld = ld();
-      for (dy=0; dy<dh; dy++) {
+      const int dh = H;
+      const int wd = W * d();
+      const int wld = ld();
+      for (int dy = 0; dy < dh; dy++) {
         memcpy(dst, src, wd);
         src += wld;
         dst += wd;
       }
     } else {
-      memcpy(new_array, array, ((long)W) * H * d());
+      memcpy(new_array, array, total_size);
     }
-    new_image = new Fl_RGB_Image(new_array, W, H, d());
+    auto *new_image = new Fl_RGB_Image(new_array, W, H, d());
     new_image->alloc_array = 1;
-  } else {
-    new_image = new Fl_RGB_Image(array, W, H, d(), ld());
+    return new_image;
   }
-  return new_image;
+
+  return new Fl_RGB_Image(array, W, H, d(), ld());
 }
 
 /**
  Create a scaled up or down copy of this image using nearest neighbor.
  */
 Fl_RGB_Image *Fl_RGB_Image::copy_nearest_neighbor_(int W, int H) const {
-  uchar         *new_ptr;       // Pointer into new array
-  int           dy,             // Destination coordinate
-                line_d;         // stride from line to line
-
-  // Allocate memory for the new image...
-  uchar  *new_array = new uchar [((long)W) * H * d()];
-  Fl_RGB_Image  *new_image = new Fl_RGB_Image(new_array, W, H, d());
+  auto *new_array = new uchar[static_cast<size_t>(W) * H * d()];
+  auto *new_image = new Fl_RGB_Image(new_array, W, H, d());
   new_image->alloc_array = 1;
 
-  line_d = ld() ? ld() : data_w() * d();
+  const int line_d = ld() != 0 ? ld() : data_w() * d();
 
-  int         sy,             // Source coordinate
-              yerr,           // Y error
-              xmod, ymod,     // X & Y moduli
-              ystep;          // Y step increment
+  const int xmod = data_w() % W;
+  const int ymod = data_h() % H;
+  const int ystep = data_h() / H;
 
-  // Figure out Bresenham step/modulus values...
-  xmod   = data_w() % W;
-  ymod   = data_h() % H;
-  ystep  = data_h() / H;
-
-  // Precompute X offsets to allow compiler auto-vectorization of the inner loop
-  int *x_offset = new int[W];
+  auto *x_offset = new int[W];
   for (int dx = 0, err = W, current_x = 0; dx < W; dx++) {
     x_offset[dx] = current_x * d();
     current_x += (data_w() / W);
@@ -536,9 +508,9 @@ Fl_RGB_Image *Fl_RGB_Image::copy_nearest_neighbor_(int W, int H) const {
     }
   }
 
-  // Scale the image using a nearest-neighbor algorithm...
-  for (dy = H, sy = 0, yerr = H, new_ptr = new_array; dy > 0; dy --) {
-    const uchar* line_ptr = array + ((long)sy) * line_d;
+  uchar *new_ptr = new_array;
+  for (int dy = H, sy = 0, yerr = H; dy > 0; dy--) {
+    const uchar* line_ptr = array + static_cast<size_t>(sy) * line_d;
     switch (d()) {
       case 1:
         for (int dx = 0; dx < W; dx++) {
@@ -578,14 +550,14 @@ Fl_RGB_Image *Fl_RGB_Image::copy_nearest_neighbor_(int W, int H) const {
         }
         break;
     }
-    sy   += ystep;
+    sy += ystep;
     yerr -= ymod;
     if (yerr <= 0) {
       yerr += H;
-      sy ++;
+      sy++;
     }
   }
-  
+
   delete[] x_offset;
   return new_image;
 }
@@ -609,73 +581,81 @@ Fl_RGB_Image *Fl_RGB_Image::copy_nearest_neighbor_(int W, int H) const {
            for deleting the returned image object when it is no longer needed.
 */
 Fl_RGB_Image *Fl_RGB_Image::copy_bilinear_(uint32_t W, uint32_t H) const {
-  const uint32_t D = d();
-  const uint32_t SW = data_w();
-  const uint32_t SH = data_h();
-  const uint32_t SLD = ld() ? ld() : SW * D;
+  const auto D = static_cast<uint32_t>(d());
+  const auto SW = static_cast<uint32_t>(data_w());
+  const auto SH = static_cast<uint32_t>(data_h());
+  const uint32_t SLD = ld() != 0 ? static_cast<uint32_t>(ld()) : SW * D;
 
-  uint8_t *new_array = new uint8_t[((long)W) * H * D];
-  Fl_RGB_Image *new_image = new Fl_RGB_Image(new_array, W, H, D);
+  auto *new_array = new uint8_t[static_cast<size_t>(W) * H * D];
+  auto *new_image = new Fl_RGB_Image(new_array, static_cast<int>(W), static_cast<int>(H), static_cast<int>(D));
   new_image->alloc_array = 1;
 
-  // Precompute X and Y coordinate maps and weights (8-bit fixed point: 0..256).
-  uint32_t *x0_off = new uint32_t[W];
-  uint32_t *x1_off = new uint32_t[W];
-  uint32_t *wx1 = new uint32_t[W];
+  auto *x0_off = new uint32_t[W];
+  auto *x1_off = new uint32_t[W];
+  auto *wx1 = new uint32_t[W];
 
-  uint32_t *y0_off = new uint32_t[H];
-  uint32_t *y1_off = new uint32_t[H];
-  uint32_t *wy1 = new uint32_t[H];
+  auto *y0_off = new uint32_t[H];
+  auto *y1_off = new uint32_t[H];
+  auto *wy1 = new uint32_t[H];
 
-  // Pixel-center mapping works for both upscaling and downscaling.
   for (uint32_t x = 0; x < W; ++x) {
-    float sx = ((x + 0.5f) * SW) / (float)W - 0.5f;
-    int32_t x0 = (int32_t)sx;
-    if (sx < 0.0f && (float)x0 != sx) x0--; // floor for negatives
+    const float sx = ((static_cast<float>(x) + 0.5F) * static_cast<float>(SW)) / static_cast<float>(W) - 0.5F;
+    auto x0 = static_cast<int32_t>(sx);
+    if (sx < 0.0F && static_cast<float>(x0) != sx) {
+      x0--;
+    }
 
-    float fx = sx - x0;
+    float fx = sx - static_cast<float>(x0);
 
     if (x0 < 0) {
       x0 = 0;
-      fx = 0.0f;
-    } else if (x0 >= (int32_t)SW - 1) {
-      x0 = SW - 1;
-      fx = 0.0f;
+      fx = 0.0F;
+    } else if (x0 >= static_cast<int32_t>(SW) - 1) {
+      x0 = static_cast<int32_t>(SW) - 1;
+      fx = 0.0F;
     }
 
-    uint32_t x1 = (x0 < (int32_t)SW - 1) ? (x0 + 1) : x0;
-    int32_t w = (int32_t)(fx * 256.0f + 0.5f);
-    if (w < 0) w = 0;
-    else if (w > 256) w = 256;
+    const uint32_t x1 = (x0 < static_cast<int32_t>(SW) - 1) ? static_cast<uint32_t>(x0 + 1) : static_cast<uint32_t>(x0);
+    auto w = static_cast<int32_t>(std::lround(fx * 256.0F));
+    if (w < 0) {
+      w = 0;
+    } else if (w > 256) {
+      w = 256;
+    }
 
-    x0_off[x] = x0 * D;
+    x0_off[x] = static_cast<uint32_t>(x0) * D;
     x1_off[x] = x1 * D;
-    wx1[x] = w;
+    wx1[x] = static_cast<uint32_t>(w);
   }
 
   for (uint32_t y = 0; y < H; ++y) {
-    float sy = ((y + 0.5f) * SH) / (float)H - 0.5f;
-    int32_t y0 = (int32_t)sy;
-    if (sy < 0.0f && (float)y0 != sy) y0--; // floor for negatives
+    const float sy = ((static_cast<float>(y) + 0.5F) * static_cast<float>(SH)) / static_cast<float>(H) - 0.5F;
+    auto y0 = static_cast<int32_t>(sy);
+    if (sy < 0.0F && static_cast<float>(y0) != sy) {
+      y0--;
+    }
 
-    float fy = sy - y0;
+    float fy = sy - static_cast<float>(y0);
 
     if (y0 < 0) {
       y0 = 0;
-      fy = 0.0f;
-    } else if (y0 >= (int32_t)SH - 1) {
-      y0 = SH - 1;
-      fy = 0.0f;
+      fy = 0.0F;
+    } else if (y0 >= static_cast<int32_t>(SH) - 1) {
+      y0 = static_cast<int32_t>(SH) - 1;
+      fy = 0.0F;
     }
 
-    uint32_t y1 = (y0 < (int32_t)SH - 1) ? (y0 + 1) : y0;
-    int32_t w = (int32_t)(fy * 256.0f + 0.5f);
-    if (w < 0) w = 0;
-    else if (w > 256) w = 256;
+    const uint32_t y1 = (y0 < static_cast<int32_t>(SH) - 1) ? static_cast<uint32_t>(y0 + 1) : static_cast<uint32_t>(y0);
+    auto w = static_cast<int32_t>(std::lround(fy * 256.0F));
+    if (w < 0) {
+      w = 0;
+    } else if (w > 256) {
+      w = 256;
+    }
 
-    y0_off[y] = y0 * SLD;
+    y0_off[y] = static_cast<uint32_t>(y0) * SLD;
     y1_off[y] = y1 * SLD;
-    wy1[y] = w;
+    wy1[y] = static_cast<uint32_t>(w);
   }
 
   for (uint32_t y = 0; y < H; ++y) {
@@ -684,7 +664,7 @@ Fl_RGB_Image *Fl_RGB_Image::copy_bilinear_(uint32_t W, uint32_t H) const {
     uint8_t *dst = new_array + y * W * D;
 
     const uint32_t wy = wy1[y];
-    const uint32_t wy0 = 256 - wy;
+    const uint32_t wy0 = 256U - wy;
 
     for (uint32_t x = 0; x < W; ++x) {
       const uint8_t *p00 = row0 + x0_off[x];
@@ -693,12 +673,12 @@ Fl_RGB_Image *Fl_RGB_Image::copy_bilinear_(uint32_t W, uint32_t H) const {
       const uint8_t *p11 = row1 + x1_off[x];
 
       const uint32_t wx = wx1[x];
-      const uint32_t wx0 = 256 - wx;
+      const uint32_t wx0 = 256U - wx;
 
       for (uint32_t c = 0; c < D; ++c) {
-        const uint32_t top = p00[c] * wx0 + p10[c] * wx;
-        const uint32_t bot = p01[c] * wx0 + p11[c] * wx;
-        dst[c] = (uint8_t)((top * wy0 + bot * wy + 32768) >> 16);
+        const uint32_t top = static_cast<uint32_t>(p00[c]) * wx0 + static_cast<uint32_t>(p10[c]) * wx;
+        const uint32_t bot = static_cast<uint32_t>(p01[c]) * wx0 + static_cast<uint32_t>(p11[c]) * wx;
+        dst[c] = static_cast<uint8_t>((top * wy0 + bot * wy + 32768U) >> 16U);
       }
       dst += D;
     }
@@ -718,273 +698,300 @@ Fl_RGB_Image *Fl_RGB_Image::copy_bilinear_(uint32_t W, uint32_t H) const {
   Create a scaled down copy of this image by a factor of 2 in the horizontal direction.
  */
 Fl_RGB_Image *Fl_RGB_Image::copy_scale_down_2h_() const {
-  int W = data_w()/2;
-  int H = data_h();
-  int D = d();
-  int LD = ld() ? ld() : data_w()*D;
-  if ((W==0) || (H==0) || (D==0)) return nullptr;
-  uchar *data = (uchar*)malloc(W*H*D);
+  const int W = data_w() / 2;
+  const int H = data_h();
+  const int D = d();
+  const int LD = ld() != 0 ? ld() : data_w() * D;
+  if ((W == 0) || (H == 0) || (D == 0)) {
+    return nullptr;
+  }
+
+  auto *data = new uchar[static_cast<size_t>(W) * H * D];
   uchar *dst = data;
   for (int y = 0; y < H; y++) {
-    const uchar *src = array + y*LD;
+    const uchar *src = array + static_cast<size_t>(y) * LD;
     switch (D) {
       case 1:
-        for (int x=0; x<W; ++x) {
-          dst[x] = (uchar)( ( (unsigned)src[x*2 + 0] + (unsigned)src[x*2 + 1] ) >> 1 );
+        for (int x = 0; x < W; ++x) {
+          dst[x] = static_cast<uchar>((static_cast<unsigned>(src[x * 2 + 0]) + static_cast<unsigned>(src[x * 2 + 1])) >> 1U);
         }
         dst += W;
         break;
       case 2:
-        for (int x=0; x<W; ++x) {
-          dst[x*2 + 0] = (uchar)( ( (unsigned)src[x*4 + 0] + (unsigned)src[x*4 + 2] ) >> 1 );
-          dst[x*2 + 1] = (uchar)( ( (unsigned)src[x*4 + 1] + (unsigned)src[x*4 + 3] ) >> 1 );
+        for (int x = 0; x < W; ++x) {
+          dst[x * 2 + 0] = static_cast<uchar>((static_cast<unsigned>(src[x * 4 + 0]) + static_cast<unsigned>(src[x * 4 + 2])) >> 1U);
+          dst[x * 2 + 1] = static_cast<uchar>((static_cast<unsigned>(src[x * 4 + 1]) + static_cast<unsigned>(src[x * 4 + 3])) >> 1U);
         }
         dst += W * 2;
         break;
       case 3:
-        for (int x=0; x<W; ++x) {
-          dst[x*3 + 0] = (uchar)( ( (unsigned)src[x*6 + 0] + (unsigned)src[x*6 + 3] ) >> 1 );
-          dst[x*3 + 1] = (uchar)( ( (unsigned)src[x*6 + 1] + (unsigned)src[x*6 + 4] ) >> 1 );
-          dst[x*3 + 2] = (uchar)( ( (unsigned)src[x*6 + 2] + (unsigned)src[x*6 + 5] ) >> 1 );
+        for (int x = 0; x < W; ++x) {
+          dst[x * 3 + 0] = static_cast<uchar>((static_cast<unsigned>(src[x * 3 * 2 + 0]) + static_cast<unsigned>(src[x * 3 * 2 + 3])) >> 1U);
+          dst[x * 3 + 1] = static_cast<uchar>((static_cast<unsigned>(src[x * 3 * 2 + 1]) + static_cast<unsigned>(src[x * 3 * 2 + 4])) >> 1U);
+          dst[x * 3 + 2] = static_cast<uchar>((static_cast<unsigned>(src[x * 3 * 2 + 2]) + static_cast<unsigned>(src[x * 3 * 2 + 5])) >> 1U);
         }
         dst += W * 3;
         break;
       case 4:
-        for (int x=0; x<W; ++x) {
-          dst[x*4 + 0] = (uchar)( ( (unsigned)src[x*8 + 0] + (unsigned)src[x*8 + 4] ) >> 1 );
-          dst[x*4 + 1] = (uchar)( ( (unsigned)src[x*8 + 1] + (unsigned)src[x*8 + 5] ) >> 1 );
-          dst[x*4 + 2] = (uchar)( ( (unsigned)src[x*8 + 2] + (unsigned)src[x*8 + 6] ) >> 1 );
-          dst[x*4 + 3] = (uchar)( ( (unsigned)src[x*8 + 3] + (unsigned)src[x*8 + 7] ) >> 1 );
+        for (int x = 0; x < W; ++x) {
+          dst[x * 4 + 0] = static_cast<uchar>((static_cast<unsigned>(src[x * 4 * 2 + 0]) + static_cast<unsigned>(src[x * 4 * 2 + 4])) >> 1U);
+          dst[x * 4 + 1] = static_cast<uchar>((static_cast<unsigned>(src[x * 4 * 2 + 1]) + static_cast<unsigned>(src[x * 4 * 2 + 5])) >> 1U);
+          dst[x * 4 + 2] = static_cast<uchar>((static_cast<unsigned>(src[x * 4 * 2 + 2]) + static_cast<unsigned>(src[x * 4 * 2 + 6])) >> 1U);
+          dst[x * 4 + 3] = static_cast<uchar>((static_cast<unsigned>(src[x * 4 * 2 + 3]) + static_cast<unsigned>(src[x * 4 * 2 + 7])) >> 1U);
         }
         dst += W * 4;
         break;
+      default:
+        break;
     }
   }
-  return new Fl_RGB_Image(data, W, H, D);
+  auto *new_img = new Fl_RGB_Image(data, W, H, D);
+  new_img->alloc_array = 1;
+  return new_img;
 }
 
 Fl_RGB_Image *Fl_RGB_Image::copy_scale_down_2v_() const {
-  int W = data_w();
-  int H = data_h()/2;
-  int D = d();
-  int LD = ld() ? ld() : data_w()*D;
-  if ((W==0) || (H==0) || (D==0)) return nullptr;
-  uchar *data = (uchar*)malloc(W*H*D);
+  const int W = data_w();
+  const int H = data_h() / 2;
+  const int D = d();
+  const int LD = ld() != 0 ? ld() : data_w() * D;
+  if ((W == 0) || (H == 0) || (D == 0)) {
+    return nullptr;
+  }
+
+  auto *data = new uchar[static_cast<size_t>(W) * H * D];
   uchar *dst = data;
   for (int y = 0; y < H; y++) {
-    const uchar *s0 = array + 2*y*LD;
+    const uchar *s0 = array + static_cast<size_t>(2 * y) * LD;
     const uchar *s1 = s0 + LD;
     switch (D) {
       case 1:
-        for (int x=0; x<W; ++x) {
-          *dst++ = ((uchar) ( ( ((unsigned)*s0++) + ((unsigned)*s1++) ) >> 1 ));
+        for (int x = 0; x < W; ++x) {
+          *dst++ = static_cast<uchar>((static_cast<unsigned>(*s0++) + static_cast<unsigned>(*s1++)) >> 1U);
         }
         break;
       case 2:
-        for (int x=0; x<W; ++x) {
-          *dst++ = ((uchar) ( ( ((unsigned)*s0++) + ((unsigned)*s1++) ) >> 1 ));
-          *dst++ = ((uchar) ( ( ((unsigned)*s0++) + ((unsigned)*s1++) ) >> 1 ));
+        for (int x = 0; x < W; ++x) {
+          *dst++ = static_cast<uchar>((static_cast<unsigned>(*s0++) + static_cast<unsigned>(*s1++)) >> 1U);
+          *dst++ = static_cast<uchar>((static_cast<unsigned>(*s0++) + static_cast<unsigned>(*s1++)) >> 1U);
         }
         break;
       case 3:
-        for (int x=0; x<W; ++x) {
-          *dst++ = ((uchar) ( ( ((unsigned)*s0++) + ((unsigned)*s1++) ) >> 1 ));
-          *dst++ = ((uchar) ( ( ((unsigned)*s0++) + ((unsigned)*s1++) ) >> 1 ));
-          *dst++ = ((uchar) ( ( ((unsigned)*s0++) + ((unsigned)*s1++) ) >> 1 ));
+        for (int x = 0; x < W; ++x) {
+          *dst++ = static_cast<uchar>((static_cast<unsigned>(*s0++) + static_cast<unsigned>(*s1++)) >> 1U);
+          *dst++ = static_cast<uchar>((static_cast<unsigned>(*s0++) + static_cast<unsigned>(*s1++)) >> 1U);
+          *dst++ = static_cast<uchar>((static_cast<unsigned>(*s0++) + static_cast<unsigned>(*s1++)) >> 1U);
         }
         break;
       case 4:
-        for (int x=0; x<W; ++x) {
-          *dst++ = ((uchar) ( ( ((unsigned)*s0++) + ((unsigned)*s1++) ) >> 1 ));
-          *dst++ = ((uchar) ( ( ((unsigned)*s0++) + ((unsigned)*s1++) ) >> 1 ));
-          *dst++ = ((uchar) ( ( ((unsigned)*s0++) + ((unsigned)*s1++) ) >> 1 ));
-          *dst++ = ((uchar) ( ( ((unsigned)*s0++) + ((unsigned)*s1++) ) >> 1 ));
+        for (int x = 0; x < W; ++x) {
+          *dst++ = static_cast<uchar>((static_cast<unsigned>(*s0++) + static_cast<unsigned>(*s1++)) >> 1U);
+          *dst++ = static_cast<uchar>((static_cast<unsigned>(*s0++) + static_cast<unsigned>(*s1++)) >> 1U);
+          *dst++ = static_cast<uchar>((static_cast<unsigned>(*s0++) + static_cast<unsigned>(*s1++)) >> 1U);
+          *dst++ = static_cast<uchar>((static_cast<unsigned>(*s0++) + static_cast<unsigned>(*s1++)) >> 1U);
         }
+        break;
+      default:
         break;
     }
   }
-  return new Fl_RGB_Image(data, W, H, D);
+  auto *new_img = new Fl_RGB_Image(data, W, H, D);
+  new_img->alloc_array = 1;
+  return new_img;
 }
-
 
 Fl_Image *Fl_RGB_Image::copy(int W, int H) const {
-  // Optimize the simple copy where the width and height are the same,
-  // or when we are copying an empty image...
-  if ((W == data_w() && H == data_h()) || !w() || !h() || !d() || !array) {
+  if ((W == data_w() && H == data_h()) || (w() == 0) || (h() == 0) || (d() == 0) || array == nullptr) {
     return copy_optimize_(W, H);
   }
-  // Negative scaling returns no image
-  if (W <= 0 || H <= 0) return nullptr;
+  if (W <= 0 || H <= 0) {
+    return nullptr;
+  }
   if (Fl_Image::RGB_scaling() == FL_RGB_SCALING_NEAREST) {
     return copy_nearest_neighbor_(W, H);
-  } else {
-    // Bilinear scaling only scales down between 100% and 50%. If our image is
-    // much larger, divide it by two in either direction first. This is not
-    // perfect, but relatively fast.
-    const Fl_RGB_Image *img = this;
-    while ((img->data_w() >= 2*W) || (img->data_h() >= 2*H)) {
-      // Coarse scaling horizontally
-      if (img->data_w()>=2*W) {
-        const Fl_RGB_Image *scaled_img = img->copy_scale_down_2h_();
-        if (img != this) delete img;
-        img = scaled_img;
+  }
+
+  const Fl_RGB_Image *img = this;
+  while ((img->data_w() >= 2 * W) || (img->data_h() >= 2 * H)) {
+    if (img->data_w() >= 2 * W) {
+      const Fl_RGB_Image *scaled_img = img->copy_scale_down_2h_();
+      if (img != this) {
+        delete img;
       }
-      // Coarse scaling vertically
-      if (img->data_h()>=2*H) {
-        const Fl_RGB_Image *scaled_img = img->copy_scale_down_2v_();
-        if (img != this) delete img;
-        img = scaled_img;
-      }
+      img = scaled_img;
     }
-    // Fine scaling the smaller image
-    if ((img->data_w() != W) || (img->data_h() != H)) {
-      Fl_RGB_Image *fine_scaled_img = img->copy_bilinear_(W, H);
-      if (img != this) delete img;
-      return fine_scaled_img;
-    } else {
-      if (img == this) { // this should not happen, but just in case
-        return copy();
-      } else {
-        return (Fl_Image*)img;
+    if (img->data_h() >= 2 * H) {
+      const Fl_RGB_Image *scaled_img = img->copy_scale_down_2v_();
+      if (img != this) {
+        delete img;
       }
+      img = scaled_img;
     }
   }
+
+  if ((img->data_w() != W) || (img->data_h() != H)) {
+    Fl_RGB_Image *fine_scaled_img = img->copy_bilinear_(static_cast<uint32_t>(W), static_cast<uint32_t>(H));
+    if (img != this) {
+      delete img;
+    }
+    return fine_scaled_img;
+  }
+
+  if (img == this) {
+    return copy();
+  }
+  return const_cast<Fl_RGB_Image*>(img);
 }
 
-
 void Fl_RGB_Image::color_average(Fl_Color c, float i) {
-  // Don't average an empty image...
-  if (!w() || !h() || !d() || !array) return;
-
-  // Delete any existing pixmap/mask objects...
-  uncache();
-
-  // Allocate memory as needed...
-  uchar         *new_array,
-                *new_ptr;
-
-  if (!alloc_array) new_array = new uchar[data_h() * data_w() * d()];
-  else new_array = (uchar *)array;
-
-  // Get the color to blend with...
-  uchar         r, g, b;
-  unsigned      ia, ir, ig, ib;
-
-  Fl::get_color(c, r, g, b);
-  if (i < 0.0f) i = 0.0f;
-  else if (i > 1.0f) i = 1.0f;
-
-  ia = (unsigned)(256 * i);
-  ir = r * (256 - ia);
-  ig = g * (256 - ia);
-  ib = b * (256 - ia);
-
-  // Update the image data to do the blend...
-  const uchar   *old_ptr;
-  int           x, y;
-  int   line_i = ld() ? ld() - (data_w()*d()) : 0; // increment from line end to beginning of next line
-
-  if (d() < 3) {
-    ig = (r * 31 + g * 61 + b * 8) / 100 * (256 - ia);
-
-    for (new_ptr = new_array, old_ptr = array, y = 0; y < data_h(); y ++, old_ptr += line_i)
-      for (x = 0; x < data_w(); x ++) {
-        *new_ptr++ = (*old_ptr++ * ia + ig) >> 8;
-        if (d() > 1) *new_ptr++ = *old_ptr++;
-      }
-  } else {
-    for (new_ptr = new_array, old_ptr = array, y = 0; y < data_h(); y ++, old_ptr += line_i)
-      for (x = 0; x < data_w(); x ++) {
-        *new_ptr++ = (*old_ptr++ * ia + ir) >> 8;
-        *new_ptr++ = (*old_ptr++ * ia + ig) >> 8;
-        *new_ptr++ = (*old_ptr++ * ia + ib) >> 8;
-        if (d() > 3) *new_ptr++ = *old_ptr++;
-      }
+  if (w() == 0 || h() == 0 || d() == 0 || array == nullptr) {
+    return;
   }
 
-  // Set the new pointers/values as needed...
-  if (!alloc_array) {
-    array       = new_array;
-    alloc_array = 1;
+  uncache();
 
+  uchar *new_array = nullptr;
+  if (alloc_array == 0) {
+    new_array = new uchar[static_cast<size_t>(data_h()) * data_w() * d()];
+  } else {
+    new_array = const_cast<uchar*>(array);
+  }
+
+  uchar r = 0;
+  uchar g = 0;
+  uchar b = 0;
+  Fl::get_color(c, r, g, b);
+
+  if (i < 0.0F) {
+    i = 0.0F;
+  } else if (i > 1.0F) {
+    i = 1.0F;
+  }
+
+  const auto ia = static_cast<unsigned>(256.0F * i);
+  const unsigned ir = r * (256U - ia);
+  unsigned ig = g * (256U - ia);
+  const unsigned ib = b * (256U - ia);
+
+  const uchar *old_ptr = array;
+  uchar *new_ptr = new_array;
+  const int line_i = ld() != 0 ? ld() - (data_w() * d()) : 0;
+
+  if (d() < 3) {
+    ig = (r * 31U + g * 61U + b * 8U) / 100U * (256U - ia);
+
+    for (int y = 0; y < data_h(); y++, old_ptr += line_i) {
+      for (int x = 0; x < data_w(); x++) {
+        *new_ptr++ = static_cast<uchar>((static_cast<unsigned>(*old_ptr++) * ia + ig) >> 8U);
+        if (d() > 1) {
+          *new_ptr++ = *old_ptr++;
+        }
+      }
+    }
+  } else {
+    for (int y = 0; y < data_h(); y++, old_ptr += line_i) {
+      for (int x = 0; x < data_w(); x++) {
+        *new_ptr++ = static_cast<uchar>((static_cast<unsigned>(*old_ptr++) * ia + ir) >> 8U);
+        *new_ptr++ = static_cast<uchar>((static_cast<unsigned>(*old_ptr++) * ia + ig) >> 8U);
+        *new_ptr++ = static_cast<uchar>((static_cast<unsigned>(*old_ptr++) * ia + ib) >> 8U);
+        if (d() > 3) {
+          *new_ptr++ = *old_ptr++;
+        }
+      }
+    }
+  }
+
+  if (alloc_array == 0) {
+    array = new_array;
+    alloc_array = 1;
     ld(0);
   }
 }
 
 void Fl_RGB_Image::desaturate() {
-  // Don't desaturate an empty image...
-  if (!w() || !h() || !d() || !array) return;
+  if (w() == 0 || h() == 0 || d() == 0 || array == nullptr) {
+    return;
+  }
+  if (d() < 3) {
+    return;
+  }
 
-  // Can only desaturate color images...
-  if (d() < 3) return;
-
-  // Delete any existing pixmap/mask objects...
   uncache();
 
-  // Allocate memory for a grayscale image...
-  uchar         *new_array,
-                *new_ptr;
-  int           new_d;
+  const int new_d = d() - 2;
+  auto *new_array = new uchar[static_cast<size_t>(data_h()) * data_w() * new_d];
 
-  new_d     = d() - 2;
-  new_array = new uchar[data_h() * data_w() * new_d];
+  const uchar *old_ptr = array;
+  uchar *new_ptr = new_array;
+  const int line_i = ld() != 0 ? ld() - (data_w() * d()) : 0;
 
-  // Copy the image data, converting to grayscale...
-  const uchar   *old_ptr;
-  int           x, y;
-  int   line_i = ld() ? ld() - (data_w()*d()) : 0; // increment from line end to beginning of next line
-
-  for (new_ptr = new_array, old_ptr = array, y = 0; y < data_h(); y ++, old_ptr += line_i)
-    for (x = 0; x < data_w(); x ++, old_ptr += d()) {
-      *new_ptr++ = (uchar)((31 * old_ptr[0] + 61 * old_ptr[1] + 8 * old_ptr[2]) / 100);
-      if (d() > 3) *new_ptr++ = old_ptr[3];
+  for (int y = 0; y < data_h(); y++, old_ptr += line_i) {
+    for (int x = 0; x < data_w(); x++, old_ptr += d()) {
+      *new_ptr++ = static_cast<uchar>((31U * static_cast<unsigned>(old_ptr[0]) +
+                                       61U * static_cast<unsigned>(old_ptr[1]) +
+                                       8U  * static_cast<unsigned>(old_ptr[2])) / 100U);
+      if (d() > 3) {
+        *new_ptr++ = old_ptr[3];
+      }
     }
+  }
 
-  // Free the old array as needed, and then set the new pointers/values...
-  if (alloc_array) delete[] (uchar *)array;
+  if (alloc_array != 0) {
+    delete[] array;
+  }
 
-  array       = new_array;
+  array = new_array;
   alloc_array = 1;
 
   ld(0);
   d(new_d);
 }
 
-#define fl_max(a,b) ((a) > (b) ? (a) : (b))
-#define fl_min(a,b) ((a) < (b) ? (a) : (b))
+namespace {
+  inline int fl_max(int a, int b) { return (a > b) ? a : b; }
+  inline int fl_min(int a, int b) { return (a < b) ? a : b; }
 
-typedef struct {int x; int y; int width; int height;} rectangle_int_t;
-static void crect_intersect(rectangle_int_t *to, rectangle_int_t *with) {
-  int x = fl_max(to->x, with->x);
-  to->width = fl_min(to->x + to->width, with->x + with->width) - x;
-  if (to->width < 0) to->width = 0;
-  int y = fl_max(to->y, with->y);
-  to->height = fl_min(to->y + to->height, with->y + with->height) - y;
-  if (to->height < 0) to->height = 0;
-  to->x = x;
-  to->y = y;
-}
+  struct RectangleInt {
+    int x;
+    int y;
+    int width;
+    int height;
+  };
 
+  void crect_intersect(RectangleInt *to, const RectangleInt *with) {
+    const int x = fl_max(to->x, with->x);
+    to->width = fl_min(to->x + to->width, with->x + with->width) - x;
+    if (to->width < 0) {
+      to->width = 0;
+    }
+    const int y = fl_max(to->y, with->y);
+    to->height = fl_min(to->y + to->height, with->y + with->height) - y;
+    if (to->height < 0) {
+      to->height = 0;
+    }
+    to->x = x;
+    to->y = y;
+  }
+} // namespace
 
 void Fl_RGB_Image::draw(int XP, int YP, int WP, int HP, int cx, int cy) {
-  if ((cx || cy || WP != w() || HP != h()) && w() == data_w() && h() == data_h()) {
-    // See issue #1128: clipping to a part of the image while the scaling
-    // has a fractional value creates problems
-    rectangle_int_t r1 = { XP-cx, YP-cy, w(), h() };
-    rectangle_int_t r2 = { XP, YP, WP, HP };
+  if ((cx != 0 || cy != 0 || WP != w() || HP != h()) && w() == data_w() && h() == data_h()) {
+    RectangleInt r1 = { XP - cx, YP - cy, w(), h() };
+    const RectangleInt r2 = { XP, YP, WP, HP };
     crect_intersect(&r1, &r2);
-    if (!r1.width || !r1.height) return;
-    // After this, r1.x,r1.y = position of top-left of drawn image part;
-    // r1.width,r1.height = size of drawn image part, in FLTK units;
-    // fl_max(cx, 0),fl_max(cy, 0) = top-left of drawn part in image.
-    int l = (ld() ? ld() : d() * w());
-    const uchar *p = array + fl_max(cy, 0) * l + fl_max(cx, 0) * d();
-    // build temporary RGB image and draw it
-    Fl_RGB_Image *temp_rgb = new Fl_RGB_Image(p, r1.width, r1.height, d(), l);
+    if (r1.width == 0 || r1.height == 0) {
+      return;
+    }
+
+    const int l = (ld() != 0 ? ld() : d() * w());
+    const uchar *p = array + static_cast<size_t>(fl_max(cy, 0)) * l + fl_max(cx, 0) * d();
+
+    auto *temp_rgb = new Fl_RGB_Image(p, r1.width, r1.height, d(), l);
     fl_graphics_driver->draw_rgb(temp_rgb, r1.x, r1.y, r1.width, r1.height, 0, 0);
     delete temp_rgb;
-  } else
+  } else {
     fl_graphics_driver->draw_rgb(this, XP, YP, WP, HP, cx, cy);
+  }
 }
 
 void Fl_RGB_Image::label(Fl_Widget* widget) {
@@ -992,5 +999,5 @@ void Fl_RGB_Image::label(Fl_Widget* widget) {
 }
 
 void Fl_RGB_Image::label(Fl_Menu_Item* m) {
-  m->label(FL_IMAGE_LABEL, (const char*)this);
+  m->label(FL_IMAGE_LABEL, reinterpret_cast<const char*>(this));
 }

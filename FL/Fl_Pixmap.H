@@ -69,7 +69,7 @@ public:
   void desaturate() override;
   void draw(int X, int Y, int W, int H, int cx=0, int cy=0) override;
   void draw(int X, int Y) {draw(X, Y, w(), h(), 0, 0);}
-  void label(Fl_Widget*w) override;
+  void label(Fl_Widget*widget) override;
   void label(Fl_Menu_Item*m) override;
   void uncache() override;
   int cache_w() const { return cache_w_; }
