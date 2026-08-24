@@ -34,11 +34,11 @@ extern unsigned fl_cmap[256]; // defined in fl_color.cxx
 
 void Fl_OpenGL_Graphics_Driver::color(Fl_Color i) {
   if (i & 0xffffff00) {
-    unsigned rgba = ((unsigned)i)^0x000000ff;
+    unsigned const rgba = i ^ 0x000000ff;
     Fl_Graphics_Driver::color(i);
     glColor4ub(rgba>>24, rgba>>16, rgba>>8, rgba);
   } else {
-    unsigned rgba = ((unsigned)fl_cmap[i])^0x000000ff;
+    unsigned const rgba = fl_cmap[i] ^ 0x000000ff;
     Fl_Graphics_Driver::color(fl_cmap[i]);
     glColor4ub(rgba>>24, rgba>>16, rgba>>8, rgba);
   }

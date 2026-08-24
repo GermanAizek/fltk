@@ -22,9 +22,6 @@
 #include <config.h>
 #include "Fl_OpenGL_Graphics_Driver.H"
 #include <FL/gl.h>
-#include <FL/Fl_Gl_Window.H>
-#include <FL/Fl_RGB_Image.H>
-#include <FL/Fl.H>
 #include <FL/fl_draw.H>
 
 // OpenGL implementation does not support custom patterns
@@ -32,9 +29,9 @@
 
 void Fl_OpenGL_Graphics_Driver::line_style(int style, int width, char* dashes) {
   if (width<1) width = 1;
-  line_width_ = (float)width;
+  line_width_ = static_cast<float>(width);
 
-  int stipple = style & 0x00ff;
+  int const stipple = style & 0x00ff;
   line_stipple_ = stipple;
 //  int cap     = style & 0x0f00;
 //  int join    = style & 0xf000;
@@ -46,26 +43,23 @@ void Fl_OpenGL_Graphics_Driver::line_style(int style, int width, char* dashes) {
     char enable = 1;
     switch (stipple & 0x00ff) {
       case FL_DASH:
-        glLineStipple(GLint(pixels_per_unit_*line_width_), 0x0F0F); // ....****....****
+        glLineStipple(static_cast<GLint>(pixels_per_unit_ * line_width_), 0x0F0F); // ....****....****
         break;
       case FL_DOT:
-        glLineStipple(GLint(pixels_per_unit_*line_width_), 0x5555); // .*.*.*.*.*.*.*.*
+        glLineStipple(static_cast<GLint>(pixels_per_unit_ * line_width_), 0x5555); // .*.*.*.*.*.*.*.*
         break;
       case FL_DASHDOT:
-        glLineStipple(GLint(pixels_per_unit_*line_width_), 0x2727); // ..*..***..*..***
+        glLineStipple(static_cast<GLint>(pixels_per_unit_ * line_width_), 0x2727); // ..*..***..*..***
         break;
       case FL_DASHDOTDOT:
-        glLineStipple(GLint(pixels_per_unit_*line_width_), 0x5757); // .*.*.***.*.*.***
+        glLineStipple(static_cast<GLint>(pixels_per_unit_ * line_width_), 0x5757); // .*.*.***.*.*.***
         break;
       default:
         glLineStipple(1, 0xFFFF);
         enable = 0;
     }
-    if (enable)
-      glEnable(GL_LINE_STIPPLE);
-    else
-      glDisable(GL_LINE_STIPPLE);
+    enable ? glEnable(GL_LINE_STIPPLE) : glDisable(GL_LINE_STIPPLE);
   }
-  glLineWidth( (GLfloat)(pixels_per_unit_ * line_width_) );
-  glPointSize( (GLfloat)(pixels_per_unit_) );
+  glLineWidth( pixels_per_unit_ * line_width_ );
+  glPointSize( pixels_per_unit_ );
 }

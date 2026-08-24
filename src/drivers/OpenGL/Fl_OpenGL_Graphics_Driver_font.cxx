@@ -28,8 +28,6 @@
 #include <config.h>
 #include "Fl_OpenGL_Graphics_Driver.H"
 #include <FL/gl.h>
-#include <FL/Fl_Gl_Window.H>
-#include <FL/Fl.H>
 #include <FL/fl_draw.H>
 
 
@@ -182,7 +180,7 @@ Fl_Font Fl_OpenGL_Graphics_Driver::font() {
 }
 
 void Fl_OpenGL_Graphics_Driver::draw(const char *str, int n, float x, float y) {
-  this->draw(str, n, int(x), int(y));
+  this->draw(str, n, static_cast<int>(x), static_cast<int>(y));
 }
 
 void Fl_OpenGL_Graphics_Driver::draw(int angle, const char *str, int n, int x, int y) {}
@@ -195,7 +193,7 @@ void Fl_OpenGL_Graphics_Driver::draw(const char* str, int n, int x, int y) {
 
 double Fl_OpenGL_Graphics_Driver::width(const char *str, int n) {
   Fl_Surface_Device::push_current(Fl_Display_Device::display_device());
-  double w = fl_width(str, n);
+  double const w = fl_width(str, n);
   Fl_Surface_Device::pop_current();
   return w;
 }
@@ -204,14 +202,14 @@ double Fl_OpenGL_Graphics_Driver::width(unsigned int c) { return Fl_Graphics_Dri
 
 int Fl_OpenGL_Graphics_Driver::descent() {
   Fl_Surface_Device::push_current(Fl_Display_Device::display_device());
-  int d = fl_descent();
+  int const d = fl_descent();
   Fl_Surface_Device::pop_current();
   return d;
 }
 
 int Fl_OpenGL_Graphics_Driver::height() {
   Fl_Surface_Device::push_current(Fl_Display_Device::display_device());
-  int h = fl_height();
+  int const h = fl_height();
   Fl_Surface_Device::pop_current();
   return h;
 }

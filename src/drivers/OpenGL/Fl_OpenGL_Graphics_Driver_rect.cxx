@@ -24,28 +24,30 @@
 #include "Fl_OpenGL_Graphics_Driver.H"
 #include <FL/gl.h>
 #include <FL/Fl_Gl_Window.H>
-#include <FL/Fl_RGB_Image.H>
 #include <FL/Fl.H>
 #include <FL/math.h>
 
 // --- line and polygon drawing with integer coordinates
 
-void Fl_OpenGL_Graphics_Driver::point(int x, int y) {
-  if (line_width_ == 1.0f) {
+void Fl_OpenGL_Graphics_Driver::point(const int x, const int y) {
+  if (line_width_ == 1.0F) {
     glBegin(GL_POINTS);
-    glVertex2f(x+0.5f, y+0.5f);
+    glVertex2f(x+0.5f, y+0.5F);
     glEnd();
   } else {
-    float offset = line_width_ / 2.0f;
-    float xx = x+0.5f, yy = y+0.5f;
+    float const offset = line_width_ / 2.0F;
+    float const xx = x+0.5F;
+    float const yy = y+0.5F;
     glRectf(xx-offset, yy-offset, xx+offset, yy+offset);
   }
 }
 
-void Fl_OpenGL_Graphics_Driver::rect(int x, int y, int w, int h) {
-  float offset = line_width_ / 2.0f;
-  float xx = x+0.5f, yy = y+0.5f;
-  float rr = x+w-0.5f, bb = y+h-0.5f;
+void Fl_OpenGL_Graphics_Driver::rect(const int x, const int y, const int w, const int h) {
+  float const offset = line_width_ / 2.0F;
+  float const xx = x+0.5F;
+  float const yy = y+0.5F;
+  float const rr = x + w - 0.5F;
+  float const bb = y + h - 0.5F;
   glRectf(xx-offset, yy-offset, rr+offset, yy+offset);
   glRectf(xx-offset, bb-offset, rr+offset, bb+offset);
   glRectf(xx-offset, yy-offset, xx+offset, bb+offset);
@@ -54,7 +56,7 @@ void Fl_OpenGL_Graphics_Driver::rect(int x, int y, int w, int h) {
 
 void Fl_OpenGL_Graphics_Driver::rectf(int x, int y, int w, int h) {
   if (w<=0 || h<=0) return;
-  glRectf((GLfloat)x, (GLfloat)y, (GLfloat)(x+w), (GLfloat)(y+h));
+  glRectf(static_cast<GLfloat>(x), static_cast<GLfloat>(y), static_cast<GLfloat>(x + w), static_cast<GLfloat>(y + h));
 }
 
 void Fl_OpenGL_Graphics_Driver::line(int x, int y, int x1, int y1) {
@@ -67,16 +69,18 @@ void Fl_OpenGL_Graphics_Driver::line(int x, int y, int x1, int y1) {
     xyline(x, y, x1);
     return;
   }
-  float xx = x+0.5f, xx1 = x1+0.5f;
-  float yy = y+0.5f, yy1 = y1+0.5f;
-  if (line_width_==1.0f) {
+  float const xx = x + 0.5F;
+  float const xx1 = x1 + 0.5F;
+  float const yy = y + 0.5F;
+  float const yy1 = y1 + 0.5F;
+  if (line_width_==1.0F) {
     glBegin(GL_LINE_STRIP);
     glVertex2f(xx, yy);
     glVertex2f(xx1, yy1);
     glEnd();
   } else {
     float dx = xx1-xx, dy = yy1-yy;
-    float len = sqrtf(dx*dx+dy*dy);
+    float const len = sqrtf(dx*dx+dy*dy);
     dx = dx/len*line_width_*0.5f;
     dy = dy/len*line_width_*0.5f;
 
@@ -89,21 +93,27 @@ void Fl_OpenGL_Graphics_Driver::line(int x, int y, int x1, int y1) {
   }
 }
 
-void Fl_OpenGL_Graphics_Driver::line(int x, int y, int x1, int y1, int x2, int y2) {
+void Fl_OpenGL_Graphics_Driver::line(const int x, const int y, const int x1, const int y1,
+                                     const int x2, const int y2) {
   // TODO: no corner types (miter) yet
   line(x, y, x1, y1);
   line(x1, y1, x2, y2);
 }
 
-void Fl_OpenGL_Graphics_Driver::xyline(int x, int y, int x1) {
-  float offset = line_width_ / 2.0f;
-  float xx = (float)x, yy = y+0.5f, rr = x1+1.0f;
+void Fl_OpenGL_Graphics_Driver::xyline(const int x, const int y, const int x1) {
+  float const offset = line_width_ / 2.0F;
+  auto xx = static_cast<float>(x);
+  float const yy = y + 0.5F;
+  float const rr = x1 + 1.0F;
   glRectf(xx, yy-offset, rr, yy+offset);
 }
 
 void Fl_OpenGL_Graphics_Driver::xyline(int x, int y, int x1, int y2) {
-  float offset = line_width_ / 2.0f;
-  float xx = (float)x, yy = y+0.5f, rr = x1+0.5f, bb = y2+1.0f;
+  float const offset = line_width_ / 2.0f;
+  auto xx = static_cast<float>(x);
+  float const yy = y + 0.5F;
+  float const rr = x1 + 0.5F;
+  float const bb = y2 + 1.0F;
   glRectf(xx, yy-offset, rr+offset, yy+offset);
   glRectf(rr-offset, yy+offset, rr+offset, bb);
 }

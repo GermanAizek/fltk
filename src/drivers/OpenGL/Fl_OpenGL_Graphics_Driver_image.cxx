@@ -20,11 +20,11 @@
 #include <FL/Fl_Image.H>
 #include <FL/Fl.H>
 
-std::map<Fl_Image*, GLuint> *Fl_OpenGL_Graphics_Driver::image_texture_map_ = NULL;
+std::map<Fl_Image*, GLuint> *Fl_OpenGL_Graphics_Driver::image_texture_map_ = nullptr;
 
 void Fl_OpenGL_Graphics_Driver::delete_image_texture(Fl_Image *img) {
   if (image_texture_map_) {
-    auto iter = image_texture_map_->find(img);
+    const auto iter = image_texture_map_->find(img);
     if (iter != image_texture_map_->end()) {
       glDeleteTextures(1, &iter->second);
       image_texture_map_->erase(iter);
@@ -46,12 +46,12 @@ void Fl_OpenGL_Graphics_Driver::cache_size(Fl_Image* img, int &width, int &heigh
 #  define GL_UNSIGNED_INT_8_8_8_8_REV 0x8367
 #endif
 
-static GLuint compute_texture_rectangle(Fl_RGB_Image *rgb)
+static GLuint compute_texture_rectangle(const Fl_RGB_Image* rgb)
 {
-  Fl_RGB_Image *temp_rgb4 = NULL;
+  Fl_RGB_Image *temp_rgb4 = nullptr;
   if (rgb->d() == 2) { // convert depth-2 into depth-4 image
     uchar *data = new uchar[rgb->data_w() * rgb->data_h() * 4];
-    int ld = rgb->ld() ? rgb->ld() : 2 * rgb->data_w();
+    int const ld = rgb->ld() ? rgb->ld() : 2 * rgb->data_w();
     uchar *p = data;
     for (int j = 0; j < rgb->data_h(); j++) {
       const uchar *q = rgb->array + j * ld;
@@ -79,7 +79,7 @@ static GLuint compute_texture_rectangle(Fl_RGB_Image *rgb)
   glPixelStorei(GL_UNPACK_ROW_LENGTH, (rgb->ld() ? rgb->ld() / rgb->d() : rgb->data_w()));
   GLint unpack_alignment = 4;
   if (rgb->d() < 4) {
-    int ld = (rgb->ld() ? rgb->ld() : rgb->data_w() * rgb->d());
+    int const ld = (rgb->ld() ? rgb->ld() : rgb->data_w() * rgb->d());
     if (ld % 4 != 0) unpack_alignment = 1;
   }
   glPixelStorei(GL_UNPACK_ALIGNMENT, unpack_alignment);
@@ -103,9 +103,9 @@ static GLuint compute_texture_rectangle(Fl_RGB_Image *rgb)
 // X,Y,W,H = where to draw full or partial texture in FLTK coords
 // cx,cy = offset inside full texture in FLTK coords
 // sw = img->data_w() / img->w(), sh = img->data_h() / img->h()
-static void draw_texture(GLuint texName, int X, int Y, int W, int H,
-                         int cx, int cy, float sw, float sh, Fl_Color col = FL_WHITE,
-                         bool alpha_blend = false) {
+static void draw_texture(const GLuint texName, const int X, const int Y, const int W, const int H,
+                         const int cx, const int cy, const float sw, const float sh,
+                         const Fl_Color col = FL_WHITE, const bool alpha_blend = false) {
   // GL_TRANSFORM_BIT for GL_PROJECTION
   // GL_TEXTURE_BIT for GL_TEXTURE_RECTANGLE_ARB
   // GL_COLOR_BUFFER_BIT for GL_BLEND and glBlendFunc,
@@ -118,16 +118,17 @@ static void draw_texture(GLuint texName, int X, int Y, int W, int H,
   Fl::get_color(col, RR, GG, BB);
   glColor4ub(RR, GG, BB, 0xff); // the color drawn through the texture seen as a kind of mask
 
-  float winw = Fl_Window::current()->as_gl_window()->pixel_w(); // winw,h = pixel size of GL scene
-  float winh = Fl_Window::current()->as_gl_window()->pixel_h();
+  float const winw = Fl_Window::current()->as_gl_window()->pixel_w(); // winw,h = pixel size of GL scene
+  float const winh = Fl_Window::current()->as_gl_window()->pixel_h();
 
-  float R = 2;
+  float const R = 2;
   glScalef(R/winw, R/winh, 1.0f);
   glTranslatef(-winw/R, -winh/R, 0.0f);
-  float s = Fl_Window::current()->as_gl_window()->pixels_per_unit();
-  int HH = s * H, WW = s * W; // WW,HH = size of drawn image in pixels
-  float ox = s * X; // ox,oy = lower-left of where to draw image in pixel coords
-  float oy = winh - s * Y;
+  float const s = Fl_Window::current()->as_gl_window()->pixels_per_unit();
+  int const HH = s * H;
+  int const WW = s * W; // WW,HH = size of drawn image in pixels
+  float const ox = s * X; // ox,oy = lower-left of where to draw image in pixel coords
+  float const oy = winh - s * Y;
   glEnable(GL_TEXTURE_RECTANGLE_ARB);
   if (alpha_blend) {
     glEnable (GL_BLEND);
@@ -176,7 +177,7 @@ void Fl_OpenGL_Graphics_Driver::draw_rgb(Fl_RGB_Image *img,
     (*image_texture_map_)[img] = texNum;
   } else texNum = iter->second;
   draw_texture(texNum, X, Y, W, H, cx, cy,
-               float(img->data_w()) / img->w(), float(img->data_h()) / img->h(),
+               static_cast<float>(img->data_w()) / img->w(), static_cast<float>(img->data_h()) / img->h(),
                FL_WHITE, (img->d() == 1));
   color(color()); // reset current color
 }
@@ -197,31 +198,32 @@ void Fl_OpenGL_Graphics_Driver::draw_pixmap(Fl_Pixmap *pxm,
   auto iter = image_texture_map_->find(pxm);
   GLuint texNum;
   if (iter == image_texture_map_->end()) {
-    Fl_RGB_Image rgb(pxm);
+    Fl_RGB_Image const rgb(pxm);
     texNum = compute_texture_rectangle(&rgb);
     (*image_texture_map_)[pxm] = texNum;
   } else texNum = iter->second;
   draw_texture(texNum, X, Y, W, H, cx, cy,
-               float(pxm->data_w()) / pxm->w(), float(pxm->data_h()) / pxm->h());
+               static_cast<float>(pxm->data_w()) / pxm->w(), static_cast<float>(pxm->data_h()) / pxm->h());
   color(color()); // reset current color
 }
 
 
-static Fl_RGB_Image *bitmap_to_rgb1(Fl_Bitmap *bm) {
-  int ld = 4 * ((bm->data_w() + 3) / 4);
-  uchar *data = new uchar[ld * bm->data_h()];
+static Fl_RGB_Image *bitmap_to_rgb1(const Fl_Bitmap* bm) {
+  int const ld = 4 * ((bm->data_w() + 3) / 4);
+  auto *data = new uchar[ld * bm->data_h()];
   memset(data, 0, bm->data_h() * ld);
-  Fl_RGB_Image *rgb = new Fl_RGB_Image(data, bm->data_w(), bm->data_h(), 1, ld);
+  auto *rgb = new Fl_RGB_Image(data, bm->data_w(), bm->data_h(), 1, ld);
   rgb->alloc_array = 1;
-  int rowBytes = (bm->data_w()+7)>>3 ;
+  int const rowBytes = (bm->data_w()+7)>>3 ;
   for (int j = 0; j < bm->data_h(); j++) {
     const uchar *p = bm->array + j*rowBytes;
     for (int i = 0; i < rowBytes; i++) {
       uchar q = *p;
-      int last = bm->data_w() - 8*i; if (last > 8) last = 8;
+      int last = bm->data_w() - 8*i;
+      if (last > 8) last = 8;
       for (int k=0; k < last; k++) {
         if (q&1) {
-          *((uchar*)rgb->array + j*ld + i*8 + k) = 0xff;
+          *(const_cast<uchar*>(rgb->array) + j*ld + i*8 + k) = 0xff;
         }
         q >>= 1;
       }
@@ -242,11 +244,11 @@ void Fl_OpenGL_Graphics_Driver::draw_bitmap(Fl_Bitmap *bm,
   GLuint texNum;
   auto iter = image_texture_map_->find(bm);
   if (iter == image_texture_map_->end()) {
-    Fl_RGB_Image *rgb = bitmap_to_rgb1(bm);
+    const Fl_RGB_Image* rgb = bitmap_to_rgb1(bm);
     texNum = compute_texture_rectangle(rgb);
     (*image_texture_map_)[bm] = texNum;
     delete rgb;
   } else texNum = iter->second;
   draw_texture(texNum, X, Y, W, H, cx, cy,
-               float(bm->data_w()) / bm->w(), float(bm->data_h()) / bm->h(), color());
+               static_cast<float>(bm->data_w()) / bm->w(), static_cast<float>(bm->data_h()) / bm->h(), color());
 }
