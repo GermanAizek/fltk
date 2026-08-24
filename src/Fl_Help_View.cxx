@@ -240,7 +240,7 @@ public:
   int           do_align(Text_Block *block, int line, int xx, Align a, int &l) const;
   void          format();
   void          format_table(int *table_width, int *columns, const char *table);
-  Align         get_align(const char *p, Align a);
+  static Align         get_align(const char *p, Align a);
   static const char    *get_attr(const char *p, const char *n, char *buf, int bufsize);
   static Fl_Color      get_color(const char *n, Fl_Color c);
   Fl_Shared_Image *get_image(const char *name, int W, int H) const;

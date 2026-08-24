@@ -55,7 +55,7 @@ private:
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);
   void decode_rc_channels();
-  uint8_t calc_crc8(const uint8_t* data, int len);
+  static uint8_t calc_crc8(const uint8_t* data, int len);
 
 public:
   Fl_CRSF();

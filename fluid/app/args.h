@@ -50,7 +50,7 @@ public:
   /// Constructor.
   Args() = default;
   // Load args from command line into variables.
-  int load(int argc, char **argv);
+  static int load(int argc, char **argv);
 };
 
 } // namespace app

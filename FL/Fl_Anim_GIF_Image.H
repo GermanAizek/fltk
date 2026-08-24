@@ -78,9 +78,9 @@ public:
   };
 
   // -- constructors and destructor
-  Fl_Anim_GIF_Image(const char *filename, Fl_Widget *canvas = 0, unsigned short flags = 0);
+  Fl_Anim_GIF_Image(const char *filename, Fl_Widget *canvas_widget = 0, unsigned short flags = 0);
   Fl_Anim_GIF_Image(const char* imagename, const unsigned char *data,
-                    const size_t length, Fl_Widget *canvas = 0,
+                    const size_t length, Fl_Widget *canvas_widget = 0,
                     unsigned short flags = 0);
   Fl_Anim_GIF_Image();
   ~Fl_Anim_GIF_Image() override;
@@ -92,9 +92,9 @@ public:
   // -- getters and setters
   void frame_uncache(bool uncache);
   bool frame_uncache() const;
-  double delay(int frame_) const;
-  void delay(int frame, double delay);
-  void canvas(Fl_Widget *canvas, unsigned short flags = 0);
+  double delay(int frame_idx) const;
+  void delay(int frame, double delay) const;
+  void canvas(Fl_Widget *canvas_widget, unsigned short flags = 0);
   Fl_Widget *canvas() const;
   int canvas_w() const;
   int canvas_h() const;
@@ -165,10 +165,10 @@ protected:
   void set_frame(int frame);
 
   static void cb_animate(void *d);
-  void scale_frame();
-  void set_frame();
-  void on_frame_data(Fl_GIF_Image::GIF_FRAME &f) override;
-  void on_extension_data(Fl_GIF_Image::GIF_FRAME &f) override;
+  void scale_frame() const;
+  void set_frame() const;
+  void on_frame_data(Fl_GIF_Image::GIF_FRAME &gf) override;
+  void on_extension_data(Fl_GIF_Image::GIF_FRAME &gf) override;
 
 private:
 

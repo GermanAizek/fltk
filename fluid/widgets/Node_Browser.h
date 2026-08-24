@@ -56,8 +56,8 @@ public:
   void rebuild();
   void new_list() { Fl_Browser_::new_list(); }
   void display(Node *);
-  void load_prefs();
-  void save_prefs();
+  static void load_prefs();
+  static void save_prefs();
 
   static Fl_Color label_color;
   static Fl_Font label_font;

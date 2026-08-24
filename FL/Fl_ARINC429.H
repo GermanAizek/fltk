@@ -59,7 +59,7 @@ private:
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);
   void decode_word();
-  bool check_parity(uint32_t raw_word) const;
+  static bool check_parity(uint32_t raw_word);
 
 public:
   Fl_ARINC429();

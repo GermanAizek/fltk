@@ -182,12 +182,12 @@ public: // Methods
   // Open a dialog to show the HTML help page from the FLTK documentation folder.
   void show_help(const char *name);
   // Open the "About" dialog.
-  void about();
+  static void about();
 
   // Build the main app window and create a few other dialogs.
   void make_main_window();
   // Ensure that text widgets in the widget panel propagates apply current changes.
-  void flush_text_widgets();
+  static void flush_text_widgets();
   // Position the given window window based on entries in the app preferences.
   char position_window(Fl_Window *w, const char *prefsName, int Visible, int X, int Y, int W=0, int H=0);
   // Save the position and visibility state of a window to the app preferences.

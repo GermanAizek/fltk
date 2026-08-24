@@ -56,7 +56,7 @@ private:
 
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);
-  uint16_t crc_accumulate(uint8_t b, uint16_t crc) const;
+  static uint16_t crc_accumulate(uint8_t b, uint16_t crc);
 
 public:
   Fl_MAVLink2();

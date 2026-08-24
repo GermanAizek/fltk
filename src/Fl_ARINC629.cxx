@@ -81,7 +81,8 @@ void Fl_ARINC629::feed_raw_word(uint32_t w) {
   buf_idx_ = 0;
 }
 
-bool Fl_ARINC629::check_parity(uint32_t raw_20bit) const {
+bool Fl_ARINC629::check_parity(uint32_t raw_20bit)
+{
   // ARINC 629 uses odd parity across the 16 data bits and 1 parity bit
   // The sync bits are typically not included in parity.
   // We'll calculate odd parity on the 17 bits (16 data + 1 parity).

@@ -111,7 +111,7 @@ private:
   /// current level of source code indentation
   int indentation { 0 };
 
-  bool file_content_matches(const std::string& filename, const std::string& content);
+  static bool file_content_matches(const std::string& filename, const std::string& content);
   bool write_file_if_changed(const std::string& filename, const std::string& content);
   int flush();
 
@@ -145,7 +145,7 @@ public:
   void indent_less() { indentation--; }
   void indent_reset() { indentation = 0; }
   std::string indent() const;
-  std::string indent(int set) const;
+  static std::string indent(int set);
   std::string indent_plus(int offset) const;
 
   bool c_contains(void* ptr);

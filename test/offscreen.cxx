@@ -51,7 +51,7 @@ private:
   void draw() FL_OVERRIDE;
   int handle(int event) FL_OVERRIDE;
   // Generate "random" values for the line display
-  double random_val(int v) const
+  static double random_val(int v)
   {
     double dr = (double)(rand()) / (double)(RAND_MAX); // 0.0 to 1.0
     dr = dr * (double)(v); // 0 to v

@@ -84,7 +84,8 @@ void Fl_ARINC429::feed_raw_word(uint32_t w) {
   buf_idx_ = 0;
 }
 
-bool Fl_ARINC429::check_parity(uint32_t raw_word) const {
+bool Fl_ARINC429::check_parity(uint32_t raw_word)
+{
   // ARINC 429 uses odd parity
   int ones = 0;
   for (int i = 0; i < 32; i++) {

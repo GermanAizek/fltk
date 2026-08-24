@@ -90,7 +90,7 @@ public:
   };
   explicit Child_Range(Node *first) : first_(first) { }
   Iterator begin() const { return Iterator(first_); }
-  Iterator end() const { return Iterator(nullptr); }
+  static Iterator end() { return Iterator(nullptr); }
 };
 
 /**
@@ -110,7 +110,7 @@ public:
   };
   explicit Const_Child_Range(const Node *first) : first_(first) { }
   Iterator begin() const { return Iterator(first_); }
-  Iterator end() const { return Iterator(nullptr); }
+  static Iterator end() { return Iterator(nullptr); }
 };
 
 /**

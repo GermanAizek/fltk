@@ -70,7 +70,7 @@ public:
   int read_quoted();
   Node *read_children(Node *p, int merge, Strategy strategy, char skip_options=0);
   int read_project(const char *, int merge, Strategy strategy=Strategy::FROM_FILE_AS_LAST_CHILD);
-  void read_error(const char *format, ...);
+  static void read_error(const char *format, ...);
   const char *read_word(int wantbrace = 0);
   int read_int();
   int read_fdesign_line(const char*& name, const char*& value);

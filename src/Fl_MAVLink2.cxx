@@ -46,7 +46,8 @@ void Fl_MAVLink2::serial_cb(Fl_Serial_Port* p, void* data) {
   }
 }
 
-uint16_t Fl_MAVLink2::crc_accumulate(uint8_t b, uint16_t crc) const {
+uint16_t Fl_MAVLink2::crc_accumulate(uint8_t b, uint16_t crc)
+{
   uint8_t ch = b ^ (uint8_t)(crc & 0x00FF);
   ch = ch ^ (ch << 4);
   return (crc >> 8) ^ ((uint16_t)ch << 8) ^ ((uint16_t)ch << 3) ^ ((uint16_t)ch >> 4);

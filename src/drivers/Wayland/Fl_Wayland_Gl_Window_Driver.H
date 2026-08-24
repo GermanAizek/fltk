@@ -50,7 +50,7 @@ private:
   void redraw_overlay() FL_OVERRIDE;
   void gl_start() FL_OVERRIDE;
   void gl_visual(Fl_Gl_Choice *c) FL_OVERRIDE;
-  void init();
+  static void init();
   void* GetProcAddress(const char *procName) FL_OVERRIDE;
 public:
   static void surface_frame_done(void *data, struct wl_callback *cb, uint32_t time);

@@ -64,7 +64,7 @@ private:
 
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);
-  uint32_t calculate_crc24(const uint8_t* msg, int len_bytes) const;
+  static uint32_t calculate_crc24(const uint8_t* msg, int len_bytes);
 
 public:
   Fl_ADSB_1090ES();

@@ -39,13 +39,13 @@ public:
   Fl_Box* widget_grid_unlinked;
   Fl_Group* wp_gridc_align;
 private:
-  inline void cb_Horizontal_i(Fl_Choice*, void*);
+  static inline void cb_Horizontal_i(Fl_Choice*, void*);
   static void cb_Horizontal(Fl_Choice*, void*);
   static Fl_Menu_Item menu_Horizontal[];
 public:
   static Fl_Menu_Item* GRID_LEFT;
 private:
-  inline void cb_Vertical_i(Fl_Choice*, void*);
+  static inline void cb_Vertical_i(Fl_Choice*, void*);
   static void cb_Vertical(Fl_Choice*, void*);
   static Fl_Menu_Item menu_Vertical[];
 public:

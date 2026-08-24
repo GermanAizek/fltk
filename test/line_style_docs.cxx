@@ -48,7 +48,7 @@ public:
     Fl_Grid *grid = (Fl_Grid *)parent();
     grid->widget(this, row, col, FL_GRID_FILL);
   }
-  const char *style_str(int style) {
+  static const char *style_str(int style) {
     switch(style) {
       case FL_SOLID       : return "FL_SOLID"      ;
       case FL_DASH        : return "FL_DASH"       ;

@@ -63,7 +63,7 @@ private:
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);
   void decode_word();
-  bool check_parity(uint32_t raw_20bit) const;
+  static bool check_parity(uint32_t raw_20bit);
 
 public:
   Fl_MIL_STD_1553();

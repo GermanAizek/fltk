@@ -69,7 +69,7 @@ protected:
   /// Number of modified code block where the corresponding project block also changed.
   int num_possible_override;
 
-  void unindent(char *s);
+  static void unindent(char *s);
   std::string read_and_unindent_block(long start, long end);
   void analyse_callback(unsigned long code_crc, unsigned long tag_crc, int uid);
   void analyse_code(unsigned long code_crc, unsigned long tag_crc, int uid);

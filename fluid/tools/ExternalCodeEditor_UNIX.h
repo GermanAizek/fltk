@@ -32,7 +32,7 @@ class ExternalCodeEditor {
 
 protected:
   void kill_editor();
-  const char *create_tmpdir();
+  static const char *create_tmpdir();
   const char *tmp_filename();
   int start_editor(const char *cmd, const char *filename);
   void set_filename(const char *val);

@@ -65,7 +65,7 @@ class FL_EXPORT Fl_Text_Editor : public Fl_Text_Display {
     int insert_mode() const { return insert_mode_; }
     void tab_nav(int val);
     int tab_nav() const;
-    void add_key_binding(int key, int state, Key_Func f, Key_Binding** list);
+    static void add_key_binding(int key, int state, Key_Func f, Key_Binding** list);
     /** Adds a \p key of state \p state with the function \p f. */
     void add_key_binding(int key, int state, Key_Func f)
       { add_key_binding(key, state, f, &key_bindings); }

@@ -47,7 +47,7 @@ private:
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);
   void decode_frame();
-  uint16_t calc_crc16(const uint8_t* data, int len);
+  static uint16_t calc_crc16(const uint8_t* data, int len);
 
 public:
   Fl_XBUS();

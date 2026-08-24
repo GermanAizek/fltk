@@ -99,7 +99,7 @@ public: // Methods
   Project();
   ~Project();
   void reset();
-  void update_settings_dialog();
+  static void update_settings_dialog();
 
   std::string projectfile_path() const;
   std::string projectfile_name() const;

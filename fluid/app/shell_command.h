@@ -145,7 +145,7 @@ public:
   void read(class fluid::io::Project_Reader*);
   void write(class fluid::io::Project_Writer*);
   void rebuild_shell_menu();
-  void update_settings_dialog();
+  static void update_settings_dialog();
 
   static Fl_Menu_Item default_menu[];
   static void menu_marker(Fl_Widget*, void*);

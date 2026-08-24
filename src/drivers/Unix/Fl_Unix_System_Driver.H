@@ -34,8 +34,8 @@ public:
   void newUUID(char *uuidBuffer) FL_OVERRIDE;
   char *preference_rootnode(Fl_Preferences *prefs, Fl_Preferences::Root root, const char *vendor,
                                     const char *application) FL_OVERRIDE;
-  char *preference_memory_rootnode(const char *vendor, const char *application, char *buffer);
-  char *preference_system_rootnode(const char *vendor, const char *application, char *buffer);
+  static char *preference_memory_rootnode(const char *vendor, const char *application, char *buffer);
+  static char *preference_system_rootnode(const char *vendor, const char *application, char *buffer);
   char *preference_user_rootnode(const char *vendor, const char *application, char *buffer);
   int preferences_need_protection_check() FL_OVERRIDE {return 1;}
   int utf8locale() FL_OVERRIDE;

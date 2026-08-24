@@ -135,7 +135,8 @@ std::string Code_Writer::unique_id(void* o, const std::string& type, const std::
  \param[in] set generate this indent depth
  \return indenting string
  */
-std::string Code_Writer::indent(int set) const {
+std::string Code_Writer::indent(int set)
+{
   return std::string(set*2, ' ');
 }
 

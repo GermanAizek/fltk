@@ -62,7 +62,8 @@ void Fl_ADSB_1090ES::process_byte(uint8_t b) {
   }
 }
 
-uint32_t Fl_ADSB_1090ES::calculate_crc24(const uint8_t* msg, int len_bytes) const {
+uint32_t Fl_ADSB_1090ES::calculate_crc24(const uint8_t* msg, int len_bytes)
+{
   static const uint32_t MODES_GENERATOR_POLY = 0x1FFF409;
   uint32_t crc = 0;
   for (int i = 0; i < len_bytes; i++) {

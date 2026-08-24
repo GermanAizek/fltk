@@ -15,7 +15,7 @@ public:
   Grid_Tab(int X, int Y, int W, int H, const char* L=nullptr);
   fluid::widget::Formula_Input* widget_grid_rows;
 private:
-  inline void cb_widget_grid_rows_i(fluid::widget::Formula_Input*, void*);
+  static inline void cb_widget_grid_rows_i(fluid::widget::Formula_Input*, void*);
   static void cb_widget_grid_rows(fluid::widget::Formula_Input*, void*);
   inline void cb__i(Fl_Button*, void*);
   static void cb_(Fl_Button*, void*);
@@ -24,7 +24,7 @@ private:
 public:
   fluid::widget::Formula_Input* widget_grid_cols;
 private:
-  inline void cb_widget_grid_cols_i(fluid::widget::Formula_Input*, void*);
+  static inline void cb_widget_grid_cols_i(fluid::widget::Formula_Input*, void*);
   static void cb_widget_grid_cols(fluid::widget::Formula_Input*, void*);
   inline void cb_2_i(Fl_Button*, void*);
   static void cb_2(Fl_Button*, void*);
@@ -33,22 +33,22 @@ private:
 public:
   Fl_Group* wp_grid_margin;
 private:
-  inline void cb_Left_i(Fl_Value_Input*, void*);
+  static inline void cb_Left_i(Fl_Value_Input*, void*);
   static void cb_Left(Fl_Value_Input*, void*);
-  inline void cb_Top_i(Fl_Value_Input*, void*);
+  static inline void cb_Top_i(Fl_Value_Input*, void*);
   static void cb_Top(Fl_Value_Input*, void*);
-  inline void cb_Right_i(Fl_Value_Input*, void*);
+  static inline void cb_Right_i(Fl_Value_Input*, void*);
   static void cb_Right(Fl_Value_Input*, void*);
-  inline void cb_Bottom_i(Fl_Value_Input*, void*);
+  static inline void cb_Bottom_i(Fl_Value_Input*, void*);
   static void cb_Bottom(Fl_Value_Input*, void*);
 public:
   Fl_Group* wp_grid_gaps;
 private:
-  inline void cb_Row_i(Fl_Value_Input*, void*);
+  static inline void cb_Row_i(Fl_Value_Input*, void*);
   static void cb_Row(Fl_Value_Input*, void*);
-  inline void cb_Col_i(Fl_Value_Input*, void*);
+  static inline void cb_Col_i(Fl_Value_Input*, void*);
   static void cb_Col(Fl_Value_Input*, void*);
-  inline void cb_Row1_i(Fl_Group*, void*);
+  static inline void cb_Row1_i(Fl_Group*, void*);
   static void cb_Row1(Fl_Group*, void*);
 public:
   fluid::widget::Formula_Input* widget_grid_curr_row;
