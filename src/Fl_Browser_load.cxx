@@ -16,8 +16,9 @@
 
 #include <FL/Fl.H>
 #include <FL/Fl_Browser.H>
-#include <stdio.h>
 #include <FL/fl_utf8.h>
+#include <fstream>
+#include <string>
 
 /**
   Clears the browser and reads the file, adding each line from the file
@@ -32,24 +33,37 @@
 */
 int Fl_Browser::load(const char *filename) {
 #define MAXFL_BLINE 1024
-    char newtext[MAXFL_BLINE];
-    int c;
-    int i;
-    clear();
-    if (!filename || !(filename[0])) return 1;
-    FILE *fl = fl_fopen(filename,"r");
-    if (!fl) return 0;
-    i = 0;
-    do {
-        c = getc(fl);
-        if (c == '\n' || c <= 0 || i>=(MAXFL_BLINE-1)) {
-            newtext[i] = 0;
-            add(newtext);
-            i = 0;
-        } else {
-            newtext[i++] = c;
-        }
-    } while (c >= 0);
-    fclose(fl);
-    return 1;
+  char newtext[MAXFL_BLINE];
+  int i = 0;
+  clear();
+  if (!filename || !(filename[0])) return 1;
+
+#if defined(_WIN32)
+  // fl_fopen or conversion for Windows UTF-8 wide path support
+  unsigned short wbuf[1024];
+  fl_utf8towc(filename, (unsigned int)strlen(filename), wbuf, 1024);
+  std::ifstream file(reinterpret_cast<const wchar_t*>(wbuf), std::ios::in | std::ios::binary);
+#else
+  std::ifstream file(filename, std::ios::in | std::ios::binary);
+#endif
+
+  if (!file.is_open()) return 0;
+
+  char ch;
+  while (file.get(ch)) {
+    if (ch == '\n' || ch == '\0' || i >= (MAXFL_BLINE - 1)) {
+      newtext[i] = '\0';
+      add(newtext);
+      i = 0;
+    } else {
+      newtext[i++] = ch;
+    }
+  }
+
+  if (i > 0) {
+    newtext[i] = '\0';
+    add(newtext);
+  }
+
+  return 1;
 }

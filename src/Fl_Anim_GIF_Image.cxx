@@ -20,9 +20,9 @@
 #include <FL/Fl_Shared_Image.H>
 #include <FL/Fl_Graphics_Driver.H>
 #include <FL/fl_string_functions.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <math.h> // round()
+#include <iostream>
 
 #include <FL/Fl_Anim_GIF_Image.H>
 
@@ -149,14 +149,8 @@ private:
 };
 
 
-#define LOG(x) if (debug()) printf x
-#define DEBUG(x) if (debug() >= 2) printf x
-#ifndef LOG
-  #define LOG(x)
-#endif
-#ifndef DEBUG
-  #define DEBUG(x)
-#endif
+#define LOG(x)
+#define DEBUG(x)
 
 
 //

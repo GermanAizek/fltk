@@ -25,12 +25,22 @@
 
 #include <FL/Fl_Window.H>
 #include "../../src/flstring.h"
+#include <FL/fl_utf8.h>
 
 #include <stdarg.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <zlib.h>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <map>
+
+#if defined(_WIN32)
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 
 extern void propagate_load(Fl_Group*, void*);
 extern void load_panel();
@@ -38,6 +48,20 @@ extern void redraw_browser();
 
 using namespace fluid;
 using namespace fluid::proj;
+
+namespace {
+  std::map<const Mergeback*, std::string> s_file_contents;
+
+  void stream_write_str(FILE *out, const char *str, size_t len) {
+    if (!out || !str || len == 0) return;
+#if defined(_WIN32)
+    _write(_fileno(out), str, static_cast<unsigned int>(len));
+#else
+    ssize_t ret = ::write(fileno(out), str, len);
+    (void)ret;
+#endif
+  }
+}
 
 // TODO: add application user setting to control mergeback
 //        [] new projects default to mergeback
@@ -128,7 +152,7 @@ Mergeback::Mergeback(Project &proj)
 /** Release allocated resources. */
 Mergeback::~Mergeback()
 {
-  if (code) ::fclose(code);
+  s_file_contents.erase(this);
 }
 
 /** Remove the first two spaces at every line start.
@@ -157,20 +181,23 @@ void Mergeback::unindent(char *s) {
  \return a string holding the text that was found in the file
  */
 std::string Mergeback::read_and_unindent_block(long start, long end) {
-  long bsize = end-start;
-  long here = ::ftell(code);
-  ::fseek(code, start, SEEK_SET);
-  char *block = (char*)::malloc(bsize+1);
-  size_t n = ::fread(block, bsize, 1, code);
-  if (n!=1)
-    block[0] = 0; // read error
-  else
-    block[bsize] = 0;
-  unindent(block);
-  std::string str = block;
-  ::free(block);
-  ::fseek(code, here, SEEK_SET);
-  return str;
+  auto it = s_file_contents.find(this);
+  if (it == s_file_contents.end() || start < 0 || end < start) {
+    return std::string();
+  }
+  const std::string &content = it->second;
+  size_t start_pos = static_cast<size_t>(start);
+  size_t end_pos = static_cast<size_t>(end);
+  if (start_pos > content.size()) start_pos = content.size();
+  if (end_pos > content.size()) end_pos = content.size();
+  size_t bsize = end_pos - start_pos;
+
+  std::vector<char> block(bsize + 1, 0);
+  if (bsize > 0) {
+    memcpy(block.data(), content.data() + start_pos, bsize);
+  }
+  unindent(block.data());
+  return std::string(block.data());
 }
 
 /** Tell user the results of our MergeBack analysis and pop up a dialog to give
@@ -265,8 +292,8 @@ void Mergeback::analyse_callback(unsigned long code_crc, unsigned long tag_crc, 
 void Mergeback::analyse_code(unsigned long code_crc, unsigned long tag_crc, int uid) {
   Node *tp = proj_.tree.find_by_uid(uid);
   if (tp && dynamic_cast<Code_Node*>(tp)) {
-    std::string code = tp->name(); code += "\n";
-    unsigned long project_crc = fluid::CRC32::block(code);
+    std::string code_str = tp->name(); code_str += "\n";
+    unsigned long project_crc = fluid::CRC32::block(code_str);
     // check if the code and project crc are the same, so this modification was already applied
     if (project_crc!=code_crc) {
       num_changed_code++;
@@ -288,8 +315,8 @@ void Mergeback::analyse_extra_code(int index, unsigned long code_crc, unsigned l
   Node *tp = proj_.tree.find_by_uid(uid);
   Widget_Node *wp = dynamic_cast<Widget_Node*>(tp);
   if (wp) {
-    std::string code = wp->extra_code(index); code += "\n";
-    unsigned long project_crc = fluid::CRC32::block(code);
+    std::string extra = wp->extra_code(index); extra += "\n";
+    unsigned long project_crc = fluid::CRC32::block(extra);
     // check if the code and project crc are the same, so this modification was already applied
     if (project_crc!=code_crc) {
       num_changed_code++;
@@ -342,7 +369,10 @@ uint32_t Mergeback::decode_trichar32(const char *text) {
  */
 void Mergeback::print_trichar32(FILE *out, uint32_t value) {
   static const char *lut[] = { "--", "-~", "~-", "~~", "-=", "=-", "~=", "=~" };
-  for (int i=30; i>=0; i-=3) fputs(lut[(value>>i)&7], out);
+  for (int i=30; i>=0; i-=3) {
+    const char *s = lut[(value>>i)&7];
+    stream_write_str(out, s, strlen(s));
+  }
 }
 
 /**
@@ -383,7 +413,7 @@ bool Mergeback::read_tag(const char *tag, Tag *prev_type, uint16_t *uid, uint32_
 
 void Mergeback::print_tag(FILE *out, Tag prev_type, Tag next_type, uint16_t uid, uint32_t crc) {
   std::string tag = format_tag(prev_type, next_type, uid, crc);
-  fputs(tag.c_str(), out);
+  stream_write_str(out, tag.c_str(), tag.size());
 }
 
 /**
@@ -433,7 +463,6 @@ std::string Mergeback::format_tag(Tag prev_type, Tag next_type, uint16_t uid, ui
   #endif
   // Write the second 32 bit word as an encoded divider line
   for (int i=30; i>=0; i-=3) result += lut[(crc>>i)&7];
-  // printf("  uid=%d, prev_type=%d, next_type=%d, crc=%u\n", uid, pt, nt, crc);
   // Repeat the intro pattern
   result += ' ';
   if (prev_type != Tag::GENERIC) result += "▲";
@@ -444,9 +473,6 @@ std::string Mergeback::format_tag(Tag prev_type, Tag next_type, uint16_t uid, ui
 }
 
 /** Analyze the code file and return findings in class member variables.
-
- The code file must be open for reading already.
-
  * tag_error is set if a tag was found, but could not be read
  * line_no returns the line where an error occurred
  * num_changed_code is set to the number of changed code blocks in the file.
@@ -461,11 +487,13 @@ std::string Mergeback::format_tag(Tag prev_type, Tag next_type, uint16_t uid, ui
  \return -1 if reading a tag failed, otherwise 0
  */
 int Mergeback::analyse() {
+  auto it = s_file_contents.find(this);
+  if (it == s_file_contents.end() || it->second.empty()) return 0;
+  const std::string &content = it->second;
+
   // initialize local variables
   fluid::CRC32 crc;
-  char line[1024];
-  // bail if the caller has not opened a file yet
-  if (!code) return 0;
+  std::string line;
   // initialize member variables to return our findings
   line_no = 0;
   tag_error = 0;
@@ -473,16 +501,15 @@ int Mergeback::analyse() {
   num_changed_structure = 0;
   num_uid_not_found = 0;
   num_possible_override = 0;
-  // loop through all lines in the code file
-  ::fseek(code, 0, SEEK_SET);
-  for (;;) {
-    // get the next line until end of file
-    if (fgets(line, 1023, code)==0) break;
+  // loop through all lines in the code content
+  std::istringstream stream(content);
+  while (std::getline(stream, line)) {
+    line += "\n";
     line_no++;
-    const char *tag = find_mergeback_tag(line);
+    const char *tag = find_mergeback_tag(line.c_str());
     if (!tag) {
       // if this line has no tag, add the contents to the CRC and continue
-      crc.update(line);
+      crc.update(line.c_str());
     } else {
       // if this line has a tag, read all tag data
       Tag tag_type = Tag::UNUSED_;
@@ -571,32 +598,32 @@ int Mergeback::apply_extra_code(int index, long block_end, long block_start, uns
 }
 
 /** Apply all possible mergebacks from the code file to the project.
- The code file must be open for reading already.
  \return -1 if reading a tag failed, 0 if nothing changed, 1 if the project changed
  */
 int Mergeback::apply() {
+  auto it = s_file_contents.find(this);
+  if (it == s_file_contents.end() || it->second.empty()) return 0;
+  const std::string &content = it->second;
+
   // initialize local variables
   fluid::CRC32 crc;
-  char line[1024];
+  std::string line;
   int changed = 0;
   long block_start = 0;
   long block_end = 0;
-  // bail if the caller has not opened a file yet
-  if (!code) return 0;
   // initialize member variables to return our findings
   line_no = 0;
   tag_error = 0;
-  // loop through all lines in the code file
-  ::fseek(code, 0, SEEK_SET);
-  for (;;) {
-    // get the next line until end of file
-    if (fgets(line, 1023, code)==0) break;
+  // loop through all lines in the code content
+  std::istringstream stream(content);
+  while (std::getline(stream, line)) {
+    line += "\n";
     line_no++;
-    const char *tag = find_mergeback_tag(line);
+    const char *tag = find_mergeback_tag(line.c_str());
     if (!tag) {
       // if this line has no tag, add the contents to the CRC and continue
-      crc.update(line);
-      block_end = ::ftell(code);
+      crc.update(line.c_str());
+      block_end = static_cast<long>(stream.tellg() >= 0 ? stream.tellg() : static_cast<std::streampos>(content.size()));
     } else {
       // if this line has a tag, read all tag data
       Tag tag_type = Tag::UNUSED_;
@@ -618,7 +645,7 @@ int Mergeback::apply() {
       }
       // reset everything for the next block
       crc.reset();
-      block_start = ::ftell(code);
+      block_start = static_cast<long>(stream.tellg() >= 0 ? stream.tellg() : static_cast<std::streampos>(content.size()));
     }
   }
   return changed;
@@ -634,9 +661,22 @@ int Mergeback::apply() {
  */
 int Mergeback::merge_back(const std::string &s, const std::string &p, Task task) {
   int ret = 0;
-  code = fl_fopen(s.c_str(), "rb");
-  if (!code) return -2;
-  do { // no actual loop, just make sure we close the code file
+
+#if defined(_WIN32)
+  unsigned short wbuf[1024];
+  fl_utf8towc(s.c_str(), (unsigned int)s.size(), wbuf, 1024);
+  std::ifstream infile(reinterpret_cast<const wchar_t*>(wbuf), std::ios::in | std::ios::binary);
+#else
+  std::ifstream infile(s.c_str(), std::ios::in | std::ios::binary);
+#endif
+
+  if (!infile.is_open()) return -2;
+
+  std::ostringstream ss;
+  ss << infile.rdbuf();
+  s_file_contents[this] = ss.str();
+
+  do { // no actual loop, just structured flow
     if (task == Task::ANALYSE) {
       analyse();
       if (tag_error) {ret = -1; break; }
@@ -675,8 +715,8 @@ int Mergeback::merge_back(const std::string &s, const std::string &p, Task task)
       ret = 1; // avoid message box in caller
     }
   } while (0);
-  fclose(code);
-  code = nullptr;
+
+  s_file_contents.erase(this);
   return ret;
 }
 

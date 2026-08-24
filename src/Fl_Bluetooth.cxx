@@ -181,6 +181,9 @@ int Fl_Bluetooth::read_data(void* buffer, int len) {
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <sstream>
+#include <iomanip>
+#include <string>
 
 // Avoid direct dependency on libbluetooth headers if they are missing
 // We manually define necessary constants for AF_BLUETOOTH
@@ -238,11 +241,14 @@ std::string Fl_Bluetooth::local_address() {
     return "00:00:00:00:00:00";
   }
   ::close(sock);
-  char buf[18];
-  snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X",
-           di.bdaddr[5], di.bdaddr[4], di.bdaddr[3],
-           di.bdaddr[2], di.bdaddr[1], di.bdaddr[0]);
-  return std::string(buf);
+
+  std::ostringstream oss;
+  oss << std::hex << std::uppercase << std::setfill('0');
+  for (int i = 5; i >= 0; --i) {
+    oss << std::setw(2) << static_cast<unsigned int>(di.bdaddr[i]);
+    if (i > 0) oss << ':';
+  }
+  return oss.str();
 }
 
 std::string Fl_Bluetooth::local_name() {
@@ -261,9 +267,8 @@ std::string Fl_Bluetooth::local_name() {
     return "Linux-Bluetooth";
   }
   ::close(sock);
-  char name[256];
-  snprintf(name, sizeof(name), "%s", di.name);
-  return std::string(name);
+
+  return std::string(di.name, strnlen(di.name, sizeof(di.name)));
 }
 
 void Fl_Bluetooth::power_on() {
@@ -284,27 +289,38 @@ std::vector<Fl_Bluetooth_Device> Fl_Bluetooth::scan_devices(int timeout_ms) {
   // Use bluetoothctl if available
   FILE* fp = popen("bluetoothctl devices 2>/dev/null", "r");
   if (!fp) return devices;
-  char line[256];
-  while (fgets(line, sizeof(line), fp)) {
-    // Expected format: Device 00:11:22:33:44:55 Name...
-    if (strncmp(line, "Device ", 7) == 0) {
-      char addr[18] = {0};
-      char name[200] = {0};
-      if (sscanf(line + 7, "%17s %199[^\n]", addr, name) >= 1) {
-        Fl_Bluetooth_Device dev;
-        dev.address = addr;
-        dev.name = name;
-        devices.push_back(dev);
+
+  std::string line;
+  int ch;
+  while ((ch = fgetc(fp)) != EOF) {
+    if (ch == '\n') {
+      // Expected format: Device 00:11:22:33:44:55 Name...
+      const std::string prefix = "Device ";
+      if (line.rfind(prefix, 0) == 0) {
+        std::istringstream iss(line.substr(prefix.length()));
+        std::string addr;
+        std::string name;
+        if (iss >> addr) {
+          std::getline(iss >> std::ws, name);
+          Fl_Bluetooth_Device dev;
+          dev.address = addr;
+          dev.name = name;
+          devices.push_back(dev);
+        }
       }
+      line.clear();
+    } else {
+      line.push_back(static_cast<char>(ch));
     }
   }
+
   pclose(fp);
   return devices;
 }
 
 int Fl_Bluetooth::connect(const char* address, int channel) {
   if (is_open()) return -1;
-  
+
   socket_ = ::socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
   if (socket_ < 0) return -1;
 
@@ -312,12 +328,23 @@ int Fl_Bluetooth::connect(const char* address, int channel) {
   addr.rc_family = AF_BLUETOOTH;
   addr.rc_channel = (uint8_t) channel;
 
-  int parsed[6];
-  if (sscanf(address, "%x:%x:%x:%x:%x:%x", 
-             &parsed[0], &parsed[1], &parsed[2], &parsed[3], &parsed[4], &parsed[5]) == 6) {
-    for (int i = 0; i < 6; i++) {
-      addr.rc_bdaddr[5-i] = (uint8_t)(parsed[i] & 0xFF); // BlueZ expects reverse byte order
+  std::istringstream iss(address != NULL ? address : "");
+  std::string byte_str;
+  int idx = 0;
+  while (idx < 6 && std::getline(iss, byte_str, ':')) {
+    char* endptr = NULL;
+    unsigned long val = strtoul(byte_str.c_str(), &endptr, 16);
+    if (endptr == byte_str.c_str()) {
+      break;
     }
+    addr.rc_bdaddr[5 - idx] = (uint8_t)(val & 0xFF); // BlueZ expects reverse byte order
+    idx++;
+  }
+
+  if (idx != 6) {
+    ::close(socket_);
+    socket_ = -1;
+    return -1;
   }
 
   if (::connect(socket_, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
