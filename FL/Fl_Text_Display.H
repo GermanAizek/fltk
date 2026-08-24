@@ -526,8 +526,8 @@ protected:
                                  int nRestyled, const char* deletedText,
                                  void* cbArg);
 
-  static void h_scrollbar_cb(Fl_Scrollbar* w, Fl_Text_Display* d);
-  static void v_scrollbar_cb( Fl_Scrollbar* w, Fl_Text_Display* d);
+  static void h_scrollbar_cb(const Fl_Scrollbar* w, Fl_Text_Display* d);
+  static void v_scrollbar_cb(const Fl_Scrollbar* w, Fl_Text_Display* d);
   void update_v_scrollbar() const;
   void update_h_scrollbar() const;
   int measure_vline(int visLineNum) const;

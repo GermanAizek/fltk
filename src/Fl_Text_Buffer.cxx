@@ -14,7 +14,12 @@
 //     https://www.fltk.org/bugs.php
 //
 
-#include <stdio.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <array>
+#include <string>
+
 #include <FL/fl_utf8.h>
 #include <FL/fl_string_functions.h>
 #include "flstring.h"
@@ -52,12 +57,12 @@
 
 #ifndef min
 
-static int max(int i1, int i2)
+int max(int i1, int i2)
 {
   return i1 >= i2 ? i1 : i2;
 }
 
-static int min(int i1, int i2)
+int min(int i1, int i2)
 {
   return i1 <= i2 ? i1 : i2;
 }
@@ -83,24 +88,22 @@ static int min(int i1, int i2)
  */
 class Fl_Text_Undo_Action {
 public:
-  Fl_Text_Undo_Action() :
-    undobuffer(NULL),
-    undobufferlength(0),
-    undoat(0),
-    undocut(0),
-    undoinsert(0),
-    undoyankcut(0)
-  { }
+  Fl_Text_Undo_Action() = default;
   ~Fl_Text_Undo_Action() {
-    ::free(undobuffer);
+    std::free(undobuffer);
   }
 
-  char *undobuffer;
-  int undobufferlength;
-  int undoat;              // points after insertion
-  int undocut;             // number of characters deleted there
-  int undoinsert;          // number of characters inserted
-  int undoyankcut;         // length of valid contents of buffer, even if undocut=0
+  Fl_Text_Undo_Action(const Fl_Text_Undo_Action&) = delete;
+  Fl_Text_Undo_Action& operator=(const Fl_Text_Undo_Action&) = delete;
+  Fl_Text_Undo_Action(Fl_Text_Undo_Action&&) = delete;
+  Fl_Text_Undo_Action& operator=(Fl_Text_Undo_Action&&) = delete;
+
+  char *undobuffer = nullptr;
+  int undobufferlength = 0;
+  int undoat = 0;              // points after insertion
+  int undocut = 0;             // number of characters deleted there
+  int undoinsert = 0;          // number of characters inserted
+  int undoyankcut = 0;         // length of valid contents of buffer, even if undocut=0
 
   /*
    Resize the undo buffer to match at least the requested size.
@@ -109,7 +112,7 @@ public:
   {
     if (n > undobufferlength) {
       undobufferlength = n + 128;
-      undobuffer = (char *)realloc(undobuffer, undobufferlength);
+      undobuffer = static_cast<char *>(std::realloc(undobuffer, static_cast<size_t>(undobufferlength)));
     }
   }
 
@@ -138,22 +141,22 @@ public:
  A list can be locked to be protected from purging while running an undo event.
  */
 class Fl_Text_Undo_Action_List {
-  Fl_Text_Undo_Action** list_;
-  int list_size_;
-  int list_capacity_;
-  bool locked_;
+  Fl_Text_Undo_Action** list_ = nullptr;
+  int list_size_ = 0;
+  int list_capacity_ = 0;
+  bool locked_ = false;
 public:
-  Fl_Text_Undo_Action_List() :
-  list_(NULL),
-  list_size_(0),
-  list_capacity_(0),
-  locked_(false)
-  { }
+  Fl_Text_Undo_Action_List() = default;
 
   ~Fl_Text_Undo_Action_List() {
     unlock();
     clear();
   }
+
+  Fl_Text_Undo_Action_List(const Fl_Text_Undo_Action_List&) = delete;
+  Fl_Text_Undo_Action_List& operator=(const Fl_Text_Undo_Action_List&) = delete;
+  Fl_Text_Undo_Action_List(Fl_Text_Undo_Action_List&&) = delete;
+  Fl_Text_Undo_Action_List& operator=(Fl_Text_Undo_Action_List&&) = delete;
 
   int size() const {
     return list_size_;
@@ -162,7 +165,7 @@ public:
   void push(Fl_Text_Undo_Action* action) {
     if (list_size_ == list_capacity_) {
       list_capacity_ += 25;
-      list_ = (Fl_Text_Undo_Action**)realloc(list_, list_capacity_ * sizeof(Fl_Text_Undo_Action*));
+      list_ = static_cast<Fl_Text_Undo_Action**>(std::realloc(list_, static_cast<size_t>(list_capacity_) * sizeof(Fl_Text_Undo_Action*)));
     }
     list_[list_size_++] = action;
   }
@@ -170,20 +173,21 @@ public:
   Fl_Text_Undo_Action* pop() {
     if (list_size_ > 0) {
       return list_[--list_size_];
-    } else {
-      return NULL;
     }
+    return nullptr;
   }
 
   void clear() {
-    if (locked_) return;
+    if (locked_) {
+      return;
+    }
     if (list_) {
       for (int i=0; i<list_size_; i++) {
         delete list_[i];
       }
-      ::free(list_);
+      std::free(list_);
     }
-    list_ = NULL;
+    list_ = nullptr;
     list_size_ = 0;
     list_capacity_ = 0;
   }
@@ -193,7 +197,7 @@ public:
 };
 
 
-static void def_transcoding_warning_action(Fl_Text_Buffer *text)
+void def_transcoding_warning_action(Fl_Text_Buffer *text)
 {
   fl_alert("%s", text->file_encoding_warning_message);
 }
@@ -201,26 +205,29 @@ static void def_transcoding_warning_action(Fl_Text_Buffer *text)
 /*
  Initialize all variables.
  */
-Fl_Text_Buffer::Fl_Text_Buffer(int requestedSize, int preferredGapSize)
+Fl_Text_Buffer::Fl_Text_Buffer(int requestedSize, int preferredGapSize) :
+  mPrimary(),
+  mSecondary(),
+  mHighlight()
 {
   mLength = 0;
   mPreferredGapSize = preferredGapSize;
-  mBuf = (char *) malloc(requestedSize + mPreferredGapSize);
+  mBuf = static_cast<char *>(std::malloc(static_cast<size_t>(requestedSize + mPreferredGapSize)));
   mGapStart = 0;
   mGapEnd = requestedSize + mPreferredGapSize;
   mTabDist = 8;
-  mPrimary.mSelected = 0;
+  mPrimary.mSelected = false;
   mPrimary.mStart = mPrimary.mEnd = 0;
-  mSecondary.mSelected = 0;
+  mSecondary.mSelected = false;
   mSecondary.mStart = mSecondary.mEnd = 0;
-  mHighlight.mSelected = 0;
+  mHighlight.mSelected = false;
   mHighlight.mStart = mHighlight.mEnd = 0;
-  mModifyProcs = NULL;
-  mCbArgs = NULL;
+  mModifyProcs = nullptr;
+  mCbArgs = nullptr;
   mNModifyProcs = 0;
   mNPredeleteProcs = 0;
-  mPredeleteProcs = NULL;
-  mPredeleteCbArgs = NULL;
+  mPredeleteProcs = nullptr;
+  mPredeleteCbArgs = nullptr;
   mCursorPosHint = 0;
   mCanUndo = 1;
   mUndo = new Fl_Text_Undo_Action();
@@ -236,7 +243,7 @@ Fl_Text_Buffer::Fl_Text_Buffer(int requestedSize, int preferredGapSize)
  */
 Fl_Text_Buffer::~Fl_Text_Buffer()
 {
-  free(mBuf);
+  std::free(mBuf);
   if (mNModifyProcs != 0) {
     delete[]mModifyProcs;
     delete[]mCbArgs;
@@ -256,9 +263,9 @@ Fl_Text_Buffer::~Fl_Text_Buffer()
  single buffer.
  */
 char *Fl_Text_Buffer::text() const {
-  char *t = (char *) malloc(mLength + 1);
-  memcpy(t, mBuf, mGapStart);
-  memcpy(t+mGapStart, mBuf+mGapEnd, mLength - mGapStart);
+  char *t = static_cast<char *>(std::malloc(static_cast<size_t>(mLength + 1)));
+  std::memcpy(t, mBuf, static_cast<size_t>(mGapStart));
+  std::memcpy(t+mGapStart, mBuf+mGapEnd, static_cast<size_t>(mLength - mGapStart));
   t[mLength] = '\0';
   return t;
 }
@@ -271,9 +278,9 @@ char *Fl_Text_Buffer::text() const {
 std::string Fl_Text_Buffer::text_str() const {
   std::string t;
   if (mLength) {
-    t.reserve(mLength);
-    t.insert(0, mBuf, mGapStart);
-    t.insert(mGapStart, mBuf+mGapEnd, mLength - mGapStart);
+    t.reserve(static_cast<size_t>(mLength));
+    t.insert(0, mBuf, static_cast<size_t>(mGapStart));
+    t.insert(static_cast<size_t>(mGapStart), mBuf+mGapEnd, static_cast<size_t>(mLength - mGapStart));
   }
   return t;
 }
@@ -288,29 +295,31 @@ void Fl_Text_Buffer::text(const char *t)
 
   // if t is null then substitute it with an empty string
   // then don't return so that internal cleanup can happen
-  if (!t) t="";
+  if (!t) {
+    t="";
+  }
 
   call_predelete_callbacks(0, length());
 
   /* Save information for redisplay, and get rid of the old buffer */
   const char *deletedText = text();
-  int deletedLength = mLength;
-  free((void *) mBuf);
+  const int deletedLength = mLength;
+  std::free(mBuf);
 
   /* Start a new buffer with a gap of mPreferredGapSize at the end */
-  int insertedLength = (int) strlen(t);
-  mBuf = (char *) malloc(insertedLength + mPreferredGapSize);
+  const int insertedLength = static_cast<int>(std::strlen(t));
+  mBuf = static_cast<char *>(std::malloc(static_cast<size_t>(insertedLength + mPreferredGapSize)));
   mLength = insertedLength;
   mGapStart = insertedLength;
   mGapEnd = mGapStart + mPreferredGapSize;
-  memcpy(mBuf, t, insertedLength);
+  std::memcpy(mBuf, t, static_cast<size_t>(insertedLength));
 
   /* Zero all of the existing selections */
   update_selections(0, deletedLength, 0);
 
   /* Call the saved display routine(s) to update the screen */
   call_modify_callbacks(0, deletedLength, insertedLength, 0, deletedText);
-  free((void *) deletedText);
+  std::free(const_cast<char *>(deletedText));
 
   if (mCanUndo) {
     mUndo->clear();
@@ -327,35 +336,36 @@ char *Fl_Text_Buffer::text_range(int start, int end) const {
   IS_UTF8_ALIGNED2(this, (start))
   IS_UTF8_ALIGNED2(this, (end))
 
-  char *s = NULL;
+  char *s = nullptr;
 
   /* Make sure start and end are ok, and allocate memory for returned string.
    If start is bad, return "", if end is bad, adjust it. */
   if (start < 0 || start > mLength)
   {
-    s = (char *) malloc(1);
+    s = static_cast<char *>(std::malloc(1));
     s[0] = '\0';
     return s;
   }
   if (end < start) {
-    int temp = start;
+    const int temp = start;
     start = end;
     end = temp;
   }
-  if (end > mLength)
+  if (end > mLength) {
     end = mLength;
-  int copiedLength = end - start;
-  s = (char *) malloc(copiedLength + 1);
+  }
+  const int copiedLength = end - start;
+  s = static_cast<char *>(std::malloc(static_cast<size_t>(copiedLength + 1)));
 
   /* Copy the text from the buffer to the returned string */
   if (end <= mGapStart) {
-    memcpy(s, mBuf + start, copiedLength);
+    std::memcpy(s, mBuf + start, static_cast<size_t>(copiedLength));
   } else if (start >= mGapStart) {
-    memcpy(s, mBuf + start + (mGapEnd - mGapStart), copiedLength);
+    std::memcpy(s, mBuf + start + (mGapEnd - mGapStart), static_cast<size_t>(copiedLength));
   } else {
-    int part1Length = mGapStart - start;
-    memcpy(s, mBuf + start, part1Length);
-    memcpy(s + part1Length, mBuf + mGapEnd, copiedLength - part1Length);
+    const int part1Length = mGapStart - start;
+    std::memcpy(s, mBuf + start, static_cast<size_t>(part1Length));
+    std::memcpy(s + part1Length, mBuf + mGapEnd, static_cast<size_t>(copiedLength - part1Length));
   }
   s[copiedLength] = '\0';
   return s;
@@ -366,13 +376,14 @@ char *Fl_Text_Buffer::text_range(int start, int end) const {
  Pos must be at a character boundary.
  */
 unsigned int Fl_Text_Buffer::char_at(int pos) const {
-  if (pos < 0 || pos >= mLength)
+  if (pos < 0 || pos >= mLength) {
     return '\0';
+  }
 
   IS_UTF8_ALIGNED2(this, (pos))
 
   const char *src = address(pos);
-  return fl_utf8decode(src, 0, 0);
+  return fl_utf8decode(src, nullptr, nullptr);
 }
 
 
@@ -381,8 +392,9 @@ unsigned int Fl_Text_Buffer::char_at(int pos) const {
  This function ignores all unicode encoding.
  */
 char Fl_Text_Buffer::byte_at(int pos) const {
-  if (pos < 0 || pos >= mLength)
+  if (pos < 0 || pos >= mLength) {
     return '\0';
+  }
   const char *src = address(pos);
   return *src;
 }
@@ -398,23 +410,26 @@ void Fl_Text_Buffer::insert(int pos, const char *text, int insertedLength)
   IS_UTF8_ALIGNED(text)
 
   /* check if there is actually any text */
-  if (!text || !*text)
+  if (!text || !*text) {
     return;
+  }
 
   /* if pos is not contiguous to existing text, make it */
-  if (pos > mLength)
+  if (pos > mLength) {
     pos = mLength;
-  if (pos < 0)
+  }
+  if (pos < 0) {
     pos = 0;
+  }
 
   /* Even if nothing is deleted, we must call these callbacks */
   call_predelete_callbacks(pos, 0);
 
   /* insert and redisplay */
-  int nInserted = insert_(pos, text, insertedLength);
+  const int nInserted = insert_(pos, text, insertedLength);
   mCursorPosHint = pos + nInserted;
   IS_UTF8_ALIGNED2(this, (mCursorPosHint))
-  call_modify_callbacks(pos, 0, nInserted, 0, NULL);
+  call_modify_callbacks(pos, 0, nInserted, 0, nullptr);
 }
 
 
@@ -427,10 +442,10 @@ void Fl_Text_Buffer::insert(int pos, const char *text, int insertedLength)
                which the caller is responsible for handling.
 */
 void Fl_Text_Buffer::vprintf(const char *fmt, va_list ap) {
-  char buffer[1024];    // XXX: 1024 should be user configurable
-  ::vsnprintf(buffer, 1024, fmt, ap);
-  buffer[1024-1] = 0;   // XXX: MICROSOFT
-  append(buffer);
+  std::array<char, 1024> buffer{};
+  ::vsnprintf(buffer.data(), buffer.size(), fmt, ap);
+  buffer[buffer.size() - 1] = 0;
+  append(buffer.data());
 }
 
 
@@ -453,11 +468,12 @@ void Fl_Text_Buffer::vprintf(const char *fmt, va_list ap) {
  \endcode
  \note The expanded string is currently limited to 1024 characters.
  \param[in] fmt is a printf format string for the message text.
+ \param[in] ... printf-style arguments
 */
 void Fl_Text_Buffer::printf(const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
-  Fl_Text_Buffer::vprintf(fmt,ap);
+  vprintf(fmt, ap);
   va_end(ap);
 }
 
@@ -469,12 +485,15 @@ void Fl_Text_Buffer::printf(const char *fmt, ...) {
 void Fl_Text_Buffer::replace(int start, int end, const char *text, int insertedLength)
 {
   // Range check...
-  if (!text)
+  if (!text) {
     return;
-  if (start < 0)
+  }
+  if (start < 0) {
     start = 0;
-  if (end > mLength)
+  }
+  if (end > mLength) {
     end = mLength;
+  }
 
   IS_UTF8_ALIGNED2(this, (start))
   IS_UTF8_ALIGNED2(this, (end))
@@ -483,10 +502,10 @@ void Fl_Text_Buffer::replace(int start, int end, const char *text, int insertedL
   call_predelete_callbacks(start, end - start);
   const char *deletedText = text_range(start, end);
   remove_(start, end);
-  int nInserted = insert_(start, text, insertedLength);
+  const int nInserted = insert_(start, text, insertedLength);
   mCursorPosHint = start + nInserted;
   call_modify_callbacks(start, end - start, nInserted, 0, deletedText);
-  free((void *) deletedText);
+  std::free(const_cast<char *>(deletedText));
 }
 
 
@@ -498,24 +517,29 @@ void Fl_Text_Buffer::remove(int start, int end)
 {
   /* Make sure the arguments make sense */
   if (start > end) {
-    int temp = start;
+    const int temp = start;
     start = end;
     end = temp;
   }
-  if (start > mLength)
+  if (start > mLength) {
     start = mLength;
-  if (start < 0)
+  }
+  if (start < 0) {
     start = 0;
-  if (end > mLength)
+  }
+  if (end > mLength) {
     end = mLength;
-  if (end < 0)
+  }
+  if (end < 0) {
     end = 0;
+  }
 
   IS_UTF8_ALIGNED2(this, (start))
   IS_UTF8_ALIGNED2(this, (end))
 
-  if (start == end)
+  if (start == end) {
     return;
+  }
 
   call_predelete_callbacks(start, end - start);
   /* Remove and redisplay */
@@ -523,7 +547,7 @@ void Fl_Text_Buffer::remove(int start, int end)
   remove_(start, end);
   mCursorPosHint = start;
   call_modify_callbacks(start, end - start, 0, 0, deletedText);
-  free((void *) deletedText);
+  std::free(const_cast<char *>(deletedText));
 }
 
 
@@ -538,30 +562,31 @@ void Fl_Text_Buffer::copy(Fl_Text_Buffer * fromBuf, int fromStart,
   IS_UTF8_ALIGNED2(fromBuf, fromEnd)
   IS_UTF8_ALIGNED2(this, (toPos))
 
-  int copiedLength = fromEnd - fromStart;
+  const int copiedLength = fromEnd - fromStart;
 
   /* Prepare the buffer to receive the new text.  If the new text fits in
    the current buffer, just move the gap (if necessary) to where
    the text should be inserted.  If the new text is too large, reallocate
    the buffer with a gap large enough to accomodate the new text and a
    gap of mPreferredGapSize */
-  if (copiedLength > mGapEnd - mGapStart)
+  if (copiedLength > mGapEnd - mGapStart) {
     reallocate_with_gap(toPos, copiedLength + mPreferredGapSize);
-  else if (toPos != mGapStart)
+  } else if (toPos != mGapStart) {
     move_gap(toPos);
+  }
 
   /* Insert the new text (toPos now corresponds to the start of the gap) */
   if (fromEnd <= fromBuf->mGapStart) {
-    memcpy(&mBuf[toPos], &fromBuf->mBuf[fromStart], copiedLength);
+    std::memcpy(&mBuf[toPos], &fromBuf->mBuf[fromStart], static_cast<size_t>(copiedLength));
   } else if (fromStart >= fromBuf->mGapStart) {
-    memcpy(&mBuf[toPos],
+    std::memcpy(&mBuf[toPos],
            &fromBuf->mBuf[fromStart + (fromBuf->mGapEnd - fromBuf->mGapStart)],
-           copiedLength);
+           static_cast<size_t>(copiedLength));
   } else {
-    int part1Length = fromBuf->mGapStart - fromStart;
-    memcpy(&mBuf[toPos], &fromBuf->mBuf[fromStart], part1Length);
-    memcpy(&mBuf[toPos + part1Length],
-           &fromBuf->mBuf[fromBuf->mGapEnd], copiedLength - part1Length);
+    const int part1Length = fromBuf->mGapStart - fromStart;
+    std::memcpy(&mBuf[toPos], &fromBuf->mBuf[fromStart], static_cast<size_t>(part1Length));
+    std::memcpy(&mBuf[toPos + part1Length],
+           &fromBuf->mBuf[fromBuf->mGapEnd], static_cast<size_t>(copiedLength - part1Length));
   }
   mGapStart += copiedLength;
   mLength += copiedLength;
@@ -574,14 +599,15 @@ void Fl_Text_Buffer::copy(Fl_Text_Buffer * fromBuf, int fromStart,
  */
 int Fl_Text_Buffer::apply_undo(Fl_Text_Undo_Action* action, int* cursorPos)
 {
-  if (action->empty())
+  if (action->empty()) {
     return 0;
+  }
 
   mRedoList->lock();
 
   int ilen = action->undocut;
-  int xlen = action->undoinsert;
-  int b = action->undoat - xlen;
+  const int xlen = action->undoinsert;
+  const int b = action->undoat - xlen;
 
   if (xlen && action->undoyankcut && !ilen) {
     ilen = action->undoyankcut;
@@ -592,19 +618,22 @@ int Fl_Text_Buffer::apply_undo(Fl_Text_Undo_Action* action, int* cursorPos)
     action->undobuffer[ilen] = 0;
     char *tmp = fl_strdup(action->undobuffer);
     replace(b, action->undoat, tmp);
-    if (cursorPos)
+    if (cursorPos) {
       *cursorPos = mCursorPosHint;
-    free(tmp);
+    }
+    std::free(tmp);
   } else if (xlen) {
     remove(b, action->undoat);
-    if (cursorPos)
+    if (cursorPos) {
       *cursorPos = mCursorPosHint;
+    }
   } else if (ilen) {
     action->undobuffersize(ilen + 1);
     action->undobuffer[ilen] = 0;
     insert(action->undoat, action->undobuffer);
-    if (cursorPos)
+    if (cursorPos) {
       *cursorPos = mCursorPosHint;
+    }
     action->undoyankcut = 0;
   }
 
@@ -618,14 +647,15 @@ int Fl_Text_Buffer::apply_undo(Fl_Text_Undo_Action* action, int* cursorPos)
  CursorPos will be at a character boundary.
  */
 int Fl_Text_Buffer::undo(int *cursorPos) {
-  if (!mCanUndo || mUndo->empty())
+  if (!mCanUndo || mUndo->empty()) {
     return 0;
+  }
 
   // save the current undo action and add an empty action to avoid generating yankcuts
   Fl_Text_Undo_Action* action = mUndo;
   mUndo = new Fl_Text_Undo_Action();
 
-  int ret = apply_undo(action, cursorPos);
+  const int ret = apply_undo(action, cursorPos);
   delete action;
 
   if (ret) {
@@ -637,7 +667,9 @@ int Fl_Text_Buffer::undo(int *cursorPos) {
       delete mUndo;
       // pop the undo action before that and make it the current undo action
       mUndo = mUndoList->pop();
-      if (!mUndo) mUndo = new Fl_Text_Undo_Action();
+      if (!mUndo) {
+        mUndo = new Fl_Text_Undo_Action();
+      }
     }
   }
 
@@ -655,17 +687,19 @@ bool Fl_Text_Buffer::can_undo() const {
  Redo previous undo action.
  */
 int Fl_Text_Buffer::redo(int *cursorPos) {
-  if (!mCanUndo)
+  if (!mCanUndo) {
     return 0;
+  }
 
   Fl_Text_Undo_Action *redo_action = mRedoList->pop();
-  if (!redo_action)
+  if (!redo_action) {
     return 0;
+  }
 
   // running the redo action will also generate a new undo action
   // Note: there is a slight chance that the current undo action and the
   //       generated action merge into one.
-  int ret = apply_undo(redo_action, cursorPos);
+  const int ret = apply_undo(redo_action, cursorPos);
 
   delete redo_action;
   return ret;
@@ -676,7 +710,7 @@ int Fl_Text_Buffer::redo(int *cursorPos) {
  \see canUndo()
  */
 bool Fl_Text_Buffer::can_redo() const {
-  return (mCanUndo && mRedoList->size());
+  return (mCanUndo && mRedoList->size() != 0);
 }
 
 /*
@@ -691,7 +725,7 @@ void Fl_Text_Buffer::canUndo(char flag)
   } else {
     if (mCanUndo) {
       delete mUndo;
-      mUndo = NULL;
+      mUndo = nullptr;
     }
   }
   mCanUndo = flag;
@@ -718,7 +752,7 @@ void Fl_Text_Buffer::tab_distance(int tabDist)
    this means copying the whole buffer contents to provide "deletedText" */
   const char *deletedText = text();
   call_modify_callbacks(0, mLength, mLength, 0, deletedText);
-  free((void *) deletedText);
+  std::free(const_cast<char *>(deletedText));
 }
 
 
@@ -745,7 +779,7 @@ void Fl_Text_Buffer::unselect()
 {
   Fl_Text_Selection oldSelection = mPrimary;
 
-  mPrimary.mSelected = 0;
+  mPrimary.mSelected = false;
   redisplay_selection(&oldSelection, &mPrimary);
 }
 
@@ -806,7 +840,7 @@ void Fl_Text_Buffer::secondary_unselect()
 {
   Fl_Text_Selection oldSelection = mSecondary;
 
-  mSecondary.mSelected = 0;
+  mSecondary.mSelected = false;
   redisplay_selection(&oldSelection, &mSecondary);
 }
 
@@ -867,7 +901,7 @@ void Fl_Text_Buffer::unhighlight()
 {
   Fl_Text_Selection oldSelection = mHighlight;
 
-  mHighlight.mSelected = 0;
+  mHighlight.mSelected = false;
   redisplay_selection(&oldSelection, &mHighlight);
 }
 
@@ -896,7 +930,7 @@ char *Fl_Text_Buffer::highlight_text() const
 void Fl_Text_Buffer::add_modify_callback(Fl_Text_Modify_Cb bufModifiedCB,
                                          void *cbArg)
 {
-  Fl_Text_Modify_Cb *newModifyProcs =
+  auto *newModifyProcs =
   new Fl_Text_Modify_Cb[mNModifyProcs + 1];
   void **newCBArgs = new void *[mNModifyProcs + 1];
   for (int i = 0; i < mNModifyProcs; i++) {
@@ -921,7 +955,8 @@ void Fl_Text_Buffer::add_modify_callback(Fl_Text_Modify_Cb bufModifiedCB,
 void Fl_Text_Buffer::remove_modify_callback(Fl_Text_Modify_Cb bufModifiedCB,
                                             void *cbArg)
 {
-  int i, toRemove = -1;
+  int i;
+  int toRemove = -1;
 
   /* find the matching callback to remove */
   for (i = 0; i < mNModifyProcs; i++) {
@@ -942,12 +977,12 @@ void Fl_Text_Buffer::remove_modify_callback(Fl_Text_Modify_Cb bufModifiedCB,
   if (mNModifyProcs == 0) {
     mNModifyProcs = 0;
     delete[]mModifyProcs;
-    mModifyProcs = NULL;
+    mModifyProcs = nullptr;
     delete[]mCbArgs;
-    mCbArgs = NULL;
+    mCbArgs = nullptr;
     return;
   }
-  Fl_Text_Modify_Cb *newModifyProcs = new Fl_Text_Modify_Cb[mNModifyProcs];
+  auto *newModifyProcs = new Fl_Text_Modify_Cb[mNModifyProcs];
   void **newCBArgs = new void *[mNModifyProcs];
 
   /* copy out the remaining members and free the old lists */
@@ -972,7 +1007,7 @@ void Fl_Text_Buffer::remove_modify_callback(Fl_Text_Modify_Cb bufModifiedCB,
 void Fl_Text_Buffer::add_predelete_callback(Fl_Text_Predelete_Cb bufPreDeleteCB,
                                             void *cbArg)
 {
-  Fl_Text_Predelete_Cb *newPreDeleteProcs =
+  auto *newPreDeleteProcs =
   new Fl_Text_Predelete_Cb[mNPredeleteProcs + 1];
   void **newCBArgs = new void *[mNPredeleteProcs + 1];
   for (int i = 0; i < mNPredeleteProcs; i++) {
@@ -996,7 +1031,8 @@ void Fl_Text_Buffer::add_predelete_callback(Fl_Text_Predelete_Cb bufPreDeleteCB,
  */
 void Fl_Text_Buffer::remove_predelete_callback(Fl_Text_Predelete_Cb bufPreDeleteCB, void *cbArg)
 {
-  int i, toRemove = -1;
+  int i;
+  int toRemove = -1;
   /* find the matching callback to remove */
   for (i = 0; i < mNPredeleteProcs; i++) {
     if (mPredeleteProcs[i] == bufPreDeleteCB &&
@@ -1015,12 +1051,12 @@ void Fl_Text_Buffer::remove_predelete_callback(Fl_Text_Predelete_Cb bufPreDelete
   mNPredeleteProcs--;
   if (mNPredeleteProcs == 0) {
     delete[]mPredeleteProcs;
-    mPredeleteProcs = NULL;
+    mPredeleteProcs = nullptr;
     delete[]mPredeleteCbArgs;
-    mPredeleteCbArgs = NULL;
+    mPredeleteCbArgs = nullptr;
     return;
   }
-  Fl_Text_Predelete_Cb *newPreDeleteProcs = new Fl_Text_Predelete_Cb[mNPredeleteProcs];
+  auto *newPreDeleteProcs = new Fl_Text_Predelete_Cb[mNPredeleteProcs];
   void **newCBArgs = new void *[mNPredeleteProcs];
 
   /* copy out the remaining members and free the old lists */
@@ -1053,8 +1089,9 @@ char *Fl_Text_Buffer::line_text(int pos) const {
  */
 int Fl_Text_Buffer::line_start(int pos) const
 {
-  if (!findchar_backward(pos, '\n', &pos))
+  if (!findchar_backward(pos, '\n', &pos)) {
     return 0;
+  }
   return pos + 1;
 }
 
@@ -1063,8 +1100,9 @@ int Fl_Text_Buffer::line_start(int pos) const
  Find the end of the line.
  */
 int Fl_Text_Buffer::line_end(int pos) const {
-  if (!findchar_forward(pos, '\n', &pos))
+  if (!findchar_forward(pos, '\n', &pos)) {
     pos = mLength;
+  }
   return pos;
 }
 
@@ -1073,9 +1111,9 @@ int Fl_Text_Buffer::line_end(int pos) const {
  Pos must be at a character boundary.
  */
 bool Fl_Text_Buffer::is_word_separator(int pos) const {
-  int c = char_at(pos);
+  const auto c = static_cast<unsigned int>(char_at(pos));
   if (c < 128) {
-    return !(fl_ascii_isalnum(c) || c == '_');  // non alphanumeric ASCII
+    return !(fl_ascii_isalnum(static_cast<int>(c)) || c == '_');  // non alphanumeric ASCII
   }
   return (c == 0xA0 ||                 // NO-BREAK SPACE
           (c >= 0x3000 && c <= 0x301F) // IDEOGRAPHIC punctuation
@@ -1091,8 +1129,9 @@ int Fl_Text_Buffer::word_start(int pos) const {
   {
     pos = prev_char(pos);
   }
-  if (is_word_separator(pos))
+  if (is_word_separator(pos)) {
     pos = next_char(pos);
+  }
   return pos;
 }
 
@@ -1140,9 +1179,10 @@ int Fl_Text_Buffer::skip_displayed_characters(int lineStartPos, int nChars) cons
   int pos = lineStartPos;
 
   for (int charCount = 0; charCount < nChars && pos < mLength; charCount++) {
-    unsigned int c = char_at(pos);
-    if (c == '\n')
+    const unsigned int c = char_at(pos);
+    if (c == '\n') {
       return pos;
+    }
     pos = next_char(pos);
   }
   return pos;
@@ -1158,22 +1198,26 @@ int Fl_Text_Buffer::count_lines(int startPos, int endPos) const {
   IS_UTF8_ALIGNED2(this, (startPos))
   IS_UTF8_ALIGNED2(this, (endPos))
 
-  int gapLen = mGapEnd - mGapStart;
+  const int gapLen = mGapEnd - mGapStart;
   int lineCount = 0;
 
   int pos = startPos;
   while (pos < mGapStart)
   {
-    if (pos == endPos)
+    if (pos == endPos) {
       return lineCount;
-    if (mBuf[pos++] == '\n')
+    }
+    if (mBuf[pos++] == '\n') {
       lineCount++;
+    }
   }
   while (pos < mLength) {
-    if (pos == endPos)
+    if (pos == endPos) {
       return lineCount;
-    if (mBuf[pos++ + gapLen] == '\n')
+    }
+    if (mBuf[pos++ + gapLen] == '\n') {
       lineCount++;
+    }
   }
   return lineCount;
 }
@@ -1188,15 +1232,17 @@ int Fl_Text_Buffer::estimate_lines(int startPos, int endPos, int lineLen) const
   IS_UTF8_ALIGNED2(this, (startPos))
   IS_UTF8_ALIGNED2(this, (endPos))
 
-  int gapLen = mGapEnd - mGapStart;
+  const int gapLen = mGapEnd - mGapStart;
   int lineCount = 0;
-  int softLineBreaks = 0, softLineBreakCount = lineLen;
+  int softLineBreaks = 0;
+  int softLineBreakCount = lineLen;
 
   int pos = startPos;
   while (pos < mGapStart)
   {
-    if (pos == endPos)
+    if (pos == endPos) {
       return lineCount + softLineBreaks;
+    }
     if (mBuf[pos++] == '\n') {
       softLineBreakCount = lineLen;
       lineCount++;
@@ -1207,8 +1253,9 @@ int Fl_Text_Buffer::estimate_lines(int startPos, int endPos, int lineLen) const
     }
   }
   while (pos < mLength) {
-    if (pos == endPos)
+    if (pos == endPos) {
       return lineCount + softLineBreaks;
+    }
     if (mBuf[pos++ + gapLen] == '\n') {
       softLineBreakCount = lineLen;
       lineCount++;
@@ -1230,10 +1277,11 @@ int Fl_Text_Buffer::skip_lines(int startPos, int nLines) const
 {
   IS_UTF8_ALIGNED2(this, (startPos))
 
-  if (nLines == 0)
+  if (nLines == 0) {
     return startPos;
+  }
 
-  int gapLen = mGapEnd - mGapStart;
+  const int gapLen = mGapEnd - mGapStart;
   int pos = startPos;
   int lineCount = 0;
   while (pos < mGapStart) {
@@ -1269,10 +1317,11 @@ int Fl_Text_Buffer::rewind_lines(int startPos, int nLines) const
   IS_UTF8_ALIGNED2(this, (startPos))
 
   int pos = startPos - 1;
-  if (pos <= 0)
+  if (pos <= 0) {
     return 0;
+  }
 
-  int gapLen = mGapEnd - mGapStart;
+  const int gapLen = mGapEnd - mGapStart;
   int lineCount = -1;
   while (pos >= mGapStart) {
     if (mBuf[pos + gapLen] == '\n') {
@@ -1305,8 +1354,9 @@ int Fl_Text_Buffer::search_forward(int startPos, const char *searchString,
   IS_UTF8_ALIGNED2(this, (startPos))
   IS_UTF8_ALIGNED(searchString)
 
-  if (!searchString)
+  if (!searchString) {
     return 0;
+  }
   int bp;
   const char *sp;
   if (matchCase) {
@@ -1314,15 +1364,16 @@ int Fl_Text_Buffer::search_forward(int startPos, const char *searchString,
       bp = startPos;
       sp = searchString;
       for (;;) {
-        char c = *sp;
+        const char c = *sp;
         // we reached the end of the "needle", so we found the string!
         if (!c) {
           *foundPos = startPos;
           return 1;
         }
-        int len = fl_utf8len1(c);
-        if (memcmp(sp, address(bp), len))
+        const int len = fl_utf8len1(c);
+        if (std::memcmp(sp, address(bp), static_cast<size_t>(len)) != 0) {
           break;
+        }
         sp += len; bp += len;
       }
       startPos = next_char(startPos);
@@ -1338,10 +1389,11 @@ int Fl_Text_Buffer::search_forward(int startPos, const char *searchString,
           return 1;
         }
         int len;
-        unsigned int b = char_at(bp);
-        unsigned int s = fl_utf8decode(sp, 0, &len);
-        if (fl_tolower(b)!=fl_tolower(s))
+        const unsigned int b = char_at(bp);
+        const unsigned int s = fl_utf8decode(sp, nullptr, &len);
+        if (fl_tolower(b)!=fl_tolower(s)) {
           break;
+        }
         sp += len;
         bp = next_char(bp);
       }
@@ -1357,8 +1409,9 @@ int Fl_Text_Buffer::search_backward(int startPos, const char *searchString,
   IS_UTF8_ALIGNED2(this, (startPos))
   IS_UTF8_ALIGNED(searchString)
 
-  if (!searchString)
+  if (!searchString) {
     return 0;
+  }
   int bp;
   const char *sp;
   if (matchCase) {
@@ -1366,15 +1419,16 @@ int Fl_Text_Buffer::search_backward(int startPos, const char *searchString,
       bp = startPos;
       sp = searchString;
       for (;;) {
-        char c = *sp;
+        const char c = *sp;
         // we reached the end of the "needle", so we found the string!
         if (!c) {
           *foundPos = startPos;
           return 1;
         }
-        int len = fl_utf8len1(c);
-        if (memcmp(sp, address(bp), len))
+        const int len = fl_utf8len1(c);
+        if (std::memcmp(sp, address(bp), static_cast<size_t>(len)) != 0) {
           break;
+        }
         sp += len; bp += len;
       }
       startPos = prev_char(startPos);
@@ -1390,10 +1444,11 @@ int Fl_Text_Buffer::search_backward(int startPos, const char *searchString,
           return 1;
         }
         int len;
-        unsigned int b = char_at(bp);
-        unsigned int s = fl_utf8decode(sp, 0, &len);
-        if (fl_tolower(b)!=fl_tolower(s))
+        const unsigned int b = char_at(bp);
+        const unsigned int s = fl_utf8decode(sp, nullptr, &len);
+        if (fl_tolower(b)!=fl_tolower(s)) {
           break;
+        }
         sp += len;
         bp = next_char(bp);
       }
@@ -1411,23 +1466,27 @@ int Fl_Text_Buffer::search_backward(int startPos, const char *searchString,
  */
 int Fl_Text_Buffer::insert_(int pos, const char *text, int insertedLength)
 {
-  if (!text || !*text)
+  if (!text || !*text) {
     return 0;
+  }
 
-  if (insertedLength == -1) insertedLength = (int) strlen(text);
+  if (insertedLength == -1) {
+    insertedLength = static_cast<int>(std::strlen(text));
+  }
 
   /* Prepare the buffer to receive the new text.  If the new text fits in
    the current buffer, just move the gap (if necessary) to where
    the text should be inserted.  If the new text is too large, reallocate
    the buffer with a gap large enough to accomodate the new text and a
    gap of mPreferredGapSize */
-  if (insertedLength > mGapEnd - mGapStart)
+  if (insertedLength > mGapEnd - mGapStart) {
     reallocate_with_gap(pos, insertedLength + mPreferredGapSize);
-  else if (pos != mGapStart)
+  } else if (pos != mGapStart) {
     move_gap(pos);
+  }
 
   /* Insert the new text (pos now corresponds to the start of the gap) */
-  memcpy(&mBuf[pos], text, insertedLength);
+  std::memcpy(&mBuf[pos], text, static_cast<size_t>(insertedLength));
   mGapStart += insertedLength;
   mLength += insertedLength;
   update_selections(pos, 0, insertedLength);
@@ -1437,7 +1496,7 @@ int Fl_Text_Buffer::insert_(int pos, const char *text, int insertedLength)
       // continue inserting text at the given cursor position
       mUndo->undoinsert += insertedLength;
     } else {
-      int yankcut = (mUndo->undoat == pos) ? mUndo->undocut : 0;
+      const int yankcut = (mUndo->undoat == pos) ? mUndo->undocut : 0;
       if (!yankcut) {
         // insert text at a new position, so generate a new undo action
         mRedoList->clear();
@@ -1464,12 +1523,14 @@ int Fl_Text_Buffer::insert_(int pos, const char *text, int insertedLength)
  */
 void Fl_Text_Buffer::remove_(int start, int end)
 {
-  if (start >= end) return;
+  if (start >= end) {
+    return;
+  }
   if (mCanUndo) {
     if (mUndo->undoat == end && mUndo->undocut) {
       // continue to remove text at the same cursor position
       mUndo->undobuffersize(mUndo->undocut + end - start + 1);
-      memmove(mUndo->undobuffer + end - start, mUndo->undobuffer, mUndo->undocut);
+      std::memmove(mUndo->undobuffer + end - start, mUndo->undobuffer, static_cast<size_t>(mUndo->undocut));
       mUndo->undocut += end - start;
     } else {
       // remove text at a new position, so generate a new undo action
@@ -1485,19 +1546,21 @@ void Fl_Text_Buffer::remove_(int start, int end)
   }
 
   if (start > mGapStart) {
-    if (mCanUndo)
-      memcpy(mUndo->undobuffer, mBuf + (mGapEnd - mGapStart) + start,
-             end - start);
+    if (mCanUndo) {
+      std::memcpy(mUndo->undobuffer, mBuf + (mGapEnd - mGapStart) + start,
+             static_cast<size_t>(end - start));
+    }
     move_gap(start);
   } else if (end < mGapStart) {
-    if (mCanUndo)
-      memcpy(mUndo->undobuffer, mBuf + start, end - start);
+    if (mCanUndo) {
+      std::memcpy(mUndo->undobuffer, mBuf + start, static_cast<size_t>(end - start));
+    }
     move_gap(end);
   } else {
-    int prelen = mGapStart - start;
+    const int prelen = mGapStart - start;
     if (mCanUndo) {
-      memcpy(mUndo->undobuffer, mBuf + start, prelen);
-      memcpy(mUndo->undobuffer + prelen, mBuf + mGapEnd, end - start - prelen);
+      std::memcpy(mUndo->undobuffer, mBuf + start, static_cast<size_t>(prelen));
+      std::memcpy(mUndo->undobuffer + prelen, mBuf + mGapEnd, static_cast<size_t>(end - start - prelen));
     }
   }
 
@@ -1574,7 +1637,7 @@ int Fl_Text_Selection::selected(int *startpos, int *endpos) const {
   \p pos must be at a character boundary.
 */
 int Fl_Text_Selection::includes(int pos) const {
-  return (selected() && pos >= start() && pos < end() );
+  return (selected() && pos >= start() && pos < end() ) ? 1 : 0;
 }
 
 
@@ -1583,12 +1646,13 @@ int Fl_Text_Selection::includes(int pos) const {
  Unicode safe.
  */
 char *Fl_Text_Buffer::selection_text_(const Fl_Text_Selection* sel) const {
-  int start, end;
+  int start;
+  int end;
 
   /* If there's no selection, return an allocated empty string */
   if (!sel->selected(&start, &end))
   {
-    char *s = (char *) malloc(1);
+    char *s = static_cast<char *>(std::malloc(1));
     *s = '\0';
     return s;
   }
@@ -1604,10 +1668,12 @@ char *Fl_Text_Buffer::selection_text_(const Fl_Text_Selection* sel) const {
  */
 void Fl_Text_Buffer::remove_selection_(Fl_Text_Selection * sel)
 {
-  int start, end;
+  int start;
+  int end;
 
-  if (!sel->selected(&start, &end))
+  if (!sel->selected(&start, &end)) {
     return;
+  }
   remove(start, end);
   //undoyankcut = undocut;
 }
@@ -1623,16 +1689,18 @@ void Fl_Text_Buffer::replace_selection_(Fl_Text_Selection * sel,
   Fl_Text_Selection oldSelection = *sel;
 
   /* If there's no selection, return */
-  int start, end;
-  if (!sel->selected(&start, &end))
+  int start;
+  int end;
+  if (!sel->selected(&start, &end)) {
     return;
+  }
 
   /* Do the appropriate type of replace */
   replace(start, end, text);
 
   /* Unselect (happens automatically in BufReplace, but BufReplaceRect
    can't detect when the contents of a selection goes away) */
-  sel->mSelected = 0;
+  sel->mSelected = false;
   redisplay_selection(&oldSelection, sel);
 }
 
@@ -1645,9 +1713,10 @@ void Fl_Text_Buffer::call_modify_callbacks(int pos, int nDeleted,
                                            int nInserted, int nRestyled,
                                            const char *deletedText) const {
   IS_UTF8_ALIGNED2(this, pos)
-  for (int i = 0; i < mNModifyProcs; i++)
+  for (int i = 0; i < mNModifyProcs; i++) {
     (*mModifyProcs[i]) (pos, nInserted, nDeleted, nRestyled,
                         deletedText, mCbArgs[i]);
+  }
 }
 
 
@@ -1656,8 +1725,9 @@ void Fl_Text_Buffer::call_modify_callbacks(int pos, int nDeleted,
  Unicode safe.
  */
 void Fl_Text_Buffer::call_predelete_callbacks(int pos, int nDeleted) const {
-  for (int i = 0; i < mNPredeleteProcs; i++)
+  for (int i = 0; i < mNPredeleteProcs; i++) {
     (*mPredeleteProcs[i]) (pos, nDeleted, mPredeleteCbArgs[i]);
+  }
 }
 
 
@@ -1665,55 +1735,55 @@ void Fl_Text_Buffer::call_predelete_callbacks(int pos, int nDeleted) const {
  Redisplay a new selected area.
  Unicode safe.
  */
-void Fl_Text_Buffer::redisplay_selection(Fl_Text_Selection *
+void Fl_Text_Buffer::redisplay_selection(const Fl_Text_Selection *
                                            oldSelection,
-                                           Fl_Text_Selection *
+                                           const Fl_Text_Selection *
                                            newSelection) const
 {
-  int oldStart, oldEnd, newStart, newEnd, ch1Start, ch1End, ch2Start,
-  ch2End;
-
   /* If either selection is rectangular, add an additional character to
    the end of the selection to request the redraw routines to wipe out
    the parts of the selection beyond the end of the line */
-  oldStart = oldSelection->mStart;
-  newStart = newSelection->mStart;
-  oldEnd = oldSelection->mEnd;
-  newEnd = newSelection->mEnd;
+  const int oldStart = oldSelection->mStart;
+  const int newStart = newSelection->mStart;
+  const int oldEnd = oldSelection->mEnd;
+  const int newEnd = newSelection->mEnd;
 
   /* If the old or new selection is unselected, just redisplay the
    single area that is (was) selected and return */
-  if (!oldSelection->mSelected && !newSelection->mSelected)
+  if (!oldSelection->mSelected && !newSelection->mSelected) {
     return;
+  }
   if (!oldSelection->mSelected)
   {
-    call_modify_callbacks(newStart, 0, 0, newEnd - newStart, NULL);
+    call_modify_callbacks(newStart, 0, 0, newEnd - newStart, nullptr);
     return;
   }
   if (!newSelection->mSelected) {
-    call_modify_callbacks(oldStart, 0, 0, oldEnd - oldStart, NULL);
+    call_modify_callbacks(oldStart, 0, 0, oldEnd - oldStart, nullptr);
     return;
   }
 
   /* If the selections are non-contiguous, do two separate updates
    and return */
   if (oldEnd < newStart || newEnd < oldStart) {
-    call_modify_callbacks(oldStart, 0, 0, oldEnd - oldStart, NULL);
-    call_modify_callbacks(newStart, 0, 0, newEnd - newStart, NULL);
+    call_modify_callbacks(oldStart, 0, 0, oldEnd - oldStart, nullptr);
+    call_modify_callbacks(newStart, 0, 0, newEnd - newStart, nullptr);
     return;
   }
 
   /* Otherwise, separate into 3 separate regions: ch1, and ch2 (the two
    changed areas), and the unchanged area of their intersection,
    and update only the changed area(s) */
-  ch1Start = min(oldStart, newStart);
-  ch2End = max(oldEnd, newEnd);
-  ch1End = max(oldStart, newStart);
-  ch2Start = min(oldEnd, newEnd);
-  if (ch1Start != ch1End)
-    call_modify_callbacks(ch1Start, 0, 0, ch1End - ch1Start, NULL);
-  if (ch2Start != ch2End)
-    call_modify_callbacks(ch2Start, 0, 0, ch2End - ch2Start, NULL);
+  const int ch1Start = min(oldStart, newStart);
+  const int ch2End = max(oldEnd, newEnd);
+  const int ch1End = max(oldStart, newStart);
+  const int ch2Start = min(oldEnd, newEnd);
+  if (ch1Start != ch1End) {
+    call_modify_callbacks(ch1Start, 0, 0, ch1End - ch1Start, nullptr);
+  }
+  if (ch2Start != ch2End) {
+    call_modify_callbacks(ch2Start, 0, 0, ch2End - ch2Start, nullptr);
+  }
 }
 
 
@@ -1723,12 +1793,13 @@ void Fl_Text_Buffer::redisplay_selection(Fl_Text_Selection *
  */
 void Fl_Text_Buffer::move_gap(int pos)
 {
-  int gapLen = mGapEnd - mGapStart;
+  const int gapLen = mGapEnd - mGapStart;
 
-  if (pos > mGapStart)
-    memmove(&mBuf[mGapStart], &mBuf[mGapEnd], pos - mGapStart);
-  else
-    memmove(&mBuf[pos + gapLen], &mBuf[pos], mGapStart - pos);
+  if (pos > mGapStart) {
+    std::memmove(&mBuf[mGapStart], &mBuf[mGapEnd], static_cast<size_t>(pos - mGapStart));
+  } else {
+    std::memmove(&mBuf[pos + gapLen], &mBuf[pos], static_cast<size_t>(mGapStart - pos));
+  }
   mGapEnd += pos - mGapStart;
   mGapStart += pos - mGapStart;
 }
@@ -1740,23 +1811,23 @@ void Fl_Text_Buffer::move_gap(int pos)
  */
 void Fl_Text_Buffer::reallocate_with_gap(int newGapStart, int newGapLen)
 {
-  char *newBuf = (char *) malloc(mLength + newGapLen);
-  int newGapEnd = newGapStart + newGapLen;
+  char *newBuf = static_cast<char *>(std::malloc(static_cast<size_t>(mLength + newGapLen)));
+  const int newGapEnd = newGapStart + newGapLen;
 
   if (newGapStart <= mGapStart) {
-    memcpy(newBuf, mBuf, newGapStart);
-    memcpy(&newBuf[newGapEnd], &mBuf[newGapStart],
-           mGapStart - newGapStart);
-    memcpy(&newBuf[newGapEnd + mGapStart - newGapStart],
-           &mBuf[mGapEnd], mLength - mGapStart);
+    std::memcpy(newBuf, mBuf, static_cast<size_t>(newGapStart));
+    std::memcpy(&newBuf[newGapEnd], &mBuf[newGapStart],
+           static_cast<size_t>(mGapStart - newGapStart));
+    std::memcpy(&newBuf[newGapEnd + mGapStart - newGapStart],
+           &mBuf[mGapEnd], static_cast<size_t>(mLength - mGapStart));
   } else {                      /* newGapStart > mGapStart */
-    memcpy(newBuf, mBuf, mGapStart);
-    memcpy(&newBuf[mGapStart], &mBuf[mGapEnd], newGapStart - mGapStart);
-    memcpy(&newBuf[newGapEnd],
+    std::memcpy(newBuf, mBuf, static_cast<size_t>(mGapStart));
+    std::memcpy(&newBuf[mGapStart], &mBuf[mGapEnd], static_cast<size_t>(newGapStart - mGapStart));
+    std::memcpy(&newBuf[newGapEnd],
            &mBuf[mGapEnd + newGapStart - mGapStart],
-           mLength - newGapStart);
+           static_cast<size_t>(mLength - newGapStart));
   }
-  free((void *) mBuf);
+  std::free(mBuf);
   mBuf = newBuf;
   mGapStart = newGapStart;
   mGapEnd = newGapEnd;
@@ -1789,22 +1860,24 @@ void Fl_Text_Buffer::update_selections(int pos, int nDeleted,
 
 void Fl_Text_Selection::update(int pos, int nDeleted, int nInserted)
 {
-  if (!mSelected || pos > mEnd)
+  if (!mSelected || pos > mEnd) {
     return;
+  }
   if (pos + nDeleted <= mStart) {
     mStart += nInserted - nDeleted;
     mEnd += nInserted - nDeleted;
   } else if (pos <= mStart && pos + nDeleted >= mEnd) {
     mStart = pos;
     mEnd = pos;
-    mSelected = 0;
+    mSelected = false;
   } else if (pos <= mStart && pos + nDeleted < mEnd) {
     mStart = pos;
     mEnd = nInserted + mEnd - nDeleted;
   } else if (pos < mEnd) {
     mEnd += nInserted - nDeleted;
-    if (mEnd <= mStart)
-      mSelected = 0;
+    if (mEnd <= mStart) {
+      mSelected = false;
+    }
   }
 }
 
@@ -1821,8 +1894,9 @@ int Fl_Text_Buffer::findchar_forward(int startPos, unsigned searchChar,
     return 0;
   }
 
-  if (startPos<0)
+  if (startPos<0) {
     startPos = 0;
+  }
 
   for ( ; startPos<mLength; startPos = next_char(startPos)) {
     if (searchChar == char_at(startPos)) {
@@ -1847,8 +1921,9 @@ int Fl_Text_Buffer::findchar_backward(int startPos, unsigned int searchChar,
     return 0;
   }
 
-  if (startPos > mLength)
+  if (startPos > mLength) {
     startPos = mLength;
+  }
 
   for (startPos = prev_char(startPos); startPos>=0; startPos = prev_char(startPos)) {
     if (searchChar == char_at(startPos)) {
@@ -1944,7 +2019,7 @@ static int general_input_filter(char *buffer, int buflen,
  *input_was_changed returns true if input was not strict UTF-8, so output
  differs from input.
  */
-static int utf8_input_filter(char *buffer,              // result buffer we fill with utf8 encoded text
+int utf8_input_filter(char *buffer,              // result buffer we fill with utf8 encoded text
                              int buflen,                // max size of buffer from caller
                              char *line,                // file line buffer caller wants us to use
                              int sline,                 // max size of line buffer
@@ -1959,16 +2034,23 @@ static int utf8_input_filter(char *buffer,              // result buffer we fill
   // lq - fl_utf8encode() length of utf8 sequence being worked on
   // r - bytes read from last fread()
   // u - utf8 decoded sequence as a single multibyte unsigned integer
-  char *p, *q, multibyte[5];
-  int len, lp, lq, r;
+  char *p;
+  char *q;
+  std::array<char, 5> multibyte{};
+  int len;
+  int lp;
+  int lq;
+  int r;
   unsigned u;
   p = line;
   q = buffer;
   while (q < buffer + buflen) {
     if (p >= endline) {                       // walked off end of input file's line buffer?
-      r = (int) fread(line, 1, sline, fp);    // read another block of sline bytes from file
+      r = static_cast<int>(fread(line, 1, static_cast<size_t>(sline), fp));    // read another block of sline bytes from file
       endline = line + r;
-      if (r == 0) return (int) (q - buffer);  // EOF? return bytes read into buffer[]
+      if (r == 0) {
+        return static_cast<int>(q - buffer);  // EOF? return bytes read into buffer[]
+      }
       p = line;
     }
     // Predict length of utf8 sequence
@@ -1977,33 +2059,36 @@ static int utf8_input_filter(char *buffer,              // result buffer we fill
     //
     len = fl_utf8len1(*p);              // anticipate length of utf8 sequence
     if (p + len > endline) {            // would walk off end of line buffer?
-      memmove(line, p, endline - p);    // re-jigger line buffer to get some room
+      std::memmove(line, p, static_cast<size_t>(endline - p));    // re-jigger line buffer to get some room
       endline -= (p - line);
-      r = (int) fread(endline, 1, sline - (endline - line), fp); // re-fill line buffer
+      r = static_cast<int>(fread(endline, 1, static_cast<size_t>(sline - (endline - line)), fp)); // re-fill line buffer
       endline += r;
       p = line;
-      if (endline - line < len) break;  // sequence *still* extends past end? stop loop
+      if (endline - line < len) {
+        break;  // sequence *still* extends past end? stop loop
+      }
     }
     while ( len > 0) {
       u = fl_utf8decode(p, p+len, &lp);   // get single utf8 encoded char as a Unicode value
-      lq = fl_utf8encode(u, multibyte);   // re-encode Unicode value to utf8 in multibyte[]
-      if (lp != len || lq != len)
+      lq = fl_utf8encode(u, multibyte.data());   // re-encode Unicode value to utf8 in multibyte[]
+      if (lp != len || lq != len) {
         *input_was_changed = true;
+      }
 
       if (q + lq > buffer + buflen) {     // encoding would walk off end of buffer[]?
-        memmove(line, p, endline - p);    // re-jigger line[] buffer for next call
+        std::memmove(line, p, static_cast<size_t>(endline - p));    // re-jigger line[] buffer for next call
         endline -= (p - line);            // adjust end of line[] buffer for next call
-        return (int) (q - buffer);        // return what's decoded so far, caller will consume buffer
+        return static_cast<int>(q - buffer);        // return what's decoded so far, caller will consume buffer
       }
-      memcpy(q, multibyte, lq);
+      std::memcpy(q, multibyte.data(), static_cast<size_t>(lq));
       q += lq;
       p += lp;
       len -= lp;
     }
   }
-  memmove(line, p, endline - p);
+  std::memmove(line, p, static_cast<size_t>(endline - p));
   endline -= (p - line);
-  return (int) (q - buffer);
+  return static_cast<int>(q - buffer);
 }
 
 const char *Fl_Text_Buffer::file_encoding_warning_message =
@@ -2019,32 +2104,36 @@ const char *Fl_Text_Buffer::file_encoding_warning_message =
  */
  int Fl_Text_Buffer::insertfile(const char *file, int pos, int buflen)
 {
-  FILE *fp;
-  if (!(fp = fl_fopen(file, "r")))
+  FILE *fp = fl_fopen(file, "r");
+  if (!fp) {
     return 1;
-  char *buffer = new char[buflen + 1];
-  char *endline, line[100];
+  }
+  char *buffer = new char[static_cast<size_t>(buflen) + 1];
+  char *endline;
+  std::array<char, 100> line{};
   int len;
   input_file_was_transcoded = false;
-  endline = line;
+  endline = line.data();
   while (true) {
 #ifdef EXAMPLE_ENCODING
     // example of 16-bit encoding: UTF-16
     len = general_input_filter(buffer, buflen,
-                               line, sizeof(line), endline,
+                               line.data(), static_cast<int>(line.size()), endline,
                                utf16toucs, // use cp1252toucs to read CP1252-encoded files
                                fp);
     input_file_was_transcoded = true;
 #else
-    len = utf8_input_filter(buffer, buflen, line, sizeof(line), endline,
+    len = utf8_input_filter(buffer, buflen, line.data(), static_cast<int>(line.size()), endline,
                             fp, &input_file_was_transcoded);
 #endif
-    if (len == 0) break;
+    if (len == 0) {
+      break;
+    }
     buffer[len] = 0;
     insert(pos, buffer);
     pos += len;
   }
-  int e = ferror(fp) ? 2 : 0;
+  const int e = ferror(fp) ? 2 : 0;
   fclose(fp);
   delete[]buffer;
   if ( (!e) && input_file_was_transcoded && transcoding_warning_action) {
@@ -2061,18 +2150,20 @@ const char *Fl_Text_Buffer::file_encoding_warning_message =
 int Fl_Text_Buffer::outputfile(const char *file,
                                int start, int end,
                                int buflen) const {
-  FILE *fp;
-  if (!(fp = fl_fopen(file, "w")))
+  FILE *fp = fl_fopen(file, "w");
+  if (!fp) {
     return 1;
-  for (int n; (n = min(end - start, buflen)); start += n) {
+  }
+  for (int n = min(end - start, buflen); n != 0; start += n, n = min(end - start, buflen)) {
     const char *p = text_range(start, start + n);
-    int r = (int) fwrite(p, 1, n, fp);
-    free((void *) p);
-    if (r != n)
+    const int r = static_cast<int>(fwrite(p, 1, static_cast<size_t>(n), fp));
+    std::free(const_cast<char *>(p));
+    if (r != n) {
       break;
+    }
   }
 
-  int e = ferror(fp) ? 2 : 0;
+  const int e = ferror(fp) ? 2 : 0;
   fclose(fp);
   return e;
 }
@@ -2083,21 +2174,27 @@ int Fl_Text_Buffer::outputfile(const char *file,
  */
 int Fl_Text_Buffer::prev_char_clipped(int pos) const
 {
-  if (pos<=0)
+  if (pos<=0) {
     return 0;
+  }
 
   IS_UTF8_ALIGNED2(this, (pos))
-  const int l_t = 40;
-  char t[l_t + 1]; t[l_t] = 0;
-  int len = l_t, p = pos, ll;
+  constexpr int l_t = 40;
+  std::array<char, l_t + 1> t{};
+  t[l_t] = 0;
+  int len = l_t;
+  int p = pos;
+  int ll;
   for (int i = l_t; i > 0 && p > 0; i--) {
-    t[--len] = byte_at(--p);
-    ll = fl_utf8len(t[len]);
-    if (ll == 1 || ll == 2) break;
+    t[static_cast<size_t>(--len)] = byte_at(--p);
+    ll = fl_utf8len(t[static_cast<size_t>(len)]);
+    if (ll == 1 || ll == 2) {
+      break;
+    }
   }
-  const char *previous = fl_utf8_previous_composed_char(t + l_t, t + len);
-  ll = strlen(t + len);
-  pos = (pos - ll) + (previous - (t+len));
+  const char *previous = fl_utf8_previous_composed_char(t.data() + l_t, t.data() + len);
+  ll = static_cast<int>(std::strlen(t.data() + len));
+  pos = (pos - ll) + static_cast<int>(previous - (t.data() + len));
   IS_UTF8_ALIGNED2(this, (pos))
   return pos;
 }
@@ -2111,7 +2208,9 @@ int Fl_Text_Buffer::prev_char_clipped(int pos) const
  */
 int Fl_Text_Buffer::prev_char(int pos) const
 {
-  if (pos==0) return -1;
+  if (pos==0) {
+    return -1;
+  }
   return prev_char_clipped(pos);
 }
 
@@ -2124,18 +2223,23 @@ int Fl_Text_Buffer::prev_char(int pos) const
 */
 int Fl_Text_Buffer::next_char(int pos) const {
   IS_UTF8_ALIGNED2(this, (pos))
-  int len = fl_utf8len(byte_at(pos));
+  int len = fl_utf8len(static_cast<signed char>(byte_at(pos)));
   if (len > 0) { // test for emoji sequence except for bad bytes
-    int p = pos, ll, b, count_points = 0;
-    char t[40]; // longest emoji sequences I know use 28 bytes in UTF8 (e.g., 🏴󠁧󠁢󠁷󠁬󠁳󠁿 "Wales flag")
+    int p = pos;
+    int ll;
+    int b;
+    int count_points = 0;
+    std::array<char, 40> t{}; // longest emoji sequences I know use 28 bytes in UTF8 (e.g., 🏴󠁧󠁢󠁷󠁬󠁳󠁿 "Wales flag")
     len = 0;
     // extract bytes after pos stopping after short codepoint or 40 bytes at most
-    while (p < mLength && len < (int)sizeof(t)) {
-      b = byte_at(p++);
-      t[len++] = b;
-      ll = fl_utf8len1(b);
+    while (p < mLength && len < static_cast<int>(t.size())) {
+      b = static_cast<unsigned char>(byte_at(p++));
+      t[static_cast<size_t>(len++)] = static_cast<char>(b);
+      ll = fl_utf8len1(static_cast<char>(b));
       count_points++;
-      for (int i = 1; i < ll && len < (int)sizeof(t); i++) t[len++] = byte_at(p++);
+      for (int i = 1; i < ll && len < static_cast<int>(t.size()); i++) {
+        t[static_cast<size_t>(len++)] = byte_at(p++);
+      }
       if (count_points > 1 && (ll == 1 || ll == 2)) {
         // stop after short codepoint but not if it's the 1st codepoint which can be inside
         // emoji sequence (e.g. 9️⃣ "keycap 9")
@@ -2143,13 +2247,14 @@ int Fl_Text_Buffer::next_char(int pos) const {
       }
     }
     // length of possibly emoji sequence starting at pos
-    len = (len > 0 ? fl_utf8_next_composed_char(t, t + len) - t : 0);
+    len = (len > 0 ? static_cast<int>(fl_utf8_next_composed_char(t.data(), t.data() + len) - t.data()) : 0);
   } else if (len == -1) {
     len = 1;
   }
   pos += len;
-  if (pos>=mLength)
+  if (pos>=mLength) {
     return mLength;
+  }
   IS_UTF8_ALIGNED2(this, (pos))
   return pos;
 }
@@ -2170,7 +2275,7 @@ int Fl_Text_Buffer::next_char_clipped(int pos) const
 int Fl_Text_Buffer::utf8_align(int pos) const
 {
   char c = byte_at(pos);
-  while (fl_utf8_is_continuation(c)) {
+  while (fl_utf8_is_continuation(static_cast<unsigned char>(c))) {
     pos--;
     c = byte_at(pos);
   }

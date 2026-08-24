@@ -275,7 +275,7 @@ protected:
   virtual void clear_tab_positions();
   virtual void draw_tab(int x1, int x2, int W, int H, Fl_Widget* o, int flags, int sel);
   virtual int tab_height();
-  virtual int hit_close(Fl_Widget *o, int event_x, int event_y);
+  virtual int hit_close(const Fl_Widget *o, int event_x, int event_y);
   virtual int hit_overflow_menu(int event_x, int event_y);
   virtual int hit_tabs_area(int event_x, int event_y);
 

@@ -815,8 +815,8 @@ protected:
    Calls the stored redisplay procedure(s) for this buffer to update the
    screen for a change in a selection.
    */
-  void redisplay_selection(Fl_Text_Selection* oldSelection,
-                           Fl_Text_Selection* newSelection) const;
+  void redisplay_selection(const Fl_Text_Selection* oldSelection,
+                           const Fl_Text_Selection* newSelection) const;
 
   /**
    Move the gap to start at a new position.

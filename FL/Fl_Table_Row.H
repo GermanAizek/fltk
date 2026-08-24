@@ -113,7 +113,7 @@ public:
   }
 
   // Checks to see if 'row' is selected. Returns 1 if selected, 0 if not.
-  int row_selected(int row);
+  int row_selected(int row) const;
 
   // Changes the selection state for 'row', depending on the value of 'flag'.
   int select_row(int row, int flag = 1);

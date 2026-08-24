@@ -20,58 +20,91 @@
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 
-#include <string.h>             // memcpy
-#include <stdio.h>              // fprintf
-#include <algorithm>            // std::min
+#include <cstring>             // memcpy
+#include <cstdio>              // fprintf
+#include <algorithm>           // std::min
+#include <vector>
 
 class Fl_Table_Dimensions {
   int default_val;
   std::vector<int*> blocks;
 public:
-  Fl_Table_Dimensions(int def) : default_val(def) {}
+  explicit Fl_Table_Dimensions(int def) : default_val(def) {}
   ~Fl_Table_Dimensions() {
-    for (size_t i=0; i<blocks.size(); i++) delete[] blocks[i];
+    for (int* block : blocks) {
+      delete[] block;
+    }
   }
+
+  Fl_Table_Dimensions(const Fl_Table_Dimensions&) = delete;
+  Fl_Table_Dimensions& operator=(const Fl_Table_Dimensions&) = delete;
+  Fl_Table_Dimensions(Fl_Table_Dimensions&&) = delete;
+  Fl_Table_Dimensions& operator=(Fl_Table_Dimensions&&) = delete;
+
   int get(int index) const {
-    int b = index >> 10;
-    int i = index & 1023;
-    if (b >= 0 && b < (int)blocks.size() && blocks[b]) return blocks[b][i];
+    if (index < 0) {
+      return default_val;
+    }
+    const auto uindex = static_cast<unsigned int>(index);
+    const auto b = static_cast<int>(uindex >> 10U);
+    const auto i = static_cast<int>(uindex & 1023U);
+    if (b >= 0 && b < static_cast<int>(blocks.size()) && blocks[static_cast<size_t>(b)]) {
+      return blocks[static_cast<size_t>(b)][i];
+    }
     return default_val;
   }
+
   void set(int index, int val) {
-    if (index < 0) return;
-    int b = index >> 10;
-    int i = index & 1023;
-    if (b >= (int)blocks.size()) {
-      if (val == default_val) return;
-      blocks.resize(b + 1, nullptr);
+    if (index < 0) {
+      return;
     }
-    if (!blocks[b]) {
-      if (val == default_val) return;
-      blocks[b] = new int[1024];
-      for (int k=0; k<1024; k++) blocks[b][k] = default_val;
+    const auto uindex = static_cast<unsigned int>(index);
+    const auto b = static_cast<int>(uindex >> 10U);
+    const auto i = static_cast<int>(uindex & 1023U);
+    if (b >= static_cast<int>(blocks.size())) {
+      if (val == default_val) {
+        return;
+      }
+      blocks.resize(static_cast<size_t>(b + 1), nullptr);
     }
-    blocks[b][i] = val;
+    if (!blocks[static_cast<size_t>(b)]) {
+      if (val == default_val) {
+        return;
+      }
+      blocks[static_cast<size_t>(b)] = new int[1024];
+      for (int k = 0; k < 1024; k++) {
+        blocks[static_cast<size_t>(b)][k] = default_val;
+      }
+    }
+    blocks[static_cast<size_t>(b)][i] = val;
   }
+
   void set_all(int val) {
     default_val = val;
-    for (size_t i=0; i<blocks.size(); i++) delete[] blocks[i];
+    for (int* block : blocks) {
+      delete[] block;
+    }
     blocks.clear();
   }
+
   long scroll_position(int index) const {
     long pos = 0;
-    int b = 0;
-    while (index > 0 && b < (int)blocks.size()) {
-      int n = std::min(index, 1024);
+    size_t b = 0;
+    while (index > 0 && b < blocks.size()) {
+      const int n = std::min(index, 1024);
       if (blocks[b]) {
-        for (int i=0; i<n; i++) pos += blocks[b][i];
+        for (int i = 0; i < n; i++) {
+          pos += blocks[b][i];
+        }
       } else {
-        pos += (long)n * default_val;
+        pos += static_cast<long>(n) * default_val;
       }
       index -= n;
       b++;
     }
-    if (index > 0) pos += (long)index * default_val;
+    if (index > 0) {
+      pos += static_cast<long>(index) * default_val;
+    }
     return pos;
   }
 };
@@ -80,11 +113,18 @@ public:
     and causes the screen to redraw.
 */
 void Fl_Table::row_position(int row) {
-  if ( _row_position == row ) return;           // OPTIMIZATION: no change? avoid redraw
-  if ( row < 0 ) row = 0;
-  else if ( row >= rows() ) row = rows() - 1;
-  if ( table_h <= tih ) return;                 // don't scroll if table smaller than window
-  double newtop = row_scroll_position(row);
+  if ( _row_position == row ) {
+    return;           // OPTIMIZATION: no change? avoid redraw
+  }
+  if ( row < 0 ) {
+    row = 0;
+  } else if ( row >= rows() ) {
+    row = rows() - 1;
+  }
+  if ( table_h <= tih ) {
+    return;                 // don't scroll if table smaller than window
+  }
+  double newtop = static_cast<double>(row_scroll_position(row));
   if ( newtop > vscrollbar->maximum() ) {
     newtop = vscrollbar->maximum();
   }
@@ -99,11 +139,18 @@ void Fl_Table::row_position(int row) {
   and causes the screen to redraw.
 */
 void Fl_Table::col_position(int col) {
-  if ( _col_position == col ) return;   // OPTIMIZATION: no change? avoid redraw
-  if ( col < 0 ) col = 0;
-  else if ( col >= cols() ) col = cols() - 1;
-  if ( table_w <= tiw ) return;         // don't scroll if table smaller than window
-  double newleft = col_scroll_position(col);
+  if ( _col_position == col ) {
+    return;   // OPTIMIZATION: no change? avoid redraw
+  }
+  if ( col < 0 ) {
+    col = 0;
+  } else if ( col >= cols() ) {
+    col = cols() - 1;
+  }
+  if ( table_w <= tiw ) {
+    return;         // don't scroll if table smaller than window
+  }
+  double newleft = static_cast<double>(col_scroll_position(col));
   if ( newleft > hscrollbar->maximum() ) {
     newleft = hscrollbar->maximum();
   }
@@ -170,6 +217,24 @@ Fl_Table::Fl_Table(int X, int Y, int W, int H, const char *l) : Fl_Group(X,Y,W,H
   select_col        = -1;
   _scrollbar_size   = 0;
   flags_            = 0;        // TABCELLNAV off
+  _row_position     = 0;
+  _col_position     = 0;
+  _selecting        = CONTEXT_NONE;
+  _callback_context = CONTEXT_NONE;
+  _callback_row     = -1;
+  _callback_col     = -1;
+  tix               = 0;
+  tiy               = 0;
+  tiw               = 0;
+  tih               = 0;
+  tox               = 0;
+  toy               = 0;
+  tow               = 0;
+  toh               = 0;
+  wix               = 0;
+  wiy               = 0;
+  wiw               = 0;
+  wih               = 0;
 
   _colwidths        = new Fl_Table_Dimensions(80);  // column widths in pixels
   _rowheights       = new Fl_Table_Dimensions(25);  // row heights in pixels
@@ -179,12 +244,12 @@ Fl_Table::Fl_Table(int X, int Y, int W, int H, const char *l) : Fl_Group(X,Y,W,H
   vscrollbar = new Fl_Scrollbar(x()+w()-Fl::scrollbar_size(), y(),
                                 Fl::scrollbar_size(), h()-Fl::scrollbar_size());
   vscrollbar->type(FL_VERTICAL);
-  vscrollbar->callback(scroll_cb, (void*)this);
+  vscrollbar->callback(scroll_cb, reinterpret_cast<void*>(this));
 
   hscrollbar = new Fl_Scrollbar(x(), y()+h()-Fl::scrollbar_size(),
                                 w(), Fl::scrollbar_size());
   hscrollbar->type(FL_HORIZONTAL);
-  hscrollbar->callback(scroll_cb, (void*)this);
+  hscrollbar->callback(scroll_cb, reinterpret_cast<void*>(this));
 
   table = new Fl_Scroll(x(), y(), w(), h());
   table->box(FL_NO_BOX);
@@ -219,7 +284,9 @@ Fl_Table::~Fl_Table() {
   if the row's height was actually changed, and when() is FL_WHEN_CHANGED.
 */
 void Fl_Table::row_height(int row, int height) {
-  if ( row < 0 || row >= _rows ) return;
+  if ( row < 0 || row >= _rows ) {
+    return;
+  }
   if ( _rowheights->get(row) == height ) {
     return;             // OPTIMIZATION: no change? avoid redraw
   }
@@ -229,7 +296,7 @@ void Fl_Table::row_height(int row, int height) {
     redraw();
   }
   // ROW RESIZE CALLBACK
-  if ( Fl_Widget::callback() && when() & FL_WHEN_CHANGED ) {
+  if ( Fl_Widget::callback() && (static_cast<unsigned int>(when()) & static_cast<unsigned int>(FL_WHEN_CHANGED)) ) {
     do_callback(CONTEXT_RC_RESIZE, row, 0);
   }
 }
@@ -241,7 +308,9 @@ void Fl_Table::row_height(int row, int height) {
 */
 void Fl_Table::col_width(int col, int width)
 {
-  if ( col < 0 || col >= _cols ) return;
+  if ( col < 0 || col >= _cols ) {
+    return;
+  }
   if ( _colwidths->get(col) == width ) {
     return;                     // OPTIMIZATION: no change? avoid redraw
   }
@@ -251,7 +320,7 @@ void Fl_Table::col_width(int col, int width)
     redraw();
   }
   // COLUMN RESIZE CALLBACK
-  if ( Fl_Widget::callback() && when() & FL_WHEN_CHANGED ) {
+  if ( Fl_Widget::callback() && (static_cast<unsigned int>(when()) & static_cast<unsigned int>(FL_WHEN_CHANGED)) ) {
     do_callback(CONTEXT_RC_RESIZE, 0, col);
   }
 }
@@ -314,7 +383,7 @@ void Fl_Table::get_bounds(TableContext context, int &X, int &Y, int &W, int &H) 
 
       // TODO: Add other contexts..
     default:
-      fprintf(stderr, "Fl_Table::get_bounds(): context %d unimplemented\n", (int)context);
+      fputs("Fl_Table::get_bounds(): context unimplemented\n", stderr);
       return;
   }
   //NOTREACHED
@@ -368,8 +437,12 @@ Fl_Table::TableContext Fl_Table::cursor2rowcol(int &R, int &C, ResizeFlag &resiz
           //     enable the appropriate resize flag.
           //
           if ( col_resize() ) {
-            if ( Fl::event_x() <= (X+3-0) ) { resizeflag = RESIZE_COL_LEFT; }
-            if ( Fl::event_x() >= (X+W-3) ) { resizeflag = RESIZE_COL_RIGHT; }
+            if ( Fl::event_x() <= (X+3-0) ) {
+              resizeflag = RESIZE_COL_LEFT;
+            }
+            if ( Fl::event_x() >= (X+W-3) ) {
+              resizeflag = RESIZE_COL_RIGHT;
+            }
           }
           return(CONTEXT_COL_HEADER);
         }
@@ -384,8 +457,12 @@ Fl_Table::TableContext Fl_Table::cursor2rowcol(int &R, int &C, ResizeFlag &resiz
   if ( Fl::event_inside(tox, toy, tow, toh) ) {
     for ( R = toprow; R <= botrow; R++ ) {
       find_cell(CONTEXT_CELL, R, C, X, Y, W, H);
-      if ( Fl::event_y() < Y ) break;           // OPT: thanks lars
-      if ( Fl::event_y() >= (Y+H) ) continue;   // OPT: " "
+      if ( Fl::event_y() < Y ) {
+        break;           // OPT: thanks lars
+      }
+      if ( Fl::event_y() >= (Y+H) ) {
+        continue;   // OPT: " "
+      }
       for ( C = leftcol; C <= rightcol; C++ ) {
         find_cell(CONTEXT_CELL, R, C, X, Y, W, H);
         if ( Fl::event_inside(X, Y, W, H) ) {
@@ -412,8 +489,8 @@ int Fl_Table::find_cell(TableContext context, int R, int C, int &X, int &Y, int 
     X=Y=W=H=0;
     return(-1);
   }
-  X = (int)col_scroll_position(C) - hscrollbar->value() + tix;
-  Y = (int)row_scroll_position(R) - vscrollbar->value() + tiy;
+  X = static_cast<int>(col_scroll_position(C)) - static_cast<int>(hscrollbar->value()) + tix;
+  Y = static_cast<int>(row_scroll_position(R)) - static_cast<int>(vscrollbar->value()) + tiy;
   W = col_width(C);
   H = row_height(R);
 
@@ -429,14 +506,12 @@ int Fl_Table::find_cell(TableContext context, int R, int C, int &X, int &Y, int 
       return(0);
 
     case CONTEXT_CELL:
-      return(0);
-
     case CONTEXT_TABLE:
       return(0);
 
       // TODO -- HANDLE OTHER CONTEXTS
     default:
-      fprintf(stderr, "Fl_Table::find_cell: unknown context %d\n", (int)context);
+      fputs("Fl_Table::find_cell: unknown context\n", stderr);
       return(-1);
   }
   //NOTREACHED
@@ -444,41 +519,47 @@ int Fl_Table::find_cell(TableContext context, int R, int C, int &X, int &Y, int 
 
 // Enable automatic scroll-selection
 void Fl_Table::_start_auto_drag() {
-  if (_auto_drag) return;
+  if (_auto_drag) {
+    return;
+  }
   _auto_drag = 1;
   Fl::add_timeout(0.3, _auto_drag_cb2, this);
 }
 
 // Disable automatic scroll-selection
 void Fl_Table::_stop_auto_drag() {
-  if (!_auto_drag) return;
+  if (!_auto_drag) {
+    return;
+  }
   Fl::remove_timeout(_auto_drag_cb2, this);
   _auto_drag = 0;
 }
 
 void Fl_Table::_auto_drag_cb2(void *d) {
-  ((Fl_Table*)d)->_auto_drag_cb();
+  static_cast<Fl_Table*>(d)->_auto_drag_cb();
 }
 
 // Handle automatic scroll-selection if mouse selection dragged off table edge
 void Fl_Table::_auto_drag_cb() {
   int lx = Fl::e_x;
   int ly = Fl::e_y;
-  if (_selecting == CONTEXT_COL_HEADER)
-  { ly = y() + col_header_height(); }
-  else if (_selecting == CONTEXT_ROW_HEADER)
-  { lx = x() + row_header_width(); }
+  if (_selecting == CONTEXT_COL_HEADER) {
+    ly = y() + col_header_height();
+  } else if (_selecting == CONTEXT_ROW_HEADER) {
+    lx = x() + row_header_width();
+  }
   if (lx > x() + w() - 20) {
     Fl::e_x = x() + w() - 20;
-    if (hscrollbar->visible())
-      ((Fl_Slider*)hscrollbar)->value(hscrollbar->clamp(hscrollbar->value() + 30));
+    if (hscrollbar->visible()) {
+      static_cast<Fl_Slider*>(hscrollbar)->value(hscrollbar->clamp(hscrollbar->value() + 30));
+    }
     hscrollbar->do_callback();
     _dragging_x = Fl::e_x - 30;
   }
   else if (lx < (x() + row_header_width())) {
     Fl::e_x = x() + row_header_width() + 1;
     if (hscrollbar->visible()) {
-      ((Fl_Slider*)hscrollbar)->value(hscrollbar->clamp(hscrollbar->value() - 30));
+      static_cast<Fl_Slider*>(hscrollbar)->value(hscrollbar->clamp(hscrollbar->value() - 30));
     }
     hscrollbar->do_callback();
     _dragging_x = Fl::e_x + 30;
@@ -486,7 +567,7 @@ void Fl_Table::_auto_drag_cb() {
   if (ly > y() + h() - 20) {
     Fl::e_y = y() + h() - 20;
     if (vscrollbar->visible()) {
-      ((Fl_Slider*)vscrollbar)->value(vscrollbar->clamp(vscrollbar->value() + 30));
+      static_cast<Fl_Slider*>(vscrollbar)->value(vscrollbar->clamp(vscrollbar->value() + 30));
     }
     vscrollbar->do_callback();
     _dragging_y = Fl::e_y - 30;
@@ -494,7 +575,7 @@ void Fl_Table::_auto_drag_cb() {
   else if (ly < (y() + col_header_height())) {
     Fl::e_y = y() + col_header_height() + 1;
     if (vscrollbar->visible()) {
-      ((Fl_Slider*)vscrollbar)->value(vscrollbar->clamp(vscrollbar->value() - 30));
+      static_cast<Fl_Slider*>(vscrollbar)->value(vscrollbar->clamp(vscrollbar->value() - 30));
     }
     vscrollbar->do_callback();
     _dragging_y = Fl::e_y + 30;
@@ -533,12 +614,12 @@ void Fl_Table::recalc_dimensions() {
   // Make scroll bars disappear if window large enough
   {
     // First pass: can hide via window size?
-    int hidev = (table_h <= tih);
-    int hideh = (table_w <= tiw);
-    int scrollsize = _scrollbar_size ? _scrollbar_size : Fl::scrollbar_size();
+    int hidev = (table_h <= tih) ? 1 : 0;
+    int hideh = (table_w <= tiw) ? 1 : 0;
+    const int scrollsize = _scrollbar_size ? _scrollbar_size : Fl::scrollbar_size();
     // Second pass: Check for interference
-    if ( !hideh && hidev ) { hidev = (( table_h - tih + scrollsize ) <= 0 ); }
-    if ( !hidev && hideh ) { hideh = (( table_w - tiw + scrollsize ) <= 0 ); }
+    if ( !hideh && hidev ) { hidev = (( table_h - tih + scrollsize ) <= 0 ) ? 1 : 0; }
+    if ( !hidev && hideh ) { hideh = (( table_w - tiw + scrollsize ) <= 0 ) ? 1 : 0; }
     // Determine scrollbar visibility, trim ti[xywh]/to[xywh]
     if ( hidev ) { vscrollbar->hide(); }
     else { vscrollbar->show(); tiw -= scrollsize; tow -= scrollsize; }
@@ -558,7 +639,7 @@ void Fl_Table::recalc_dimensions() {
 */
 void Fl_Table::table_scrolled() {
   // Find top row
-  int y, row, voff = vscrollbar->value();
+  int y, row, voff = static_cast<int>(vscrollbar->value());
   for ( row=y=0; row < _rows; row++ ) {
     y += row_height(row);
     if ( y > voff ) { y -= row_height(row); break; }
@@ -566,14 +647,14 @@ void Fl_Table::table_scrolled() {
   _row_position = toprow = ( row >= _rows ) ? (row - 1) : row;
   toprow_scrollpos = y;         // OPTIMIZATION: save for later use
   // Find bottom row
-  voff = vscrollbar->value() + tih;
+  voff = static_cast<int>(vscrollbar->value()) + tih;
   for ( ; row < _rows; row++ ) {
     y += row_height(row);
     if ( y >= voff ) { break; }
   }
   botrow = ( row >= _rows ) ? (row - 1) : row;
   // Left column
-  int x, col, hoff = hscrollbar->value();
+  int x, col, hoff = static_cast<int>(hscrollbar->value());
   for ( col=x=0; col < _cols; col++ ) {
     x += col_width(col);
     if ( x > hoff ) { x -= col_width(col); break; }
@@ -583,7 +664,7 @@ void Fl_Table::table_scrolled() {
   // Right column
   //    Work with data left over from leftcol calculation
   //
-  hoff = hscrollbar->value() + tiw;
+  hoff = static_cast<int>(hscrollbar->value()) + tiw;
   for ( ; col < _cols; col++ ) {
     x += col_width(col);
     if ( x >= hoff ) { break; }
@@ -598,8 +679,8 @@ void Fl_Table::table_scrolled() {
   Calls recall_dimensions(), and recalculates scrollbar sizes.
 */
 void Fl_Table::table_resized() {
-  table_h = (int)row_scroll_position(rows());
-  table_w = (int)col_scroll_position(cols());
+  table_h = static_cast<int>(row_scroll_position(rows()));
+  table_w = static_cast<int>(col_scroll_position(cols()));
   recalc_dimensions();
   // Recalc scrollbar sizes
   //    Clamp scrollbar value() after a resize.
@@ -607,9 +688,9 @@ void Fl_Table::table_resized() {
   //
   {
     // Vertical scrollbar
-    float vscrolltab = ( table_h == 0 || tih > table_h ) ? 1 : (float)tih / table_h;
-    float hscrolltab = ( table_w == 0 || tiw > table_w ) ? 1 : (float)tiw / table_w;
-    int scrollsize = _scrollbar_size ? _scrollbar_size : Fl::scrollbar_size();
+    const float vscrolltab = ( table_h == 0 || tih > table_h ) ? 1.0f : static_cast<float>(tih) / static_cast<float>(table_h);
+    const float hscrolltab = ( table_w == 0 || tiw > table_w ) ? 1.0f : static_cast<float>(tiw) / static_cast<float>(table_w);
+    const int scrollsize = _scrollbar_size ? _scrollbar_size : Fl::scrollbar_size();
     vscrollbar->bounds(0, table_h-tih);
     vscrollbar->precision(10);
     vscrollbar->slider_size(vscrolltab);
@@ -640,8 +721,8 @@ void Fl_Table::table_resized() {
 /**
   Callback for when someone moves a scrollbar.
 */
-void Fl_Table::scroll_cb(Fl_Widget*w, void *data) {
-  Fl_Table *o = (Fl_Table*)data;
+void Fl_Table::scroll_cb(Fl_Widget* /*w*/, void *data) {
+  auto *o = static_cast<Fl_Table*>(data);
   o->recalc_dimensions();       // recalc tix, tiy, etc.
   o->table_scrolled();
   o->redraw();
@@ -651,10 +732,12 @@ void Fl_Table::scroll_cb(Fl_Widget*w, void *data) {
   Sets the number of rows in the table, and the table is redrawn.
 */
 void Fl_Table::rows(int val) {
-  int oldrows = _rows;
+  const int oldrows = _rows;
   _rows = val;
 
-  if (val == 0) _rowheights->set_all(25);
+  if (val == 0) {
+    _rowheights->set_all(25);
+  }
 
   table_resized();
 
@@ -672,7 +755,9 @@ void Fl_Table::rows(int val) {
 void Fl_Table::cols(int val) {
   _cols = val;
 
-  if (val == 0) _colwidths->set_all(80);
+  if (val == 0) {
+    _colwidths->set_all(80);
+  }
 
   table_resized();
   redraw();
@@ -695,26 +780,30 @@ void Fl_Table::change_cursor(Fl_Cursor newcursor) {
 void Fl_Table::damage_zone(int r1, int c1, int r2, int c2, int r3, int c3) {
   int R1 = r1, C1 = c1;
   int R2 = r2, C2 = c2;
-  if (r1 > R2) R2 = r1;
-  if (r2 < R1) R1 = r2;
-  if (r3 > R2) R2 = r3;
-  if (r3 < R1) R1 = r3;
-  if (c1 > C2) C2 = c1;
-  if (c2 < C1) C1 = c2;
-  if (c3 > C2) C2 = c3;
-  if (c3 < C1) C1 = c3;
+  if (r1 > R2) { R2 = r1; }
+  if (r2 < R1) { R1 = r2; }
+  if (r3 > R2) { R2 = r3; }
+  if (r3 < R1) { R1 = r3; }
+  if (c1 > C2) { C2 = c1; }
+  if (c2 < C1) { C1 = c2; }
+  if (c3 > C2) { C2 = c3; }
+  if (c3 < C1) { C1 = c3; }
   if (R1 < 0) {
-    if (R2 < 0) return;
+    if (R2 < 0) {
+      return;
+    }
     R1 = 0;
   }
   if (C1 < 0) {
-    if (C2 < 0) return;
+    if (C2 < 0) {
+      return;
+    }
     C1 = 0;
   }
-  if (R1 < toprow) R1 = toprow;
-  if (R2 > botrow) R2 = botrow;
-  if (C1 < leftcol) C1 = leftcol;
-  if (C2 > rightcol) C2 = rightcol;
+  if (R1 < toprow) { R1 = toprow; }
+  if (R2 > botrow) { R2 = botrow; }
+  if (C1 < leftcol) { C1 = leftcol; }
+  if (C2 > rightcol) { C2 = rightcol; }
   redraw_range(R1, R2, C1, C2);
 }
 
@@ -745,15 +834,15 @@ void Fl_Table::damage_zone(int r1, int c1, int r2, int c2, int r3, int c3) {
   \endcode
 */
 int Fl_Table::move_cursor(int R, int C, int shiftselect) {
-  if (select_row == -1) R++;
-  if (select_col == -1) C++;
+  if (select_row == -1) { R++; }
+  if (select_col == -1) { C++; }
   R += select_row;
   C += select_col;
-  if (R < 0) R = 0;
-  if (R >= rows()) R = rows() - 1;
-  if (C < 0) C = 0;
-  if (C >= cols()) C = cols() - 1;
-  if (R == select_row && C == select_col) return 0;
+  if (R < 0) { R = 0; }
+  if (R >= rows()) { R = rows() - 1; }
+  if (C < 0) { C = 0; }
+  if (C >= cols()) { C = cols() - 1; }
+  if (R == select_row && C == select_col) { return 0; }
   damage_zone(current_row, current_col, select_row, select_col, R, C);
   select_row = R;
   select_col = C;
@@ -761,8 +850,8 @@ int Fl_Table::move_cursor(int R, int C, int shiftselect) {
     current_row = R;
     current_col = C;
   }
-  if (R < toprow + 1 || R > botrow - 1) row_position(R);
-  if (C < leftcol + 1 || C > rightcol - 1) col_position(C);
+  if (R < toprow + 1 || R > botrow - 1) { row_position(R); }
+  if (C < leftcol + 1 || C > rightcol - 1) { col_position(C); }
   return 1;
 }
 
@@ -791,9 +880,11 @@ int Fl_Table::handle(int event) {
   // Which row/column are we over?
   int R, C;                             // row/column being worked on
   ResizeFlag resizeflag;                // which resizing area are we over? (0=none)
-  TableContext context = cursor2rowcol(R, C, resizeflag);
+  const TableContext context = cursor2rowcol(R, C, resizeflag);
   if (ret) {
-    if (Fl::event_inside(hscrollbar) || Fl::event_inside(vscrollbar)) return 1;
+    if (Fl::event_inside(hscrollbar) || Fl::event_inside(vscrollbar)) {
+      return 1;
+    }
     if ( context != CONTEXT_ROW_HEADER &&               // mouse not in row header (STR#2742)
          context != CONTEXT_COL_HEADER &&               // mouse not in col header (STR#2742)
          Fl::focus() != this &&                         // we don't have focus?
@@ -803,13 +894,13 @@ int Fl_Table::handle(int event) {
   }
   // Make snapshots of realtime event states *before* we service user's cb,
   // which may do things like post popup menus that return with unexpected button states.
-  int _event_button = Fl::event_button();
-  int _event_clicks = Fl::event_clicks();
-  int _event_x      = Fl::event_x();
-  int _event_y      = Fl::event_y();
-  int _event_key    = Fl::event_key();
-  int _event_state  = Fl::event_state();
-  Fl_Widget *_focus = Fl::focus();
+  const int _event_button = Fl::event_button();
+  const int _event_clicks = Fl::event_clicks();
+  const int _event_x      = Fl::event_x();
+  const int _event_y      = Fl::event_y();
+  const int _event_key    = Fl::event_key();
+  const int _event_state  = Fl::event_state();
+  const Fl_Widget *_focus = Fl::focus();
   switch ( event ) {
     case FL_PUSH:
       // Single left-click on table? do user's callback with CONTEXT_TABLE
@@ -872,13 +963,15 @@ int Fl_Table::handle(int event) {
               //    (C-1) is used if mouse is over the left hand side
               //    of cell, so we resize the next column on the left.
               //
-              _resizing_col = ( resizeflag & RESIZE_COL_LEFT ) ? C-1 : C;
+              _resizing_col = ( static_cast<unsigned int>(resizeflag) & static_cast<unsigned int>(RESIZE_COL_LEFT) ) ? C-1 : C;
               _resizing_row = -1;
               _dragging_x = _event_x;
               ret = 1;
             } else {
               // Not resizing? Select the column
-              if ( Fl::focus() != this && contains(Fl::focus()) ) return 0;     // STR #3018 - item 1
+              if ( Fl::focus() != this && contains(Fl::focus()) ) {
+                return 0;     // STR #3018 - item 1
+              }
               current_col = select_col = C;
               current_row = 0;
               select_row = rows() - 1;
@@ -899,13 +992,15 @@ int Fl_Table::handle(int event) {
               //    (R-1) is used if mouse is over the top of the cell,
               //    so that we resize the row above.
               //
-              _resizing_row = ( resizeflag & RESIZE_ROW_ABOVE ) ? R-1 : R;
+              _resizing_row = ( static_cast<unsigned int>(resizeflag) & static_cast<unsigned int>(RESIZE_ROW_ABOVE) ) ? R-1 : R;
               _resizing_col = -1;
               _dragging_y = _event_y;
               ret = 1;
             } else {
               // Not resizing? Select the row
-              if ( Fl::focus() != this && contains(Fl::focus()) ) return 0;     // STR #3018 - item 1
+              if ( Fl::focus() != this && contains(Fl::focus()) ) {
+                return 0;     // STR #3018 - item 1
+              }
               current_row = select_row = R;
               current_col = 0;
               select_col = cols() - 1;
@@ -935,16 +1030,18 @@ int Fl_Table::handle(int event) {
         //    Don't allow column width smaller than 1.
         //    Continue to show FL_CURSOR_WE at all times during drag.
         //
-        int offset = _dragging_x - _event_x;
+        const int offset = _dragging_x - _event_x;
         int new_w = col_width(_resizing_col) - offset;
-        if ( new_w < _col_resize_min ) new_w = _col_resize_min;
+        if ( new_w < _col_resize_min ) {
+          new_w = _col_resize_min;
+        }
         col_width(_resizing_col, new_w);
         _dragging_x = _event_x;
         table_resized();
         redraw();
         change_cursor(FL_CURSOR_WE);
         ret = 1;
-        if ( Fl_Widget::callback() && when() & FL_WHEN_CHANGED ) {
+        if ( Fl_Widget::callback() && (static_cast<unsigned int>(when()) & static_cast<unsigned int>(FL_WHEN_CHANGED)) ) {
           do_callback(CONTEXT_RC_RESIZE, R, C);
         }
       }
@@ -955,16 +1052,18 @@ int Fl_Table::handle(int event) {
         //    Don't allow row width smaller than 1.
         //    Continue to show FL_CURSOR_NS at all times during drag.
         //
-        int offset = _dragging_y - _event_y;
+        const int offset = _dragging_y - _event_y;
         int new_h = row_height(_resizing_row) - offset;
-        if ( new_h < _row_resize_min ) new_h = _row_resize_min;
+        if ( new_h < _row_resize_min ) {
+          new_h = _row_resize_min;
+        }
         row_height(_resizing_row, new_h);
         _dragging_y = _event_y;
         table_resized();
         redraw();
         change_cursor(FL_CURSOR_NS);
         ret = 1;
-        if ( Fl_Widget::callback() && when() & FL_WHEN_CHANGED ) {
+        if ( Fl_Widget::callback() && (static_cast<unsigned int>(when()) & static_cast<unsigned int>(FL_WHEN_CHANGED)) ) {
           do_callback(CONTEXT_RC_RESIZE, R, C);
         }
       } else {
@@ -972,7 +1071,9 @@ int Fl_Table::handle(int event) {
             _selecting == CONTEXT_CELL &&
             context == CONTEXT_CELL) {
           // Dragging a cell selection?
-          if ( _event_clicks ) break;                   // STR #3018 - item 2
+          if ( _event_clicks ) {
+            break;                   // STR #3018 - item 2
+          }
           if (select_row != R || select_col != C) {
             damage_zone(current_row, current_col, select_row, select_col, R, C);
           }
@@ -982,7 +1083,7 @@ int Fl_Table::handle(int event) {
         }
         else if (_event_button == 1 &&
                  _selecting == CONTEXT_ROW_HEADER &&
-                 context & (CONTEXT_ROW_HEADER|CONTEXT_COL_HEADER|CONTEXT_CELL)) {
+                 (static_cast<unsigned int>(context) & static_cast<unsigned int>(CONTEXT_ROW_HEADER|CONTEXT_COL_HEADER|CONTEXT_CELL))) {
           if (select_row != R) {
             damage_zone(current_row, current_col, select_row, select_col, R, C);
           }
@@ -991,7 +1092,7 @@ int Fl_Table::handle(int event) {
         }
         else if (_event_button == 1 &&
                  _selecting == CONTEXT_COL_HEADER
-                 && context & (CONTEXT_ROW_HEADER|CONTEXT_COL_HEADER|CONTEXT_CELL)) {
+                 && (static_cast<unsigned int>(context) & static_cast<unsigned int>(CONTEXT_ROW_HEADER|CONTEXT_COL_HEADER|CONTEXT_CELL))) {
           if (select_col != C) {
             damage_zone(current_row, current_col, select_row, select_col, R, C);
           }
@@ -1020,7 +1121,7 @@ int Fl_Table::handle(int event) {
           if ( _resizing_col == -1 &&           // not resizing a column
               _resizing_row == -1 &&            // not resizing a row
               Fl_Widget::callback() &&          // callback defined
-              when() & FL_WHEN_RELEASE &&       // on button release
+              (static_cast<unsigned int>(when()) & static_cast<unsigned int>(FL_WHEN_RELEASE)) &&       // on button release
               _last_row == R ) {                // release on same row PUSHed?
             // Need this for eg. left clicking on a cell to select it
             do_callback(context, R, C);
@@ -1053,7 +1154,9 @@ int Fl_Table::handle(int event) {
       break;
 
     case FL_ENTER:              // See FLTK event docs on the FL_ENTER widget
-      if (!ret) take_focus();
+      if (!ret) {
+        take_focus();
+      }
       ret = 1;
       //FALLTHROUGH
 
@@ -1078,8 +1181,8 @@ int Fl_Table::handle(int event) {
 
     case FL_KEYBOARD: {
       ret = 0;
-      int is_row = select_row;
-      int is_col = select_col;
+      const int is_row = select_row;
+      const int is_col = select_col;
       switch(_event_key) {
         case FL_Home:
           ret = move_cursor(0, -1000000);
@@ -1106,12 +1209,16 @@ int Fl_Table::handle(int event) {
           ret = move_cursor(1, 0);
           break;
         case FL_Tab:
-          if ( !tab_cell_nav() ) break;         // not navigating cells? let fltk handle it (STR#2862)
-          if ( _event_state & FL_SHIFT ) {
+          if ( !tab_cell_nav() ) {
+            break;         // not navigating cells? let fltk handle it (STR#2862)
+          }
+          if ( static_cast<unsigned int>(_event_state) & static_cast<unsigned int>(FL_SHIFT) ) {
             ret = move_cursor(0, -1, 0);        // shift-tab -> left
           } else {
             ret = move_cursor(0, 1, 0);         // tab -> right
           }
+          break;
+        default:
           break;
       }
       if (ret && Fl::focus() != this) {
@@ -1121,7 +1228,7 @@ int Fl_Table::handle(int event) {
       //if (!ret && Fl_Widget::callback() && when() & FL_WHEN_NOT_CHANGED  )
       if ( Fl_Widget::callback() &&
           (
-           ( !ret && when() & FL_WHEN_NOT_CHANGED ) ||
+           ( !ret && (static_cast<unsigned int>(when()) & static_cast<unsigned int>(FL_WHEN_NOT_CHANGED)) ) ||
            ( is_row!= select_row || is_col!= select_col )
            )
           ) {
@@ -1152,7 +1259,9 @@ void Fl_Table::resize(int X, int Y, int W, int H) {
 
 // Draw a cell
 void Fl_Table::_redraw_cell(TableContext context, int r, int c) {
-  if ( r < 0 || c < 0 ) return;
+  if ( r < 0 || c < 0 ) {
+    return;
+  }
   int X,Y,W,H;
   find_cell(context, r, c, X, Y, W, H); // find positions of cell
   draw_cell(context, r, c, X, Y, W, H); // call users' function to draw it
@@ -1241,7 +1350,7 @@ void Fl_Table::set_selection(int row_top, int col_left, int row_bot, int col_rig
   via calls to draw_cell().
 */
 void Fl_Table::draw() {
-    int scrollsize = _scrollbar_size ? _scrollbar_size : Fl::scrollbar_size();
+  const int scrollsize = _scrollbar_size ? _scrollbar_size : Fl::scrollbar_size();
   // Check if scrollbar size changed
   if ( ( vscrollbar && (scrollsize != vscrollbar->w()) ) ||
        ( hscrollbar && (scrollsize != hscrollbar->h()) ) ) {
@@ -1271,7 +1380,7 @@ void Fl_Table::draw() {
   //    that leak around the border.
   //
   if ( ! table->visible() ) {
-    if ( damage() & FL_DAMAGE_ALL || damage() & FL_DAMAGE_CHILD ) {
+    if ( (static_cast<unsigned int>(damage()) & static_cast<unsigned int>(FL_DAMAGE_ALL)) || (static_cast<unsigned int>(damage()) & static_cast<unsigned int>(FL_DAMAGE_CHILD)) ) {
       draw_box(table->box(), tox, toy, tow, toh, table->color());
     }
   }
@@ -1279,7 +1388,7 @@ void Fl_Table::draw() {
   fl_push_clip(wix, wiy, wiw, wih);
   {
     // Only redraw a few cells?
-    if ( ! ( damage() & FL_DAMAGE_ALL ) && _redraw_leftcol != -1 ) {
+    if ( ! ( static_cast<unsigned int>(damage()) & static_cast<unsigned int>(FL_DAMAGE_ALL) ) && _redraw_leftcol != -1 ) {
       fl_push_clip(tix, tiy, tiw, tih);
       for ( int c = _redraw_leftcol; c <= _redraw_rightcol; c++ ) {
         for ( int r = _redraw_toprow; r <= _redraw_botrow; r++ ) {
@@ -1288,7 +1397,7 @@ void Fl_Table::draw() {
       }
       fl_pop_clip();
     }
-    if ( damage() & FL_DAMAGE_ALL ) {
+    if ( static_cast<unsigned int>(damage()) & static_cast<unsigned int>(FL_DAMAGE_ALL) ) {
       int X,Y,W,H;
       // Draw row headers, if any
       if ( row_header() ) {
@@ -1384,7 +1493,9 @@ void Fl_Table::draw() {
   Returns the current height of the specified row as a value in pixels.
 */
 int Fl_Table::row_height(int row) const {
-  if (row < 0 || row >= _rows) return 0;
+  if (row < 0 || row >= _rows) {
+    return 0;
+  }
   return _rowheights->get(row);
 }
 
@@ -1392,7 +1503,9 @@ int Fl_Table::row_height(int row) const {
   Returns the current width of the specified column in pixels.
 */
 int Fl_Table::col_width(int col) const {
-  if (col < 0 || col >= _cols) return 0;
+  if (col < 0 || col >= _cols) {
+    return 0;
+  }
   return _colwidths->get(col);
 }
 

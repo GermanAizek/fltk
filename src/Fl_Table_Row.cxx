@@ -54,10 +54,15 @@
   \retval  1  row is selected
   \retval  0  row is not selected or \p row is out of range
 */
-int Fl_Table_Row::row_selected(int row) {
-  if (row < 0 || row >= rows()) return 0;
-  if ((size_t)(row / 8) >= _rowselect.size()) return 0;
-  return (_rowselect[row / 8] & (1 << (row % 8))) ? 1 : 0;
+int Fl_Table_Row::row_selected(int row) const {
+  if (row < 0 || row >= rows()) {
+    return 0;
+  }
+  const auto urow = static_cast<size_t>(row);
+  if ((urow / 8U) >= _rowselect.size()) {
+    return 0;
+  }
+  return (_rowselect[urow / 8U] & (1U << (urow % 8U))) ? 1 : 0;
 }
 
 // Change row selection type
@@ -71,13 +76,12 @@ void Fl_Table_Row::type(TableRowSelectMode val) {
     }
     case SELECT_SINGLE: {
       int count = 0;
-      for (size_t i = 0; i < _rowselect.size(); i++) {
-        uint8_t &sel = _rowselect[i];
+      for (uint8_t &sel : _rowselect) {
         if (sel) {
-          for (int bit = 0; bit < 8; bit++) {
-            if (sel & (1 << bit)) {
+          for (unsigned int bit = 0; bit < 8U; bit++) {
+            if (sel & (1U << bit)) {
               if (++count > 1) {  // only one allowed
-                sel &= ~(1 << bit);
+                sel &= static_cast<uint8_t>(~(1U << bit));
               }
             }
           }
@@ -112,15 +116,23 @@ int Fl_Table_Row::select_row(int row, int flag) {
   if ( row < 0 || row >= rows() ) { return(-1); }
 
   auto get_val = [&](int r) -> int {
-    if ((size_t)(r / 8) >= _rowselect.size()) return 0;
-    return (_rowselect[r / 8] & (1 << (r % 8))) ? 1 : 0;
+    const auto ur = static_cast<size_t>(r);
+    if ((ur / 8U) >= _rowselect.size()) {
+      return 0;
+    }
+    return (_rowselect[ur / 8U] & (1U << (ur % 8U))) ? 1 : 0;
   };
   auto set_val = [&](int r, int v) {
+    const auto ur = static_cast<size_t>(r);
     if (v) {
-      if ((size_t)(r / 8) >= _rowselect.size()) _rowselect.resize(r / 8 + 1, 0);
-      _rowselect[r / 8] |= (1 << (r % 8));
+      if ((ur / 8U) >= _rowselect.size()) {
+        _rowselect.resize(ur / 8U + 1, 0);
+      }
+      _rowselect[ur / 8U] |= static_cast<uint8_t>(1U << (ur % 8U));
     } else {
-      if ((size_t)(r / 8) < _rowselect.size()) _rowselect[r / 8] &= ~(1 << (r % 8));
+      if ((ur / 8U) < _rowselect.size()) {
+        _rowselect[ur / 8U] &= static_cast<uint8_t>(~(1U << (ur % 8U)));
+      }
     }
   };
 
@@ -129,8 +141,8 @@ int Fl_Table_Row::select_row(int row, int flag) {
       return(-1);
 
     case SELECT_SINGLE: {
-      int oldval = get_val(row);
-      int newval = (flag == 2) ? (oldval ^ 1) : flag;
+      const int oldval = get_val(row);
+      const int newval = (flag == 2) ? (oldval ^ 1) : flag;
       if (newval != oldval) {
         set_val(row, newval);
         redraw_range(row, row, leftcol, rightcol);
@@ -139,10 +151,10 @@ int Fl_Table_Row::select_row(int row, int flag) {
       if (newval) {
         for (size_t i = 0; i < _rowselect.size(); i++) {
           if (_rowselect[i]) {
-            for (int bit = 0; bit < 8; bit++) {
-              int t = i * 8 + bit;
-              if (t != row && (_rowselect[i] & (1 << bit))) {
-                _rowselect[i] &= ~(1 << bit);
+            for (unsigned int bit = 0; bit < 8U; bit++) {
+              const int t = static_cast<int>(i * 8U + bit);
+              if (t != row && (_rowselect[i] & (1U << bit))) {
+                _rowselect[i] &= static_cast<uint8_t>(~(1U << bit));
                 redraw_range(t, t, leftcol, rightcol);
               }
             }
@@ -153,8 +165,8 @@ int Fl_Table_Row::select_row(int row, int flag) {
     }
 
     case SELECT_MULTI: {
-      int oldval = get_val(row);
-      int newval = (flag == 2) ? (oldval ^ 1) : flag;
+      const int oldval = get_val(row);
+      const int newval = (flag == 2) ? (oldval ^ 1) : flag;
       if ( newval != oldval ) {
         set_val(row, newval);
         if ( row >= toprow && row <= botrow ) {         // row visible?
@@ -175,36 +187,44 @@ void Fl_Table_Row::select_all_rows(int flag) {
       return;
 
     case SELECT_SINGLE:
-      if ( flag != 0 ) return;
+      if ( flag != 0 ) {
+        return;
+      }
       //FALLTHROUGH
 
     case SELECT_MULTI: {
       char changed = 0;
       if ( flag == 2 ) {
-        if (_rowselect.size() * 8 < (size_t)rows()) {
-          _rowselect.resize((rows() + 7) / 8, 0);
+        if (_rowselect.size() * 8U < static_cast<size_t>(rows())) {
+          _rowselect.resize((static_cast<size_t>(rows()) + 7U) / 8U, 0);
         }
-        for (size_t i = 0; i < _rowselect.size(); i++) {
-          _rowselect[i] ^= 0xFF;
+        for (uint8_t &sel : _rowselect) {
+          sel ^= 0xFFU;
           changed = 1;
         }
-        if (rows() % 8 != 0 && _rowselect.size() > 0) {
-          _rowselect.back() &= (1 << (rows() % 8)) - 1;
+        if (rows() % 8 != 0 && !_rowselect.empty()) {
+          const auto urem = static_cast<unsigned int>(rows() % 8);
+          _rowselect.back() &= static_cast<uint8_t>((1U << urem) - 1U);
         }
       } else if (flag == 1) {
-        if (_rowselect.size() * 8 < (size_t)rows()) {
-          _rowselect.resize((rows() + 7) / 8, 0);
+        if (_rowselect.size() * 8U < static_cast<size_t>(rows())) {
+          _rowselect.resize((static_cast<size_t>(rows()) + 7U) / 8U, 0);
         }
-        for (size_t i = 0; i < _rowselect.size(); i++) {
-          if (_rowselect[i] != 0xFF) changed = 1;
-          _rowselect[i] = 0xFF;
+        for (uint8_t &sel : _rowselect) {
+          if (sel != 0xFFU) {
+            changed = 1;
+          }
+          sel = 0xFFU;
         }
-        if (rows() % 8 != 0 && _rowselect.size() > 0) {
-          _rowselect.back() &= (1 << (rows() % 8)) - 1;
+        if (rows() % 8 != 0 && !_rowselect.empty()) {
+          const auto urem = static_cast<unsigned int>(rows() % 8);
+          _rowselect.back() &= static_cast<uint8_t>((1U << urem) - 1U);
         }
       } else {
-        for (size_t i = 0; i < _rowselect.size(); i++) {
-          if (_rowselect[i] != 0) changed = 1;
+        for (const uint8_t sel : _rowselect) {
+          if (sel != 0) {
+            changed = 1;
+          }
         }
         std::vector<uint8_t>().swap(_rowselect);
       }
@@ -218,12 +238,13 @@ void Fl_Table_Row::select_all_rows(int flag) {
 // Set number of rows
 void Fl_Table_Row::rows(int val) {
   Fl_Table::rows(val);
-  size_t needed = (val + 7) / 8;
+  const size_t needed = (static_cast<size_t>(val) + 7U) / 8U;
   if (needed < _rowselect.size()) {
     _rowselect.resize(needed);
   }
-  if (val % 8 != 0 && _rowselect.size() > 0) {
-    _rowselect.back() &= (1 << (val % 8)) - 1;
+  if (val % 8 != 0 && !_rowselect.empty()) {
+    const auto urem = static_cast<unsigned int>(val % 8);
+    _rowselect.back() &= static_cast<uint8_t>((1U << urem) - 1U);
   }
 }
 
@@ -233,12 +254,12 @@ int Fl_Table_Row::handle(int event) {
 
   // Make snapshots of realtime event states *before* we service user's cb,
   // which may do things like post popup menus that return with unexpected button states.
-  int _event_button = Fl::event_button();
+  const int _event_button = Fl::event_button();
   //int _event_clicks = Fl::event_clicks();     // uncomment if needed
-  int _event_x      = Fl::event_x();
-  int _event_y      = Fl::event_y();
+  const int _event_x      = Fl::event_x();
+  const int _event_y      = Fl::event_y();
   //int _event_key    = Fl::event_key();        // uncomment if needed
-  int _event_state  = Fl::event_state();
+  const int _event_state  = Fl::event_state();
   //Fl_Widget *_focus = Fl::focus();            // uncomment if needed
 
   // Let base class handle event
@@ -250,8 +271,8 @@ int Fl_Table_Row::handle(int event) {
   // The following code disables cell selection.. why was it added? -erco 05/18/03
   // if ( ret ) { _last_y = Fl::event_y(); return(1); } // base class 'handled' it (eg. column resize)
 
-  int shiftstate = (_event_state & FL_CTRL) ? FL_CTRL :
-  (_event_state & FL_SHIFT) ? FL_SHIFT : 0;
+  const int shiftstate = (static_cast<unsigned int>(_event_state) & static_cast<unsigned int>(FL_CTRL)) ? FL_CTRL :
+  (static_cast<unsigned int>(_event_state) & static_cast<unsigned int>(FL_SHIFT)) ? FL_SHIFT : 0;
 
   // Which row/column are we over?
   int R, C;                             // row/column being worked on
@@ -305,29 +326,29 @@ int Fl_Table_Row::handle(int event) {
     case FL_DRAG: {
       if ( _dragging_select ) {
         // Dragged off table edges? Handle scrolling
-        int offtop = toy - _last_y;                     // >0 if off top of table
-        int offbot = _last_y - (toy + toh);             // >0 if off bottom of table
+        const int offtop = toy - _last_y;                     // >0 if off top of table
+        const int offbot = _last_y - (toy + toh);             // >0 if off bottom of table
 
         if ( offtop > 0 && row_position() > 0 ) {
           // Only scroll in upward direction
-          int diff = _last_y - _event_y;
+          const int diff = _last_y - _event_y;
           if ( diff < 1 ) {
             ret = 1;
             break;
           }
           row_position(row_position() - diff);
-          context = CONTEXT_CELL; C = 0; R = row_position();  // HACK: fake it
+          context = CONTEXT_CELL; R = row_position();  // HACK: fake it
           if ( R < 0 || R > rows() ) { ret = 1; break; }      // HACK: ugly
         }
         else if ( offbot > 0 && botrow < rows() ) {
           // Only scroll in downward direction
-          int diff = _event_y - _last_y;
+          const int diff = _event_y - _last_y;
           if ( diff < 1 ) {
             ret = 1;
             break;
           }
           row_position(row_position() + diff);
-          context = CONTEXT_CELL; C = 0; R = botrow;            // HACK: fake it
+          context = CONTEXT_CELL; R = botrow;            // HACK: fake it
           if ( R < 0 || R > rows() ) { ret = 1; break; }        // HACK: ugly
         }
         if ( context == CONTEXT_CELL ) {
@@ -367,8 +388,8 @@ int Fl_Table_Row::handle(int event) {
         // Clicked off edges of data table?
         //    A way for user to clear the current selection.
         //
-        int databot = tiy + table_h,
-        dataright = tix + table_w;
+        const int databot = tiy + table_h;
+        const int dataright = tix + table_w;
         if (
             ( _last_push_x > dataright && _event_x > dataright ) ||
             ( _last_push_y > databot && _event_y > databot )
