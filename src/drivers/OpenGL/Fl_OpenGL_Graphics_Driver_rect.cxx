@@ -119,8 +119,12 @@ void Fl_OpenGL_Graphics_Driver::xyline(int x, int y, int x1, int y2) {
 }
 
 void Fl_OpenGL_Graphics_Driver::xyline(int x, int y, int x1, int y2, int x3) {
-  float offset = line_width_ / 2.0f;
-  float xx = (float)x, yy = y+0.5f, xx1 = x1+0.5f, rr = x3+1.0f, bb = y2+0.5f;
+  float const offset = line_width_ / 2.0F;
+  auto xx = static_cast<float>(x);
+  float const yy = y + 0.5F;
+  float const xx1 = x1 + 0.5F;
+  float const rr = x3 + 1.0F;
+  float const bb = y2 + 0.5F;
   glRectf(xx, yy-offset, xx1+offset, yy+offset);
   glRectf(xx1-offset, yy+offset, xx1+offset, bb+offset);
   glRectf(xx1+offset, bb-offset, rr, bb+offset);

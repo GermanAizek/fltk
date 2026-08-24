@@ -18,12 +18,12 @@
 #include <FL/Fl_Box.H>
 
 
-Fl_Box::Fl_Box(int X, int Y, int W, int H, const char *l)
+Fl_Box::Fl_Box(const int X, const int Y, const int W, const int H, const char *l)
 : Fl_Widget(X,Y,W,H,l)
 {
 }
 
-Fl_Box::Fl_Box(Fl_Boxtype b, int X, int Y, int W, int H, const char *l)
+Fl_Box::Fl_Box(const Fl_Boxtype b, const int X, const int Y, const int W, const int H, const char *l)
 : Fl_Widget(X,Y,W,H,l)
 {
   box(b);

@@ -24,7 +24,7 @@
 #include <FL/Fl_Toggle_Button.H>
 
 
-Fl_Widget_Tracker *Fl_Button::key_release_tracker = 0;
+Fl_Widget_Tracker *Fl_Button::key_release_tracker = nullptr;
 
 
 // There are a lot of subclasses, named Fl_*_Button.  Some of
@@ -38,17 +38,19 @@ Fl_Widget_Tracker *Fl_Button::key_release_tracker = 0;
  \see set(), clear()
  */
 int Fl_Button::value(int v) {
-  v = v ? 1 : 0;
-  oldval = v;
+  const char new_v = v ? 1 : 0;
+  oldval = new_v;
   clear_changed();
-  if (value_ != v) {
-    value_ = v;
-    if (box()) redraw();
-    else redraw_label();
+  if (value_ != new_v) {
+    value_ = new_v;
+    if (box()) {
+      redraw();
+    } else {
+      redraw_label();
+    }
     return 1;
-  } else {
-    return 0;
   }
+  return 0;
 }
 
 /**
@@ -57,64 +59,133 @@ int Fl_Button::value(int v) {
  */
 void Fl_Button::setonly() { // set this radio button on, turn others off
   value(1);
-  Fl_Group* g = parent();
-  Fl_Widget*const* a = g->array();
+  const Fl_Group* g = parent();
+  if (!g) {
+    return;
+  }
+  Fl_Widget* const* a = g->array();
   for (int i = g->children(); i--;) {
     Fl_Widget* o = *a++;
-    if (o != this && o->type()==FL_RADIO_BUTTON) ((Fl_Button*)o)->value(0);
+    if (o != this && static_cast<unsigned char>(o->type()) == static_cast<unsigned char>(FL_RADIO_BUTTON)) {
+      static_cast<Fl_Button*>(o)->value(0);
+    }
   }
 }
 
 void Fl_Button::draw() {
-  if (type() == FL_HIDDEN_BUTTON) return;
-  Fl_Color col = value() ? selection_color() : color();
-  Fl_Boxtype bt = value() ? (down_box()?down_box():fl_down(box())) : box();
+  if (type() == FL_HIDDEN_BUTTON) {
+    return;
+  }
+  const Fl_Color col = value() ? selection_color() : color();
+  const Fl_Boxtype bt = value() ? (down_box() ? down_box() : fl_down(box())) : box();
   if (compact_ && parent()) {
     Fl_Widget *p = parent();
-    int px, py, pw = p->w(), ph = p->h();
-    if (p->as_window()) { px = 0; py = 0; } else { px = p->x(); py = p->y(); }
+    const int pw = p->w();
+    const int ph = p->h();
+    int px;
+    int py;
+    if (p->as_window()) {
+      px = 0;
+      py = 0;
+    } else {
+      px = p->x();
+      py = p->y();
+    }
     fl_push_clip(x(), y(), w(), h());
     draw_box(bt, px, py, pw, ph, col);
     fl_pop_clip();
-    const int hh = 5, ww = 5;
-    Fl_Color divider_color = fl_gray_ramp(FL_NUM_GRAY/3);
-    if (!active_r())
+    Fl_Color divider_color = fl_gray_ramp(static_cast<int>(FL_NUM_GRAY / 3U));
+    if (!active_r()) {
       divider_color = fl_inactive(divider_color);
-    if (x()+w() != px+pw) {
-      fl_color(divider_color);
-      fl_yxline(x()+w()-1, y()+hh, y()+h()-1-hh);
     }
-    if (y()+h() != py+ph) {
+    if (x() + w() != px + pw) {
+      const int hh = 5;
       fl_color(divider_color);
-      fl_xyline(x()+ww, y()+h()-1, x()+w()-1-ww);
+      fl_yxline(x() + w() - 1, y() + hh, y() + h() - 1 - hh);
+    }
+    if (y() + h() != py + ph) {
+      const int ww = 5;
+      fl_color(divider_color);
+      fl_xyline(x() + ww, y() + h() - 1, x() + w() - 1 - ww);
     }
   } else {
     draw_box(bt, col);
   }
   draw_backdrop();
   if (labeltype() == FL_NORMAL_LABEL && value()) {
-    Fl_Color c = labelcolor();
+    const Fl_Color c = labelcolor();
     labelcolor(fl_contrast(c, col));
     draw_label();
     labelcolor(c);
-  } else draw_label();
-  if (Fl::focus() == this) draw_focus();
+  } else {
+    draw_label();
+  }
+  if (Fl::focus() == this) {
+    draw_focus();
+  }
 }
 
 int Fl_Button::handle(int event) {
-  int newval;
+  auto handle_keyboard_trigger = [&]() -> int {
+    if (static_cast<unsigned char>(type()) == static_cast<unsigned char>(FL_RADIO_BUTTON)) {
+      if (!value_) {
+        setonly();
+        set_changed();
+        if ((static_cast<unsigned int>(when()) & static_cast<unsigned int>(FL_WHEN_CHANGED)) != 0U) {
+          do_callback(FL_REASON_CHANGED);
+        } else if ((static_cast<unsigned int>(when()) & static_cast<unsigned int>(FL_WHEN_RELEASE)) != 0U) {
+          do_callback(FL_REASON_RELEASED);
+        }
+      } else {
+        if ((static_cast<unsigned int>(when()) & static_cast<unsigned int>(FL_WHEN_NOT_CHANGED)) != 0U) {
+          do_callback(FL_REASON_SELECTED);
+        }
+      }
+    } else if (static_cast<unsigned char>(type()) == static_cast<unsigned char>(FL_TOGGLE_BUTTON)) {
+      value(value() == 0 ? 1 : 0);
+      set_changed();
+      if ((static_cast<unsigned int>(when()) & static_cast<unsigned int>(FL_WHEN_CHANGED)) != 0U) {
+        do_callback(FL_REASON_CHANGED);
+      } else if ((static_cast<unsigned int>(when()) & static_cast<unsigned int>(FL_WHEN_RELEASE)) != 0U) {
+        do_callback(FL_REASON_RELEASED);
+      }
+    } else {
+      simulate_key_action();
+      if ((static_cast<unsigned int>(when()) & static_cast<unsigned int>(FL_WHEN_CHANGED)) != 0U) {
+        set_changed();
+        Fl_Widget_Tracker wp(this);
+        do_callback(FL_REASON_CHANGED);
+        if (wp.deleted()) {
+          return 1;
+        }
+        set_changed();
+        do_callback(FL_REASON_RELEASED);
+      } else if ((static_cast<unsigned int>(when()) & static_cast<unsigned int>(FL_WHEN_RELEASE)) != 0U) {
+        set_changed();
+        do_callback(FL_REASON_RELEASED);
+      }
+    }
+    return 1;
+  };
+
   switch (event) {
     case FL_ENTER: /* FALLTHROUGH */
     case FL_LEAVE:
       //  if ((value_?selection_color():color())==FL_GRAY) redraw();
       return 1;
     case FL_PUSH:
-      if (Fl::visible_focus() && handle(FL_FOCUS)) Fl::focus(this);
+      if (Fl::visible_focus() && handle(FL_FOCUS)) {
+        Fl::focus(this);
+      }
       /* FALLTHROUGH */
-    case FL_DRAG:
+    case FL_DRAG: {
+      char newval;
       if (Fl::event_inside(this)) {
-        if (type() == FL_RADIO_BUTTON) newval = 1;
-        else newval = !oldval;
+        if (static_cast<unsigned char>(type()) == static_cast<unsigned char>(FL_RADIO_BUTTON)) {
+          newval = 1;
+        } else {
+          newval = static_cast<char>(oldval == 0 ? 1 : 0);
+        }
       } else {
         clear_changed();
         newval = oldval;
@@ -122,39 +193,53 @@ int Fl_Button::handle(int event) {
       if (newval != value_) {
         value_ = newval;
         set_changed();
-        if (box() && (fl_box(box())==box())) redraw();
-        else redraw_label();
-        if (when() & FL_WHEN_CHANGED) do_callback(FL_REASON_CHANGED);
+        if (box() && (fl_box(box()) == box())) {
+          redraw();
+        } else {
+          redraw_label();
+        }
+        if ((static_cast<unsigned int>(when()) & static_cast<unsigned int>(FL_WHEN_CHANGED)) != 0U) {
+          do_callback(FL_REASON_CHANGED);
+        }
       }
       return 1;
+    }
     case FL_RELEASE:
       if (value_ == oldval) {
-        if (when() & FL_WHEN_NOT_CHANGED) do_callback(FL_REASON_SELECTED);
+        if ((static_cast<unsigned int>(when()) & static_cast<unsigned int>(FL_WHEN_NOT_CHANGED)) != 0U) {
+          do_callback(FL_REASON_SELECTED);
+        }
         return 1;
       }
-      if (type() == FL_RADIO_BUTTON) {
+      if (static_cast<unsigned char>(type()) == static_cast<unsigned char>(FL_RADIO_BUTTON)) {
         setonly();
         set_changed();
-      } else if (type() == FL_TOGGLE_BUTTON) {
+      } else if (static_cast<unsigned char>(type()) == static_cast<unsigned char>(FL_TOGGLE_BUTTON)) {
         oldval = value_;
         set_changed();
       } else {
         value(oldval);
         set_changed();
-        if (when() & FL_WHEN_CHANGED) {
+        if ((static_cast<unsigned int>(when()) & static_cast<unsigned int>(FL_WHEN_CHANGED)) != 0U) {
           Fl_Widget_Tracker wp(this);
           do_callback(FL_REASON_CHANGED);
-          if (wp.deleted()) return 1;
+          if (wp.deleted()) {
+            return 1;
+          }
         }
       }
-      if (when() & FL_WHEN_RELEASE) do_callback(FL_REASON_RELEASED);
+      if ((static_cast<unsigned int>(when()) & static_cast<unsigned int>(FL_WHEN_RELEASE)) != 0U) {
+        do_callback(FL_REASON_RELEASED);
+      }
       return 1;
     case FL_SHORTCUT:
-      if (!(shortcut() ? Fl::test_shortcut(shortcut()) : test_shortcut()))
+      if (!(shortcut() ? Fl::test_shortcut(shortcut()) : test_shortcut())) {
         return 0;
-      if (Fl::visible_focus() && handle(FL_FOCUS))
+      }
+      if (Fl::visible_focus() && handle(FL_FOCUS)) {
         Fl::focus(this);
-      goto triggered_by_keyboard;
+      }
+      return handle_keyboard_trigger();
     case FL_FOCUS:
     case FL_UNFOCUS:
       if (Fl::visible_focus()) {
@@ -162,61 +247,29 @@ int Fl_Button::handle(int event) {
           // Widgets with boxtypes that don't draw the background need a parent
           // to redraw, since it is responsible for drawing the background...
           if (window()) {
-            int X = x() > 0 ? x() - 1 : 0;
-            int Y = y() > 0 ? y() - 1 : 0;
+            const int X = x() > 0 ? x() - 1 : 0;
+            const int Y = y() > 0 ? y() - 1 : 0;
             window()->damage(FL_DAMAGE_ALL, X, Y, w() + 2, h() + 2);
           }
         } else {
-          if (box() && (fl_box(box()) == box())) // ? FIXME ?
+          if (box() && (fl_box(box()) == box())) { // ? FIXME ?
             redraw();
-          else
-            redraw_label();
-        }
-        return 1;
-      } else {
-        return 0;
-      }
-      /* NOTREACHED */
-    case FL_KEYBOARD:
-      if (Fl::focus() == this && Fl::event_key() == ' ' &&
-          !(Fl::event_state() & (FL_SHIFT | FL_CTRL | FL_ALT | FL_META))) {
-      triggered_by_keyboard: // from FL_SHORTCUT
-        if (type() == FL_RADIO_BUTTON) {
-          if (!value_) {
-            setonly();
-            set_changed();
-            if (when() & FL_WHEN_CHANGED)
-              do_callback(FL_REASON_CHANGED);
-            else if (when() & FL_WHEN_RELEASE)
-              do_callback(FL_REASON_RELEASED);
           } else {
-            if (when() & FL_WHEN_NOT_CHANGED)
-              do_callback(FL_REASON_SELECTED);
-          }
-        } else if (type() == FL_TOGGLE_BUTTON) {
-          value(!value());
-          set_changed();
-          if (when() & FL_WHEN_CHANGED)
-            do_callback(FL_REASON_CHANGED);
-          else if (when() & FL_WHEN_RELEASE)
-            do_callback(FL_REASON_RELEASED);
-        } else {
-          simulate_key_action();
-          if (when() & FL_WHEN_CHANGED) {
-            set_changed();
-            Fl_Widget_Tracker wp(this);
-            do_callback(FL_REASON_CHANGED);
-            if (wp.deleted()) return 1;
-            set_changed();
-            do_callback(FL_REASON_RELEASED);
-          } else if (when() & FL_WHEN_RELEASE) {
-            set_changed();
-            do_callback(FL_REASON_RELEASED);
+            redraw_label();
           }
         }
         return 1;
       }
-      /* FALLTHROUGH */
+      return 0;
+      /* NOTREACHED */
+    case FL_KEYBOARD: {
+      const auto state = static_cast<unsigned int>(Fl::event_state());
+      constexpr auto mask = static_cast<unsigned int>(FL_SHIFT | FL_CTRL | FL_ALT | FL_META);
+      if (Fl::focus() == this && Fl::event_key() == ' ' && (state & mask) == 0U) {
+        return handle_keyboard_trigger();
+      }
+      return 0;
+    }
     default:
       return 0;
   }
@@ -236,12 +289,14 @@ void Fl_Button::simulate_key_action()
 
 void Fl_Button::key_release_timeout(void *d)
 {
-  Fl_Widget_Tracker *wt = (Fl_Widget_Tracker*)d;
-  if (!wt)
+  auto *wt = static_cast<Fl_Widget_Tracker*>(d);
+  if (!wt) {
     return;
-  if (wt==key_release_tracker)
-    key_release_tracker = 0L;
-  Fl_Button *btn = (Fl_Button*)wt->widget();
+  }
+  if (wt == key_release_tracker) {
+    key_release_tracker = nullptr;
+  }
+  auto *btn = static_cast<Fl_Button*>(wt->widget());
   if (btn) {
     btn->value(0);
     btn->redraw();
@@ -278,7 +333,7 @@ void Fl_Button::key_release_timeout(void *d)
  \param[in] L widget label, default is no label
  */
 Fl_Button::Fl_Button(int X, int Y, int W, int H, const char *L)
-: Fl_Widget(X,Y,W,H,L),
+: Fl_Widget(X, Y, W, H, L),
 shortcut_(0),
 value_(0),
 oldval(0),
@@ -297,7 +352,7 @@ compact_(0)
  \param[in] X, Y, W, H position and size of the widget
  \param[in] L widget label, default is no label
  */
-Fl_Radio_Button::Fl_Radio_Button(int X,int Y,int W,int H,const char *L)
+Fl_Radio_Button::Fl_Radio_Button(int X, int Y, int W, int H, const char *L)
 : Fl_Button(X, Y, W, H, L) {
   type(FL_RADIO_BUTTON);
 }
@@ -310,8 +365,8 @@ Fl_Radio_Button::Fl_Radio_Button(int X,int Y,int W,int H,const char *L)
  \param[in] X, Y, W, H position and size of the widget
  \param[in] L widget label, default is no label
  */
-Fl_Toggle_Button::Fl_Toggle_Button(int X,int Y,int W,int H,const char *L)
-: Fl_Button(X,Y,W,H,L)
+Fl_Toggle_Button::Fl_Toggle_Button(int X, int Y, int W, int H, const char *L)
+: Fl_Button(X, Y, W, H, L)
 {
   type(FL_TOGGLE_BUTTON);
 }

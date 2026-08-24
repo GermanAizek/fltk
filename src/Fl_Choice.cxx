@@ -29,20 +29,20 @@
 // Albrecht
 
 void Fl_Choice::draw() {
-  Fl_Boxtype btype = Fl::scheme() ? FL_UP_BOX           // non-default uses up box
-                                  : FL_DOWN_BOX;        // default scheme uses down box
-  int dx = Fl::box_dx(btype);
-  int dy = Fl::box_dy(btype);
+  const Fl_Boxtype btype = Fl::scheme() ? FL_UP_BOX      // non-default uses up box
+                                        : FL_DOWN_BOX;   // default scheme uses down box
+  const int dx = Fl::box_dx(btype);
+  const int dy = Fl::box_dy(btype);
 
   // Arrow area
-  int H = h() - 2 * dy;
+  const int H = h() - 2 * dy;
   int W = 20;
-  int X = x() + w() - W - dx;
-  int Y = y() + dy;
+  const int X = x() + w() - W - dx;
+  const int Y = y() + dy;
 
   Fl_Rect ab(X, Y, W, H); // arrow box
-  int active = active_r();
-  Fl_Color arrow_color = active ? labelcolor() : fl_inactive(labelcolor());
+  const int active = active_r();
+  const Fl_Color arrow_color = active ? labelcolor() : fl_inactive(labelcolor());
   Fl_Color box_color = color();
 
   // From "original" code: modify the box color *only* for the default scheme.
@@ -50,15 +50,15 @@ void Fl_Choice::draw() {
   // color contrasts well when the text is rendered *or* we should do this for
   // *all* schemes. Anyway, adapting the old code... (Albrecht)
 
-  if (!Fl::scheme()) {            // default scheme only, see comment above
-    if (fl_contrast(textcolor(), FL_BACKGROUND2_COLOR) == textcolor())
+  if (!Fl::scheme()) { // default scheme only, see comment above
+    if (fl_contrast(textcolor(), FL_BACKGROUND2_COLOR) == textcolor()) {
       box_color = FL_BACKGROUND2_COLOR;
-    else
+    } else {
       box_color = fl_lighter(color());
+    }
   }
 
   // Draw the widget box
-
   draw_box(btype, box_color);
 
   // Arrow box or horizontal divider line, depending on the current scheme
@@ -74,9 +74,9 @@ void Fl_Choice::draw() {
         Fl::is_scheme("gleam") ||
         Fl::is_scheme("oxy")) {
       // draw the divider
-      int x1 = x() + w() - W - 2 * dx;
-      int y1 = y() + dy;
-      int y2 = y() + h() - dy;
+      const int x1 = x() + w() - W - 2 * dx;
+      const int y1 = y() + dy;
+      const int y2 = y() + h() - dy;
 
       fl_color(fl_darker(color()));
       fl_yxline(x1, y1, y2);
@@ -98,29 +98,41 @@ void Fl_Choice::draw() {
   // Draw menu item's label
   if (mvalue()) {
     Fl_Menu_Item m = *mvalue();
-    if (active) m.activate(); else m.deactivate();
+    if (active) {
+      m.activate();
+    } else {
+      m.deactivate();
+    }
 
     // Clip
-    int xx = x() + dx, yy = y() + dy + 1, ww = w() - W, hh = H - 2;
+    const int xx = x() + dx;
+    const int yy = y() + dy + 1;
+    const int ww = w() - W;
+    const int hh = H - 2;
     fl_push_clip(xx, yy, ww, hh);
 
     if (Fl::scheme()) {
       Fl_Label l;
       l.value = m.text;
-      l.image = 0;
-      l.deimage = 0;
-      l.type = m.labeltype_;
-      l.font = m.labelsize_ || m.labelfont_ ? m.labelfont_ : textfont();
-      l.size = m.labelsize_ ? m.labelsize_ : textsize();
-      l.color= m.labelcolor_ ? m.labelcolor_ : textcolor();
-      l.h_margin_ = l.v_margin_ = l.spacing = 0;
-      if (!m.active()) l.color = fl_inactive((Fl_Color)l.color);
+      l.image = nullptr;
+      l.deimage = nullptr;
+      l.type = static_cast<Fl_Labeltype>(m.labeltype_);
+      l.font = (m.labelsize_ || m.labelfont_) ? static_cast<Fl_Font>(m.labelfont_) : textfont();
+      l.size = m.labelsize_ ? static_cast<Fl_Fontsize>(m.labelsize_) : textsize();
+      l.color = m.labelcolor_ ? m.labelcolor_ : textcolor();
+      l.h_margin_ = 0;
+      l.v_margin_ = 0;
+      l.spacing = 0;
+      if (!m.active()) {
+        l.color = fl_inactive(l.color);
+      }
       fl_draw_shortcut = 2; // hack value to make '&' disappear
-      l.draw(xx+3, yy, ww>6 ? ww-6 : 0, hh, FL_ALIGN_LEFT);
+      l.draw(xx + 3, yy, (ww > 6) ? (ww - 6) : 0, hh, FL_ALIGN_LEFT);
       fl_draw_shortcut = 0;
-      if ( Fl::focus() == this ) draw_focus(box(), xx, yy, ww, hh);
-    }
-    else {
+      if (Fl::focus() == this) {
+        draw_focus(box(), xx, yy, ww, hh);
+      }
+    } else {
       fl_draw_shortcut = 2; // hack value to make '&' disappear
       m.draw(xx, yy, ww, hh, this, Fl::focus() == this);
       fl_draw_shortcut = 0;
@@ -144,7 +156,7 @@ void Fl_Choice::draw() {
   \param[in] L widget label, default is no label
  */
 Fl_Choice::Fl_Choice(int X, int Y, int W, int H, const char *L)
-: Fl_Menu_(X,Y,W,H,L) {
+    : Fl_Menu_(X, Y, W, H, L) {
   align(FL_ALIGN_LEFT);
   when(FL_WHEN_RELEASE);
   textfont(FL_HELVETICA);
@@ -159,7 +171,9 @@ Fl_Choice::Fl_Choice(int X, int Y, int W, int H, const char *L)
   \returns non-zero if the new value is different to the old one.
  */
 int Fl_Choice::value(const Fl_Menu_Item *v) {
-  if (!Fl_Menu_::value(v)) return 0;
+  if (!Fl_Menu_::value(v)) {
+    return 0;
+  }
   redraw();
   return 1;
 }
@@ -171,61 +185,105 @@ int Fl_Choice::value(const Fl_Menu_Item *v) {
   \returns non-zero if the new value is different to the old one.
  */
 int Fl_Choice::value(int v) {
-  if (v == -1) return value((const Fl_Menu_Item *)0);
-  if (v < 0 || v >= (size() - 1)) return 0;
-  if (!Fl_Menu_::value(v)) return 0;
+  if (v == -1) {
+    return value(static_cast<const Fl_Menu_Item *>(nullptr));
+  }
+  if (v < 0 || v >= (size() - 1)) {
+    return 0;
+  }
+  if (!Fl_Menu_::value(v)) {
+    return 0;
+  }
   redraw();
   return 1;
 }
 
 int Fl_Choice::handle(int e) {
-  if (!menu() || !menu()->text) return 0;
-  const Fl_Menu_Item* v;
-  Fl_Widget_Tracker wp(this);
-  switch (e) {
-  case FL_ENTER:
-  case FL_LEAVE:
-    return 1;
+  if (!menu() || !menu()->text) {
+    return 0;
+  }
 
-  case FL_KEYBOARD:
-    if (Fl::event_key() != ' ' ||
-        (Fl::event_state() & (FL_SHIFT | FL_CTRL | FL_ALT | FL_META))) return 0;
-  case FL_PUSH:
-    if (Fl::visible_focus()) Fl::focus(this);
-  J1:
-    if (Fl::scheme()
-        || fl_contrast(textcolor(), FL_BACKGROUND2_COLOR) != textcolor()) {
+  Fl_Widget_Tracker wp(this);
+
+  // Helper lambda encapsulating the pulldown interaction to avoid goto jumps
+  auto trigger_pulldown = [&]() -> int {
+    const Fl_Menu_Item *v = nullptr;
+    if (Fl::scheme() ||
+        fl_contrast(textcolor(), FL_BACKGROUND2_COLOR) != textcolor()) {
       handle(FL_BEFORE_MENU);
       v = menu()->pulldown(x(), y(), w(), h(), mvalue(), this);
-      if (wp.deleted()) return 1;
+      if (wp.deleted()) {
+        return 1;
+      }
     } else {
       // In order to preserve the old look-n-feel of "white" menus,
       // temporarily override the color() of this widget...
-      Fl_Color c = color();
+      const Fl_Color c = color();
       color(FL_BACKGROUND2_COLOR);
       handle(FL_BEFORE_MENU);
       v = menu()->pulldown(x(), y(), w(), h(), mvalue(), this);
-      if (wp.deleted()) return 1;
+      if (wp.deleted()) {
+        return 1;
+      }
       color(c);
     }
-    if (!v || v->submenu()) return 1;
-    if (v != mvalue()) redraw();
-    picked(v);
-    return 1;
-  case FL_SHORTCUT:
-    if (Fl_Widget::test_shortcut()) goto J1;
-    v = menu()->test_shortcut();
-    if (!v) return 0;
-    if (v != mvalue()) redraw();
-    picked(v);
-    return 1;
-  case FL_FOCUS:
-  case FL_UNFOCUS:
-    if (Fl::visible_focus()) {
-      redraw();
+    if (!v || v->submenu()) {
       return 1;
-    } else return 0;
-  default:
-    return 0;
+    }
+    if (v != mvalue()) {
+      redraw();
+    }
+    picked(v);
+    return 1;
+  };
+
+  switch (e) {
+    case FL_ENTER:
+    case FL_LEAVE:
+      return 1;
+
+    case FL_KEYBOARD: {
+      const auto state = static_cast<unsigned int>(Fl::event_state());
+      constexpr auto mask = static_cast<unsigned int>(FL_SHIFT | FL_CTRL | FL_ALT | FL_META);
+      if (Fl::event_key() != ' ' || (state & mask) != 0U) {
+        return 0;
+      }
+      if (Fl::visible_focus()) {
+        Fl::focus(this);
+      }
+      return trigger_pulldown();
+    }
+
+    case FL_PUSH:
+      if (Fl::visible_focus()) {
+        Fl::focus(this);
+      }
+      return trigger_pulldown();
+
+    case FL_SHORTCUT: {
+      if (Fl_Widget::test_shortcut()) {
+        return trigger_pulldown();
+      }
+      const Fl_Menu_Item *v = menu()->test_shortcut();
+      if (!v) {
+        return 0;
+      }
+      if (v != mvalue()) {
+        redraw();
+      }
+      picked(v);
+      return 1;
+    }
+
+    case FL_FOCUS:
+    case FL_UNFOCUS:
+      if (Fl::visible_focus()) {
+        redraw();
+        return 1;
+      }
+      return 0;
+
+    default:
+      return 0;
   }
 }

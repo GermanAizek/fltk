@@ -15,10 +15,16 @@
 //
 
 #include <FL/Fl.H>
+#include <FL/Fl_Box.H>
 #include <FL/Fl_Color_Chooser.H>
+#include <FL/Fl_Return_Button.H>
+#include <FL/Fl_Window.H>
 #include <FL/fl_draw.H>
 #include <FL/math.h>
-#include <stdio.h>
+#include <array>
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
 
 // Besides being a useful object on it's own, the Fl_Color_Chooser was
 // an attempt to make a complex composite object that could be easily
@@ -37,6 +43,150 @@
 // you get this by defining this:
 #define UPDATE_HUE_BOX 1
 
+namespace {
+
+/** Fl_Color_Chooser modes */
+enum : std::uint8_t {
+  M_RGB,        /**< mode() of Fl_Color_Chooser showing RGB values */
+  M_BYTE,       /**< mode() of Fl_Color_Chooser showing byte values */
+  M_HEX,        /**< mode() of Fl_Color_Chooser showing hex values */
+  M_HSV         /**< mode() of Fl_Color_Chooser showing HSV values */
+};
+
+const std::array<Fl_Menu_Item, 5> mode_menu = {{
+  {"rgb"},
+  {"byte"},
+  {"hex"},
+  {"hsv"},
+  {nullptr}
+}};
+
+void tohs(double x, double y, double& h, double& s) {
+#ifdef CIRCLE
+  x = 2.0 * x - 1.0;
+  y = 1.0 - 2.0 * y;
+  s = std::sqrt(x * x + y * y);
+  if (s > 1.0) {
+    s = 1.0;
+  }
+  h = (3.0 / M_PI) * std::atan2(y, x);
+  if (h < 0.0) {
+    h += 6.0;
+  }
+#else
+  h = std::fmod(6.0 * x, 6.0);
+  if (h < 0.0) {
+    h += 6.0;
+  }
+  s = 1.0 - y;
+  if (s < 0.0) {
+    s = 0.0;
+  } else if (s > 1.0) {
+    s = 1.0;
+  }
+#endif
+}
+
+void generate_image(void* vv, int X, int Y, int W, uchar* buf) {
+  const auto* v = static_cast<const Flcc_HueBox*>(vv);
+  const int iw = v->w() - Fl::box_dw(v->box());
+  const double Yf = static_cast<double>(Y) / static_cast<double>(v->h() - Fl::box_dh(v->box()));
+#ifdef UPDATE_HUE_BOX
+  const double V = static_cast<const Fl_Color_Chooser*>(v->parent())->value();
+#else
+  const double V = 1.0;
+#endif
+  for (int x = X; x < X + W; x++) {
+    const double Xf = static_cast<double>(x) / static_cast<double>(iw);
+    double H = 0.0;
+    double S = 0.0;
+    tohs(Xf, Yf, H, S);
+    double r = 0.0;
+    double g = 0.0;
+    double b = 0.0;
+    Fl_Color_Chooser::hsv2rgb(H, S, V, r, g, b);
+    *buf++ = static_cast<uchar>(std::lround(255.0 * r));
+    *buf++ = static_cast<uchar>(std::lround(255.0 * g));
+    *buf++ = static_cast<uchar>(std::lround(255.0 * b));
+  }
+}
+
+double tr = 0.0;
+double tg = 0.0;
+double tb = 0.0;
+
+void generate_vimage(void* vv, int X, int Y, int W, uchar* buf) {
+  const auto* v = static_cast<const Flcc_ValueBox*>(vv);
+  const double Yf = 255.0 * (1.0 - static_cast<double>(Y) / static_cast<double>(v->h() - Fl::box_dh(v->box())));
+  const auto r = static_cast<uchar>(std::lround(tr * Yf));
+  const auto g = static_cast<uchar>(std::lround(tg * Yf));
+  const auto b = static_cast<uchar>(std::lround(tb * Yf));
+  for (int x = X; x < X + W; x++) {
+    *buf++ = r;
+    *buf++ = g;
+    *buf++ = b;
+  }
+}
+
+int copy_rgb(double r, double g, double b) {
+  std::array<char, 8> buf{};
+  const int len = std::snprintf(buf.data(), buf.size(), "%02lX%02lX%02lX",
+                                std::lround(r * 255.0),
+                                std::lround(g * 255.0),
+                                std::lround(b * 255.0));
+  Fl::copy(buf.data(), len, 1);
+  return 1;
+}
+
+class ColorChip : public Fl_Widget {
+public:
+  uchar r{0};
+  uchar g{0};
+  uchar b{0};
+
+  ColorChip(int X, int Y, int W, int H) : Fl_Widget(X, Y, W, H) {
+    box(FL_ENGRAVED_FRAME);
+  }
+
+  void draw() override {
+    if ((static_cast<unsigned int>(damage()) & static_cast<unsigned int>(FL_DAMAGE_ALL)) != 0U) {
+      draw_box();
+    }
+    fl_rectf(x() + Fl::box_dx(box()),
+             y() + Fl::box_dy(box()),
+             w() - Fl::box_dw(box()),
+             h() - Fl::box_dh(box()), r, g, b);
+  }
+};
+
+void chooser_cb(Fl_Widget* o, void* vv) {
+  const auto* c = static_cast<const Fl_Color_Chooser*>(o);
+  auto* v = static_cast<ColorChip*>(vv);
+  v->r = static_cast<uchar>(std::lround(255.0 * c->r()));
+  v->g = static_cast<uchar>(std::lround(255.0 * c->g()));
+  v->b = static_cast<uchar>(std::lround(255.0 * c->b()));
+  v->damage(FL_DAMAGE_EXPOSE);
+}
+
+void cc_ok_cb(Fl_Widget *o, void *p) {
+  *static_cast<int*>(p) = 1;
+  const auto* w = o->window();
+  if (w) {
+    const_cast<Fl_Window*>(w)->hide();
+  }
+}
+
+void cc_cancel_cb(Fl_Widget *o, void *p) {
+  *static_cast<int*>(p) = 0;
+  if (o->window()) {
+    o->window()->hide();
+  } else {
+    o->hide();
+  }
+}
+
+} // namespace
+
 /**
   This \e static method converts HSV colors to RGB colorspace.
   \param[in] H, S, V color components
@@ -47,18 +197,19 @@ void Fl_Color_Chooser::hsv2rgb(
   if (S < 5.0e-6) {
     R = G = B = V;
   } else {
-    int i = (int)H;
-    double f = H - (float)i;
-    double p1 = V*(1.0-S);
-    double p2 = V*(1.0-S*f);
-    double p3 = V*(1.0-S*(1.0-f));
+    const int i = static_cast<int>(H);
+    const double f = H - static_cast<double>(i);
+    const double p1 = V * (1.0 - S);
+    const double p2 = V * (1.0 - S * f);
+    const double p3 = V * (1.0 - S * (1.0 - f));
     switch (i) {
-    case 0: R = V;   G = p3;  B = p1;  break;
-    case 1: R = p2;  G = V;   B = p1;  break;
-    case 2: R = p1;  G = V;   B = p3;  break;
-    case 3: R = p1;  G = p2;  B = V;   break;
-    case 4: R = p3;  G = p1;  B = V;   break;
-    case 5: R = V;   G = p1;  B = p2;  break;
+      case 0: R = V;   G = p3;  B = p1;  break;
+      case 1: R = p2;  G = V;   B = p1;  break;
+      case 2: R = p1;  G = V;   B = p3;  break;
+      case 3: R = p1;  G = p2;  B = V;   break;
+      case 4: R = p3;  G = p1;  B = V;   break;
+      case 5: R = V;   G = p1;  B = p2;  break;
+      default: R = G = B = 0.0; break;
     }
   }
 }
@@ -70,70 +221,72 @@ void Fl_Color_Chooser::hsv2rgb(
  */
 void Fl_Color_Chooser::rgb2hsv(
         double R, double G, double B, double& H, double& S, double& V) {
-  double maxv = R > G ? R : G; if (B > maxv) maxv = B;
+  double maxv = (R > G) ? R : G;
+  if (B > maxv) {
+    maxv = B;
+  }
   V = maxv;
-  if (maxv>0) {
-    double minv = R < G ? R : G; if (B < minv) minv = B;
-    S = 1.0 - double(minv)/maxv;
+  if (maxv > 0.0) {
+    double minv = (R < G) ? R : G;
+    if (B < minv) {
+      minv = B;
+    }
+    S = 1.0 - (minv / maxv);
     if (maxv > minv) {
-      if (maxv == R) {H = (G-B)/double(maxv-minv); if (H<0) H += 6.0;}
-      else if (maxv == G) H = 2.0+(B-R)/double(maxv-minv);
-      else H = 4.0+(R-G)/double(maxv-minv);
+      if (maxv == R) {
+        H = (G - B) / (maxv - minv);
+        if (H < 0.0) {
+          H += 6.0;
+        }
+      } else if (maxv == G) {
+        H = 2.0 + (B - R) / (maxv - minv);
+      } else {
+        H = 4.0 + (R - G) / (maxv - minv);
+      }
     }
   }
 }
 
-/** Fl_Color_Chooser modes */
-enum {
-  M_RGB,        /**< mode() of Fl_Color_Chooser showing RGB values */
-  M_BYTE,       /**< mode() of Fl_Color_Chooser showing byte values */
-  M_HEX,        /**< mode() of Fl_Color_Chooser showing hex values */
-  M_HSV         /**< mode() of Fl_Color_Chooser showing HSV values */
-};
-static const Fl_Menu_Item mode_menu[] = {
-  {"rgb"},
-  {"byte"},
-  {"hex"},
-  {"hsv"},
-  {0}
-};
-
 #ifndef FL_DOXYGEN
 
 int Flcc_Value_Input::format(char* buf) {
-  Fl_Color_Chooser* c = (Fl_Color_Chooser*)parent();
-  if (c->mode() == M_HEX) return snprintf(buf, 5,"0x%02X", int(value()));
-  else return Fl_Valuator::format(buf);
+  const auto* c = static_cast<const Fl_Color_Chooser*>(parent());
+  if (c->mode() == M_HEX) {
+    return std::snprintf(buf, 5, "0x%02X", static_cast<int>(value()));
+  }
+  return Fl_Valuator::format(buf);
 }
 
 // Note: although Flcc_Value_Input is marked private in the header files,
 // it nevertheless is publicly accessible, so implement this here just in case.
 std::string Flcc_Value_Input::format_str() {
-  char buffer[129];
-  int size = format(buffer);
-  return std::string(buffer, size);
+  std::array<char, 129> buffer{};
+  const int size = format(buffer.data());
+  return {buffer.data(), static_cast<std::string::size_type>(size)};
 }
 
 #endif // !FL_DOXYGEN
 
 void Fl_Color_Chooser::set_valuators() {
   switch (mode()) {
-  case M_RGB:
-    rvalue.range(0,1); rvalue.step(1,1000); rvalue.value(r_);
-    gvalue.range(0,1); gvalue.step(1,1000); gvalue.value(g_);
-    bvalue.range(0,1); bvalue.step(1,1000); bvalue.value(b_);
-    break;
-  case M_BYTE: /* FALLTHROUGH */
-  case M_HEX:
-    rvalue.range(0,255); rvalue.step(1); rvalue.value(int(255*r_+.5));
-    gvalue.range(0,255); gvalue.step(1); gvalue.value(int(255*g_+.5));
-    bvalue.range(0,255); bvalue.step(1); bvalue.value(int(255*b_+.5));
-    break;
-  case M_HSV:
-    rvalue.range(0,6); rvalue.step(1,1000); rvalue.value(hue_);
-    gvalue.range(0,1); gvalue.step(1,1000); gvalue.value(saturation_);
-    bvalue.range(0,1); bvalue.step(1,1000); bvalue.value(value_);
-    break;
+    case M_RGB:
+      rvalue.range(0, 1); rvalue.step(1, 1000); rvalue.value(r_);
+      gvalue.range(0, 1); gvalue.step(1, 1000); gvalue.value(g_);
+      bvalue.range(0, 1); bvalue.step(1, 1000); bvalue.value(b_);
+      break;
+    case M_BYTE: /* FALLTHROUGH */
+    case M_HEX:
+      rvalue.range(0, 255); rvalue.step(1); rvalue.value(static_cast<double>(std::lround(255.0 * r_)));
+      gvalue.range(0, 255); gvalue.step(1); gvalue.value(static_cast<double>(std::lround(255.0 * g_)));
+      bvalue.range(0, 255); bvalue.step(1); bvalue.value(static_cast<double>(std::lround(255.0 * b_)));
+      break;
+    case M_HSV:
+      rvalue.range(0, 6); rvalue.step(1, 1000); rvalue.value(hue_);
+      gvalue.range(0, 1); gvalue.step(1, 1000); gvalue.value(saturation_);
+      bvalue.range(0, 1); bvalue.step(1, 1000); bvalue.value(value_);
+      break;
+    default:
+      break;
   }
 }
 
@@ -145,19 +298,22 @@ void Fl_Color_Chooser::set_valuators() {
   \return 1 if a new rgb value was set, 0 if the rgb value was the previous one.
  */
 int Fl_Color_Chooser::rgb(double R, double G, double B) {
-  if (R == r_ && G == g_ && B == b_) return 0;
+  if (R == r_ && G == g_ && B == b_) {
+    return 0;
+  }
   r_ = R; g_ = G; b_ = B;
-  double ph = hue_;
-  double ps = saturation_;
-  double pv = value_;
-  rgb2hsv(R,G,B,hue_,saturation_,value_);
+  const double ph = hue_;
+  const double ps = saturation_;
+  const double pv = value_;
+  rgb2hsv(R, G, B, hue_, saturation_, value_);
   set_valuators();
   set_changed();
   if (value_ != pv) {
 #ifdef UPDATE_HUE_BOX
     huebox.damage(FL_DAMAGE_SCROLL);
 #endif
-    valuebox.damage(FL_DAMAGE_EXPOSE);}
+    valuebox.damage(FL_DAMAGE_EXPOSE);
+  }
   if (hue_ != ph || saturation_ != ps) {
     huebox.damage(FL_DAMAGE_EXPOSE);
     valuebox.damage(FL_DAMAGE_SCROLL);
@@ -173,24 +329,38 @@ int Fl_Color_Chooser::rgb(double R, double G, double B) {
   \return 1 if a new hsv value was set, 0 if the hsv value was the previous one.
 */
 int Fl_Color_Chooser::hsv(double H, double S, double V) {
-  H = fmod(H,6.0); if (H < 0.0) H += 6.0;
-  if (S < 0.0) S = 0.0; else if (S > 1.0) S = 1.0;
-  if (V < 0.0) V = 0.0; else if (V > 1.0) V = 1.0;
-  if (H == hue_ && S == saturation_ && V == value_) return 0;
-  double ph = hue_;
-  double ps = saturation_;
-  double pv = value_;
+  H = std::fmod(H, 6.0);
+  if (H < 0.0) {
+    H += 6.0;
+  }
+  if (S < 0.0) {
+    S = 0.0;
+  } else if (S > 1.0) {
+    S = 1.0;
+  }
+  if (V < 0.0) {
+    V = 0.0;
+  } else if (V > 1.0) {
+    V = 1.0;
+  }
+  if (H == hue_ && S == saturation_ && V == value_) {
+    return 0;
+  }
+  const double ph = hue_;
+  const double ps = saturation_;
+  const double pv = value_;
   hue_ = H; saturation_ = S; value_ = V;
   if (value_ != pv) {
 #ifdef UPDATE_HUE_BOX
     huebox.damage(FL_DAMAGE_SCROLL);
 #endif
-    valuebox.damage(FL_DAMAGE_EXPOSE);}
+    valuebox.damage(FL_DAMAGE_EXPOSE);
+  }
   if (hue_ != ph || saturation_ != ps) {
     huebox.damage(FL_DAMAGE_EXPOSE);
     valuebox.damage(FL_DAMAGE_SCROLL);
   }
-  hsv2rgb(H,S,V,r_,g_,b_);
+  hsv2rgb(H, S, V, r_, g_, b_);
   set_valuators();
   set_changed();
   return 1;
@@ -198,112 +368,94 @@ int Fl_Color_Chooser::hsv(double H, double S, double V) {
 
 ////////////////////////////////////////////////////////////////
 
-static void tohs(double x, double y, double& h, double& s) {
-#ifdef CIRCLE
-  x = 2*x-1;
-  y = 1-2*y;
-  s = sqrt(x*x+y*y); if (s > 1.0) s = 1.0;
-  h = (3.0/M_PI)*atan2(y,x);
-  if (h<0) h += 6.0;
-#else
-  h = fmod(6.0*x,6.0); if (h < 0.0) h += 6.0;
-  s = 1.0-y; if (s < 0.0) s = 0.0; else if (s > 1.0) s = 1.0;
-#endif
-}
-
 #ifndef FL_DOXYGEN
 int Flcc_HueBox::handle(int e) {
-  static double ih, is;
-  Fl_Color_Chooser* c = (Fl_Color_Chooser*)parent();
+  static double ih = 0.0;
+  static double is = 0.0;
+  auto* c = static_cast<Fl_Color_Chooser*>(parent());
   switch (e) {
-  case FL_PUSH:
-    if (Fl::visible_focus()) {
-      Fl::focus(this);
-      redraw();
-    }
-    ih = c->hue();
-    is = c->saturation();
-  case FL_DRAG: {
-    double Xf, Yf, H, S;
-    Xf = (Fl::event_x()-x()-Fl::box_dx(box()))/double(w()-Fl::box_dw(box()));
-    Yf = (Fl::event_y()-y()-Fl::box_dy(box()))/double(h()-Fl::box_dh(box()));
-    tohs(Xf, Yf, H, S);
-    if (fabs(H-ih) < 3*6.0/w()) H = ih;
-    if (fabs(S-is) < 3*1.0/h()) S = is;
-    if (Fl::event_state(FL_CTRL)) H = ih;
-    if (c->hsv(H, S, c->value())) c->do_callback(FL_REASON_DRAGGED);
-    } return 1;
-  case FL_FOCUS : /* FALLTHROUGH */
-  case FL_UNFOCUS :
-    if (Fl::visible_focus()) {
-      redraw();
+    case FL_PUSH:
+      if (Fl::visible_focus()) {
+        Fl::focus(this);
+        redraw();
+      }
+      ih = c->hue();
+      is = c->saturation();
+      /* FALLTHROUGH */
+    case FL_DRAG: {
+      const double Xf = static_cast<double>(Fl::event_x() - x() - Fl::box_dx(box())) / static_cast<double>(w() - Fl::box_dw(box()));
+      const double Yf = static_cast<double>(Fl::event_y() - y() - Fl::box_dy(box())) / static_cast<double>(h() - Fl::box_dh(box()));
+      double H = 0.0;
+      double S = 0.0;
+      tohs(Xf, Yf, H, S);
+      if (std::fabs(H - ih) < (3.0 * 6.0 / static_cast<double>(w()))) {
+        H = ih;
+      }
+      if (std::fabs(S - is) < (3.0 * 1.0 / static_cast<double>(h()))) {
+        S = is;
+      }
+      if (Fl::event_state(FL_CTRL)) {
+        H = ih;
+      }
+      if (c->hsv(H, S, c->value())) {
+        c->do_callback(FL_REASON_DRAGGED);
+      }
       return 1;
     }
-    else return 1;
-  case FL_KEYBOARD :
-    return handle_key(Fl::event_key());
-  default:
-    return 0;
+    case FL_FOCUS: /* FALLTHROUGH */
+    case FL_UNFOCUS:
+      if (Fl::visible_focus()) {
+        redraw();
+        return 1;
+      }
+      return 1;
+    case FL_KEYBOARD:
+      return handle_key(Fl::event_key());
+    default:
+      return 0;
   }
 }
 #endif // !FL_DOXYGEN
 
-static void generate_image(void* vv, int X, int Y, int W, uchar* buf) {
-  Flcc_HueBox* v = (Flcc_HueBox*)vv;
-  int iw = v->w()-Fl::box_dw(v->box());
-  double Yf = double(Y)/(v->h()-Fl::box_dh(v->box()));
-#ifdef UPDATE_HUE_BOX
-  const double V = ((Fl_Color_Chooser*)(v->parent()))->value();
-#else
-  const double V = 1.0;
-#endif
-  for (int x = X; x < X+W; x++) {
-    double Xf = double(x)/iw;
-    double H,S; tohs(Xf,Yf,H,S);
-    double r=0, g=0, b=0;
-    Fl_Color_Chooser::hsv2rgb(H,S,V,r,g,b);
-    *buf++ = uchar(255*r+.5);
-    *buf++ = uchar(255*g+.5);
-    *buf++ = uchar(255*b+.5);
-  }
-}
-
 #ifndef FL_DOXYGEN
 int Flcc_HueBox::handle_key(int key) const {
-  int w1 = w()-Fl::box_dw(box())-6;
-  int h1 = h()-Fl::box_dh(box())-6;
-  Fl_Color_Chooser* c = (Fl_Color_Chooser*)parent();
+  const int w1 = w() - Fl::box_dw(box()) - 6;
+  const int h1 = h() - Fl::box_dh(box()) - 6;
+  auto* c = static_cast<Fl_Color_Chooser*>(parent());
 
 #ifdef CIRCLE
-  int X = int(.5*(cos(c->hue()*(M_PI/3.0))*c->saturation()+1) * w1);
-  int Y = int(.5*(1-sin(c->hue()*(M_PI/3.0))*c->saturation()) * h1);
+  int X = static_cast<int>(std::lround(0.5 * (std::cos(c->hue() * (M_PI / 3.0)) * c->saturation() + 1.0) * static_cast<double>(w1)));
+  int Y = static_cast<int>(std::lround(0.5 * (1.0 - std::sin(c->hue() * (M_PI / 3.0)) * c->saturation()) * static_cast<double>(h1)));
 #else
-  int X = int(c->hue()/6.0*w1);
-  int Y = int((1-c->saturation())*h1);
+  int X = static_cast<int>(std::lround(c->hue() / 6.0 * static_cast<double>(w1)));
+  int Y = static_cast<int>(std::lround((1.0 - c->saturation()) * static_cast<double>(h1)));
 #endif
 
   switch (key) {
-    case FL_Up :
+    case FL_Up:
       Y -= 3;
       break;
-    case FL_Down :
+    case FL_Down:
       Y += 3;
       break;
-    case FL_Left :
+    case FL_Left:
       X -= 3;
       break;
-    case FL_Right :
+    case FL_Right:
       X += 3;
       break;
-    default :
+    default:
       return 0;
   }
 
-  double Xf, Yf, H, S;
-  Xf = (double)X/(double)w1;
-  Yf = (double)Y/(double)h1;
+  const double Xf = static_cast<double>(X) / static_cast<double>(w1);
+  const double Yf = static_cast<double>(Y) / static_cast<double>(h1);
+  double H = 0.0;
+  double S = 0.0;
   tohs(Xf, Yf, H, S);
-  if (c->hsv(H, S, c->value())) c->do_callback(FL_REASON_CHANGED);
+  if (c->hsv(H, S, c->value())) {
+    c->do_callback(FL_REASON_CHANGED);
+  }
 
   return 1;
 }
@@ -311,30 +463,43 @@ int Flcc_HueBox::handle_key(int key) const {
 
 #ifndef FL_DOXYGEN
 void Flcc_HueBox::draw() {
-  if (damage()&FL_DAMAGE_ALL) draw_box();
-  int x1 = x()+Fl::box_dx(box());
-  int yy1 = y()+Fl::box_dy(box());
-  int w1 = w()-Fl::box_dw(box());
-  int h1 = h()-Fl::box_dh(box());
-  if (w1>0 && h1>0) {
-    if (damage() == FL_DAMAGE_EXPOSE) fl_push_clip(x1+px,yy1+py,6,6);
-    fl_draw_image(generate_image, this, x1, yy1, w1, h1);
-    if (damage() == FL_DAMAGE_EXPOSE) fl_pop_clip();
+  if ((static_cast<unsigned int>(damage()) & static_cast<unsigned int>(FL_DAMAGE_ALL)) != 0U) {
+    draw_box();
   }
-  Fl_Color_Chooser* c = (Fl_Color_Chooser*)parent();
+  const int x1 = x() + Fl::box_dx(box());
+  const int yy1 = y() + Fl::box_dy(box());
+  const int w1 = w() - Fl::box_dw(box());
+  const int h1 = h() - Fl::box_dh(box());
+  if (w1 > 0 && h1 > 0) {
+    if (damage() == FL_DAMAGE_EXPOSE) {
+      fl_push_clip(x1 + px, yy1 + py, 6, 6);
+    }
+    fl_draw_image(generate_image, this, x1, yy1, w1, h1);
+    if (damage() == FL_DAMAGE_EXPOSE) {
+      fl_pop_clip();
+    }
+  }
+  const auto* c = static_cast<const Fl_Color_Chooser*>(parent());
 #ifdef CIRCLE
-  int X = int(.5*(cos(c->hue()*(M_PI/3.0))*c->saturation()+1) * (w1-6));
-  int Y = int(.5*(1-sin(c->hue()*(M_PI/3.0))*c->saturation()) * (h1-6));
+  int X = static_cast<int>(std::lround(0.5 * (std::cos(c->hue() * (M_PI / 3.0)) * c->saturation() + 1.0) * static_cast<double>(w1 - 6)));
+  int Y = static_cast<int>(std::lround(0.5 * (1.0 - std::sin(c->hue() * (M_PI / 3.0)) * c->saturation()) * static_cast<double>(h1 - 6)));
 #else
-  int X = int(c->hue()/6.0*(w1-6));
-  int Y = int((1-c->saturation())*(h1-6));
+  int X = static_cast<int>(std::lround(c->hue() / 6.0 * static_cast<double>(w1 - 6)));
+  int Y = static_cast<int>(std::lround((1.0 - c->saturation()) * static_cast<double>(h1 - 6)));
 #endif
-  if (X < 0) X = 0; else if (X > w1-6) X = w1-6;
-  if (Y < 0) Y = 0; else if (Y > h1-6) Y = h1-6;
-  //  fl_color(c->value()>.75 ? FL_BLACK : FL_WHITE);
-  if (w1>0 && h1>0) {
-    fl_push_clip(x1,yy1,w1,h1);
-    draw_box(FL_UP_BOX,x1+X,yy1+Y,6,6,Fl::focus() == this ? FL_FOREGROUND_COLOR : FL_GRAY);
+  if (X < 0) {
+    X = 0;
+  } else if (X > w1 - 6) {
+    X = w1 - 6;
+  }
+  if (Y < 0) {
+    Y = 0;
+  } else if (Y > h1 - 6) {
+    Y = h1 - 6;
+  }
+  if (w1 > 0 && h1 > 0) {
+    fl_push_clip(x1, yy1, w1, h1);
+    draw_box(FL_UP_BOX, x1 + X, yy1 + Y, 6, 6, Fl::focus() == this ? FL_FOREGROUND_COLOR : FL_GRAY);
     fl_pop_clip();
   }
   px = X; py = Y;
@@ -345,91 +510,99 @@ void Flcc_HueBox::draw() {
 
 #ifndef FL_DOXYGEN
 int Flcc_ValueBox::handle(int e) {
-  static double iv;
-  Fl_Color_Chooser* c = (Fl_Color_Chooser*)parent();
+  static double iv = 0.0;
+  auto* c = static_cast<Fl_Color_Chooser*>(parent());
   switch (e) {
-  case FL_PUSH:
-    if (Fl::visible_focus()) {
-      Fl::focus(this);
-      redraw();
-    }
-    iv = c->value();
-  case FL_DRAG: {
-    double Yf;
-    Yf = 1-(Fl::event_y()-y()-Fl::box_dy(box()))/double(h()-Fl::box_dh(box()));
-    if (fabs(Yf-iv)<(3*1.0/h())) Yf = iv;
-    if (c->hsv(c->hue(),c->saturation(),Yf)) c->do_callback(FL_REASON_DRAGGED);
-    } return 1;
-  case FL_FOCUS : /* FALLTHROUGH */
-  case FL_UNFOCUS :
-    if (Fl::visible_focus()) {
-      redraw();
+    case FL_PUSH:
+      if (Fl::visible_focus()) {
+        Fl::focus(this);
+        redraw();
+      }
+      iv = c->value();
+      /* FALLTHROUGH */
+    case FL_DRAG: {
+      double Yf = 1.0 - static_cast<double>(Fl::event_y() - y() - Fl::box_dy(box())) / static_cast<double>(h() - Fl::box_dh(box()));
+      if (std::fabs(Yf - iv) < (3.0 * 1.0 / static_cast<double>(h()))) {
+        Yf = iv;
+      }
+      if (c->hsv(c->hue(), c->saturation(), Yf)) {
+        c->do_callback(FL_REASON_DRAGGED);
+      }
       return 1;
     }
-    else return 1;
-  case FL_KEYBOARD :
-    return handle_key(Fl::event_key());
-  default:
-    return 0;
+    case FL_FOCUS: /* FALLTHROUGH */
+    case FL_UNFOCUS:
+      if (Fl::visible_focus()) {
+        redraw();
+        return 1;
+      }
+      return 1;
+    case FL_KEYBOARD:
+      return handle_key(Fl::event_key());
+    default:
+      return 0;
   }
 }
 #endif // !FL_DOXYGEN
 
-static double tr, tg, tb;
-static void generate_vimage(void* vv, int X, int Y, int W, uchar* buf) {
-  Flcc_ValueBox* v = (Flcc_ValueBox*)vv;
-  double Yf = 255*(1.0-double(Y)/(v->h()-Fl::box_dh(v->box())));
-  uchar r = uchar(tr*Yf+.5);
-  uchar g = uchar(tg*Yf+.5);
-  uchar b = uchar(tb*Yf+.5);
-  for (int x = X; x < X+W; x++) {
-    *buf++ = r; *buf++ = g; *buf++ = b;
-  }
-}
-
 #ifndef FL_DOXYGEN
 void Flcc_ValueBox::draw() {
-  if (damage()&FL_DAMAGE_ALL) draw_box();
-  Fl_Color_Chooser* c = (Fl_Color_Chooser*)parent();
-  c->hsv2rgb(c->hue(),c->saturation(),1.0,tr,tg,tb);
-  int x1 = x()+Fl::box_dx(box());
-  int yy1 = y()+Fl::box_dy(box());
-  int w1 = w()-Fl::box_dw(box());
-  int h1 = h()-Fl::box_dh(box());
-  if (w1>0 && h1>0) {
-    if (damage() == FL_DAMAGE_EXPOSE) fl_push_clip(x1,yy1+py,w1,6);
-    fl_draw_image(generate_vimage, this, x1, yy1, w1, h1);
-    if (damage() == FL_DAMAGE_EXPOSE) fl_pop_clip();
+  if ((static_cast<unsigned int>(damage()) & static_cast<unsigned int>(FL_DAMAGE_ALL)) != 0U) {
+    draw_box();
   }
-  int Y = int((1-c->value()) * (h1-6));
-  if (Y < 0) Y = 0; else if (Y > h1-6) Y = h1-6;
-  draw_box(FL_UP_BOX,x1,yy1+Y,w1,6,Fl::focus() == this ? FL_FOREGROUND_COLOR : FL_GRAY);
+  const auto* c = static_cast<const Fl_Color_Chooser*>(parent());
+  Fl_Color_Chooser::hsv2rgb(c->hue(), c->saturation(), 1.0, tr, tg, tb);
+  const int x1 = x() + Fl::box_dx(box());
+  const int yy1 = y() + Fl::box_dy(box());
+  const int w1 = w() - Fl::box_dw(box());
+  const int h1 = h() - Fl::box_dh(box());
+  if (w1 > 0 && h1 > 0) {
+    if (damage() == FL_DAMAGE_EXPOSE) {
+      fl_push_clip(x1, yy1 + py, w1, 6);
+    }
+    fl_draw_image(generate_vimage, this, x1, yy1, w1, h1);
+    if (damage() == FL_DAMAGE_EXPOSE) {
+      fl_pop_clip();
+    }
+  }
+  int Y = static_cast<int>(std::lround((1.0 - c->value()) * static_cast<double>(h1 - 6)));
+  if (Y < 0) {
+    Y = 0;
+  } else if (Y > h1 - 6) {
+    Y = h1 - 6;
+  }
+  draw_box(FL_UP_BOX, x1, yy1 + Y, w1, 6, Fl::focus() == this ? FL_FOREGROUND_COLOR : FL_GRAY);
   py = Y;
 }
 #endif // !FL_DOXYGEN
 
 #ifndef FL_DOXYGEN
 int Flcc_ValueBox::handle_key(int key) const {
-  int h1 = h()-Fl::box_dh(box())-6;
-  Fl_Color_Chooser* c = (Fl_Color_Chooser*)parent();
+  const int h1 = h() - Fl::box_dh(box()) - 6;
+  auto* c = static_cast<Fl_Color_Chooser*>(parent());
 
-  int Y = int((1-c->value()) * h1);
-  if (Y < 0) Y = 0; else if (Y > h1) Y = h1;
+  int Y = static_cast<int>(std::lround((1.0 - c->value()) * static_cast<double>(h1)));
+  if (Y < 0) {
+    Y = 0;
+  } else if (Y > h1) {
+    Y = h1;
+  }
 
   switch (key) {
-    case FL_Up :
+    case FL_Up:
       Y -= 3;
       break;
-    case FL_Down :
+    case FL_Down:
       Y += 3;
       break;
-    default :
+    default:
       return 0;
   }
 
-  double Yf;
-  Yf = 1-((double)Y/(double)h1);
-  if (c->hsv(c->hue(),c->saturation(),Yf)) c->do_callback(FL_REASON_CHANGED);
+  const double Yf = 1.0 - (static_cast<double>(Y) / static_cast<double>(h1));
+  if (c->hsv(c->hue(), c->saturation(), Yf)) {
+    c->do_callback(FL_REASON_CHANGED);
+  }
 
   return 1;
 }
@@ -437,8 +610,8 @@ int Flcc_ValueBox::handle_key(int key) const {
 
 ////////////////////////////////////////////////////////////////
 
-void Fl_Color_Chooser::rgb_cb(Fl_Widget* o, void*) {
-  Fl_Color_Chooser* c = (Fl_Color_Chooser*)(o->parent());
+void Fl_Color_Chooser::rgb_cb(Fl_Widget* o, void* /*unused*/) {
+  auto* c = static_cast<Fl_Color_Chooser*>(o->parent());
   // clamp input values to valid ranges (issue #749, part 1)
   double R = c->rvalue.clamp(c->rvalue.value());
   double G = c->gvalue.clamp(c->gvalue.value());
@@ -448,19 +621,23 @@ void Fl_Color_Chooser::rgb_cb(Fl_Widget* o, void*) {
   c->gvalue.value(G);
   c->bvalue.value(B);
   if (c->mode() == M_HSV) {
-    if (c->hsv(R,G,B)) c->do_callback(FL_REASON_CHANGED);
+    if (c->hsv(R, G, B)) {
+      c->do_callback(FL_REASON_CHANGED);
+    }
     return;
   }
   if (c->mode() != M_RGB) {
-    R = R/255;
-    G = G/255;
-    B = B/255;
+    R /= 255.0;
+    G /= 255.0;
+    B /= 255.0;
   }
-  if (c->rgb(R,G,B)) c->do_callback(FL_REASON_CHANGED);
+  if (c->rgb(R, G, B)) {
+    c->do_callback(FL_REASON_CHANGED);
+  }
 }
 
-void Fl_Color_Chooser::mode_cb(Fl_Widget* o, void*) {
-  Fl_Color_Chooser* c = (Fl_Color_Chooser*)(o->parent());
+void Fl_Color_Chooser::mode_cb(Fl_Widget* o, void* /*unused*/) {
+  auto* c = static_cast<Fl_Color_Chooser*>(o->parent());
   // force them to redraw even if value is the same:
   c->rvalue.value(-1);
   c->gvalue.value(-1);
@@ -472,19 +649,6 @@ void Fl_Color_Chooser::mode(int newMode)
 {
   choice.value(newMode);
   choice.do_callback(FL_REASON_RESELECTED);
-}
-
-// Small local helper function:
-// Copy hex color value ('RRGGBB') of Fl_Color_Chooser to clipboard.
-// Always returns 1 (event was used).
-
-static int copy_rgb(double r, double g, double b) {
-  char buf[8];
-  int len;
-  len = snprintf(buf, 8, "%02X%02X%02X", int(r * 255 + .5), int(g * 255 + .5), int(b * 255 + .5));
-  Fl::copy(buf, len, 1);
-  // printf("copied '%s' to clipboard\n", buf); // Debug
-  return 1;
 }
 
 /**
@@ -521,29 +685,32 @@ static int copy_rgb(double r, double g, double b) {
 */
 
 int Fl_Color_Chooser::handle(int e) {
-
-  int mods = Fl::event_state() & (FL_META | FL_CTRL | FL_ALT);
-  unsigned int shift = Fl::event_state() & FL_SHIFT;
+  const auto mods = static_cast<unsigned int>(Fl::event_state() & (FL_META | FL_CTRL | FL_ALT));
+  const auto shift = static_cast<unsigned int>(Fl::event_state() & FL_SHIFT);
 
   switch (e) {
     case FL_KEYBOARD:
     case FL_SHORTCUT:
       // ignore CTRL-SHIFT-C, CTRL-SHIFT-X and CTRL-SHIFT-Insert
-      if (shift)
+      if (shift != 0U) {
         return Fl_Group::handle(e);
+      }
       switch (Fl::event_key()) {
         case FL_Insert:
-          if (mods == FL_CTRL)
+          if (mods == static_cast<unsigned int>(FL_CTRL)) {
             return copy_rgb(r_, g_, b_);
+          }
           break;
         case 'c':
         case 'x':
-          if (mods == FL_COMMAND)
+          if (mods == static_cast<unsigned int>(FL_COMMAND)) {
             return copy_rgb(r_, g_, b_);
+          }
           break;
         default:
           break;
       }
+      break;
     default:
       break;
   }
@@ -560,25 +727,27 @@ int Fl_Color_Chooser::handle(int e) {
   \param[in] L widget label, default is no label
  */
 Fl_Color_Chooser::Fl_Color_Chooser(int X, int Y, int W, int H, const char* L)
-  : Fl_Group(0,0,195,115,L),
-    huebox(0,0,115,115),
-    valuebox(115,0,20,115),
-    choice(140,0,55,25),
-    rvalue(140,30,55,25),
-    gvalue(140,60,55,25),
-    bvalue(140,90,55,25),
-    resize_box(0,0,115,115)
+  : Fl_Group(0, 0, 195, 115, L),
+    huebox(0, 0, 115, 115),
+    valuebox(115, 0, 20, 115),
+    choice(140, 0, 55, 25),
+    rvalue(140, 30, 55, 25),
+    gvalue(140, 60, 55, 25),
+    bvalue(140, 90, 55, 25),
+    resize_box(0, 0, 115, 115)
 {
   end();
   resizable(resize_box);
-  resize(X,Y,W,H);
-  r_ = g_ = b_ = 0;
+  resize(X, Y, W, H);
+  r_ = 0.0;
+  g_ = 0.0;
+  b_ = 0.0;
   hue_ = 0.0;
   saturation_ = 0.0;
   value_ = 0.0;
   huebox.box(FL_DOWN_FRAME);
   valuebox.box(FL_DOWN_FRAME);
-  choice.menu(mode_menu);
+  choice.menu(mode_menu.data());
   set_valuators();
   rvalue.callback(rgb_cb);
   gvalue.callback(rgb_cb);
@@ -591,58 +760,8 @@ Fl_Color_Chooser::Fl_Color_Chooser(int X, int Y, int W, int H, const char* L)
 ////////////////////////////////////////////////////////////////
 // fl_color_chooser():
 
-#include <FL/Fl_Window.H>
-#include <FL/Fl_Box.H>
-#include <FL/Fl_Return_Button.H>
-
-class ColorChip : public Fl_Widget {
-  void draw() FL_OVERRIDE;
-public:
-  uchar r,g,b;
-  ColorChip(int X, int Y, int W, int H) : Fl_Widget(X,Y,W,H) {
-    box(FL_ENGRAVED_FRAME);}
-};
-
-void ColorChip::draw() {
-  if (damage()&FL_DAMAGE_ALL) draw_box();
-  fl_rectf(x()+Fl::box_dx(box()),
-           y()+Fl::box_dy(box()),
-           w()-Fl::box_dw(box()),
-           h()-Fl::box_dh(box()),r,g,b);
-}
-
-static void chooser_cb(Fl_Widget* o, void* vv) {
-  Fl_Color_Chooser* c = (Fl_Color_Chooser*)o;
-  ColorChip* v = (ColorChip*)vv;
-  v->r = uchar(255*c->r()+.5);
-  v->g = uchar(255*c->g()+.5);
-  v->b = uchar(255*c->b()+.5);
-  v->damage(FL_DAMAGE_EXPOSE);
-}
-
 extern const char* fl_ok;
 extern const char* fl_cancel;
-
-// fl_color_chooser's callback for ok_button (below)
-//  [in] o is a pointer to okay_button (below)
-//  [in] p is a pointer to an int to receive the return value (1)
-// closes the fl_color_chooser window
-static void cc_ok_cb (Fl_Widget *o, void *p) {
-  *((int *)p) = 1; // set return value
-  o->window()->hide();
-}
-
-// fl_color_chooser's callback for cancel_button and window close
-//  [in] o is a pointer to cancel_button (below) _or_ the dialog window
-//  [in] p is a pointer to an int to receive the return value (0)
-// closes the fl_color_chooser window
-static void cc_cancel_cb (Fl_Widget *o, void *p) {
-  *((int *)p) = 0; // set return value
-  if (o->window()) // cancel button
-    o->window()->hide();
-  else // window close
-    o->hide();
-}
 
 /** \addtogroup  group_comdlg
     @{ */
@@ -660,28 +779,35 @@ static void cc_cancel_cb (Fl_Widget *o, void *p) {
  */
 int fl_color_chooser(const char* name, double& r, double& g, double& b, int cmode) {
   int ret = 0;
-  Fl_Window window(215,200,name);
-  window.callback(cc_cancel_cb,&ret);
+  Fl_Window window(215, 200, name);
+  window.callback(cc_cancel_cb, &ret);
   Fl_Color_Chooser chooser(10, 10, 195, 115);
   ColorChip ok_color(10, 130, 95, 25);
   Fl_Return_Button ok_button(10, 165, 95, 25, fl_ok);
-  ok_button.callback(cc_ok_cb,&ret);
+  ok_button.callback(cc_ok_cb, &ret);
   ColorChip cancel_color(110, 130, 95, 25);
-  cancel_color.r = uchar(255*r+.5); ok_color.r = cancel_color.r;
-  ok_color.g = cancel_color.g = uchar(255*g+.5);
-  ok_color.b = cancel_color.b = uchar(255*b+.5);
+  cancel_color.r = static_cast<uchar>(std::lround(255.0 * r));
+  ok_color.r = cancel_color.r;
+  cancel_color.g = static_cast<uchar>(std::lround(255.0 * g));
+  ok_color.g = cancel_color.g;
+  cancel_color.b = static_cast<uchar>(std::lround(255.0 * b));
+  ok_color.b = cancel_color.b;
   Fl_Button cancel_button(110, 165, 95, 25, fl_cancel);
-  cancel_button.callback(cc_cancel_cb,&ret);
+  cancel_button.callback(cc_cancel_cb, &ret);
   window.resizable(chooser);
-  chooser.rgb(r,g,b);
+  chooser.rgb(r, g, b);
   chooser.callback(chooser_cb, &ok_color);
-  if (cmode!=-1) chooser.mode(cmode);
+  if (cmode != -1) {
+    chooser.mode(cmode);
+  }
   window.end();
   window.set_modal();
   window.hotspot(window);
   window.show();
-  while (window.shown()) Fl::wait();
-  if (ret) { // ok_button or Enter
+  while (window.shown()) {
+    Fl::wait();
+  }
+  if (ret != 0) { // ok_button or Enter
     r = chooser.r();
     g = chooser.g();
     b = chooser.b();
@@ -702,13 +828,13 @@ int fl_color_chooser(const char* name, double& r, double& g, double& b, int cmod
   \relates Fl_Color_Chooser
  */
 int fl_color_chooser(const char* name, uchar& r, uchar& g, uchar& b, int cmode) {
-  double dr = r/255.0;
-  double dg = g/255.0;
-  double db = b/255.0;
-  if (fl_color_chooser(name,dr,dg,db,cmode)) {
-    r = uchar(255*dr+.5);
-    g = uchar(255*dg+.5);
-    b = uchar(255*db+.5);
+  double dr = static_cast<double>(r) / 255.0;
+  double dg = static_cast<double>(g) / 255.0;
+  double db = static_cast<double>(b) / 255.0;
+  if (fl_color_chooser(name, dr, dg, db, cmode) != 0) {
+    r = static_cast<uchar>(std::lround(255.0 * dr));
+    g = static_cast<uchar>(std::lround(255.0 * dg));
+    b = static_cast<uchar>(std::lround(255.0 * db));
     return 1;
   }
   return 0;

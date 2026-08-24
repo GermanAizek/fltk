@@ -49,8 +49,10 @@ FL_EXPORT unsigned fl_cmap[256] = {
  8 bits will always be 0.
  */
 unsigned Fl::get_color(Fl_Color i) {
-  if (i & 0xffffff00) return (i);
-  else return fl_cmap[i];
+  if ((static_cast<unsigned int>(i) & 0xffffff00U) != 0U) {
+    return static_cast<unsigned int>(i);
+  }
+  return fl_cmap[i];
 }
 
 /**
@@ -60,8 +62,10 @@ unsigned Fl::get_color(Fl_Color i) {
  until fl_color(i) is used.
  */
 void Fl::set_color(Fl_Color i, uchar red, uchar green, uchar blue) {
-  Fl::set_color((Fl_Color)(i & 255),
-                ((unsigned)red<<24)+((unsigned)green<<16)+((unsigned)blue<<8));
+  Fl::set_color(static_cast<Fl_Color>(static_cast<unsigned int>(i) & 0xffU),
+                (static_cast<unsigned int>(red) << 24U) +
+                (static_cast<unsigned int>(green) << 16U) +
+                (static_cast<unsigned int>(blue) << 8U));
 }
 
 /**
@@ -72,11 +76,11 @@ void Fl::set_color(Fl_Color i, uchar red, uchar green, uchar blue) {
  \version 1.4
  */
 void Fl::set_color(Fl_Color i, uchar red, uchar green, uchar blue, uchar alpha) {
-  Fl::set_color((Fl_Color)(i & 255),
-                ((unsigned)red<<24)
-                |((unsigned)green<<16)
-                |((unsigned)blue<<8)
-                |(alpha^0xff));
+  Fl::set_color(static_cast<Fl_Color>(static_cast<unsigned int>(i) & 0xffU),
+                (static_cast<unsigned int>(red) << 24U) |
+                (static_cast<unsigned int>(green) << 16U) |
+                (static_cast<unsigned int>(blue) << 8U) |
+                (static_cast<unsigned int>(alpha) ^ 0xffU));
 }
 
 
@@ -101,14 +105,13 @@ void Fl::free_color(Fl_Color i, int overlay)
  \see unsigned get_color(Fl_Color c)
  */
 void Fl::get_color(Fl_Color i, uchar &red, uchar &green, uchar &blue) {
-  unsigned c;
+  const unsigned c = ((static_cast<unsigned int>(i) & 0xffffff00U) != 0U)
+                         ? static_cast<unsigned int>(i)
+                         : fl_cmap[i];
 
-  if (i & 0xffffff00) c = (unsigned)i;
-  else c = fl_cmap[i];
-
-  red   = uchar(c>>24);
-  green = uchar(c>>16);
-  blue  = uchar(c>>8);
+  red   = static_cast<uchar>(c >> 24U);
+  green = static_cast<uchar>(c >> 16U);
+  blue  = static_cast<uchar>(c >> 8U);
 }
 
 /**
@@ -120,15 +123,14 @@ void Fl::get_color(Fl_Color i, uchar &red, uchar &green, uchar &blue) {
  \see unsigned get_color(Fl_Color c)
  */
 void Fl::get_color(Fl_Color i, uchar &red, uchar &green, uchar &blue, uchar &alpha) {
-  unsigned c;
+  const unsigned c = ((static_cast<unsigned int>(i) & 0xffffff00U) != 0U)
+                         ? static_cast<unsigned int>(i)
+                         : fl_cmap[i];
 
-  if (i & 0xffffff00) c = (unsigned)i;
-  else c = fl_cmap[i];
-
-  red   = uchar(c>>24);
-  green = uchar(c>>16);
-  blue  = uchar(c>>8);
-  alpha = uchar(c^0x000000ff);
+  red   = static_cast<uchar>(c >> 24U);
+  green = static_cast<uchar>(c >> 16U);
+  blue  = static_cast<uchar>(c >> 8U);
+  alpha = static_cast<uchar>(c ^ 0x000000ffU);
 }
 
 /**
@@ -144,19 +146,25 @@ void Fl::get_color(Fl_Color i, uchar &red, uchar &green, uchar &blue, uchar &alp
  \param[in] weight weighting factor
  */
 Fl_Color fl_color_average(Fl_Color color1, Fl_Color color2, float weight) {
-  unsigned rgb1;
-  unsigned rgb2;
-  uchar r, g, b;
+  const unsigned rgb1 = ((static_cast<unsigned int>(color1) & 0xffffff00U) != 0U)
+                            ? static_cast<unsigned int>(color1)
+                            : fl_cmap[static_cast<unsigned int>(color1) & 0xffU];
 
-  if (color1 & 0xffffff00) rgb1 = color1;
-  else rgb1 = fl_cmap[color1 & 255];
+  const unsigned rgb2 = ((static_cast<unsigned int>(color2) & 0xffffff00U) != 0U)
+                            ? static_cast<unsigned int>(color2)
+                            : fl_cmap[static_cast<unsigned int>(color2) & 0xffU];
 
-  if (color2 & 0xffffff00) rgb2 = color2;
-  else rgb2 = fl_cmap[color2 & 255];
+  const auto r = static_cast<uchar>(
+      static_cast<float>(static_cast<uchar>(rgb1 >> 24U)) * weight +
+      static_cast<float>(static_cast<uchar>(rgb2 >> 24U)) * (1.0f - weight));
 
-  r = (uchar)(((uchar)(rgb1>>24))*weight + ((uchar)(rgb2>>24))*(1-weight));
-  g = (uchar)(((uchar)(rgb1>>16))*weight + ((uchar)(rgb2>>16))*(1-weight));
-  b = (uchar)(((uchar)(rgb1>>8))*weight + ((uchar)(rgb2>>8))*(1-weight));
+  const auto g = static_cast<uchar>(
+      static_cast<float>(static_cast<uchar>(rgb1 >> 16U)) * weight +
+      static_cast<float>(static_cast<uchar>(rgb2 >> 16U)) * (1.0f - weight));
+
+  const auto b = static_cast<uchar>(
+      static_cast<float>(static_cast<uchar>(rgb1 >> 8U)) * weight +
+      static_cast<float>(static_cast<uchar>(rgb2 >> 8U)) * (1.0f - weight));
 
   return fl_rgb_color(r, g, b);
 }
