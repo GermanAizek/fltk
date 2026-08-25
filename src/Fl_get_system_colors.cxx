@@ -1,7 +1,7 @@
 //
 // System color support for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2024 by Bill Spitzak and others.
+// Copyright 1998-2026 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -22,11 +22,11 @@
 #include "Fl_Screen_Driver.H"
 #include "Fl_System_Driver.H"
 #include <FL/platform.H>
-#include <FL/math.h>
 #include <FL/fl_string_functions.h>
 #include "flstring.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <FL/Fl_Pixmap.H>
 #include <FL/Fl_Tiled_Image.H>
 #include "tile.xpm"
@@ -37,31 +37,58 @@
     the colors used as backgrounds by almost all widgets and used to draw
     the edges of all the boxtypes.
 */
-void Fl::background(uchar r, uchar g, uchar b) {
+void Fl::background(const uchar r, const uchar g, const uchar b) {
   Fl_Screen_Driver::bg_set = 1;
 
   // replace the gray ramp so that FL_GRAY is this color
-  if (!r) r = 1; else if (r==255) r = 254;
-  double powr = log(r/255.0)/log((FL_GRAY-FL_GRAY_RAMP)/(FL_NUM_GRAY-1.0));
-  if (!g) g = 1; else if (g==255) g = 254;
-  double powg = log(g/255.0)/log((FL_GRAY-FL_GRAY_RAMP)/(FL_NUM_GRAY-1.0));
-  if (!b) b = 1; else if (b==255) b = 254;
-  double powb = log(b/255.0)/log((FL_GRAY-FL_GRAY_RAMP)/(FL_NUM_GRAY-1.0));
-  for (int i = 0; i < FL_NUM_GRAY; i++) {
-    double gray = i/(FL_NUM_GRAY-1.0);
-    Fl::set_color(fl_gray_ramp(i),
-                  uchar(pow(gray,powr)*255+.5),
-                  uchar(pow(gray,powg)*255+.5),
-                  uchar(pow(gray,powb)*255+.5));
+  uchar adj_r = r;
+  if (adj_r == 0U) {
+    adj_r = 1U;
+  } else if (adj_r == 255U) {
+    adj_r = 254U;
+  } else {
+    // Value remains in [1, 254]
+  }
+  const double powr = std::log(static_cast<double>(adj_r) / 255.0) /
+                      std::log(static_cast<double>(FL_GRAY - FL_GRAY_RAMP) / (static_cast<double>(FL_NUM_GRAY) - 1.0));
+
+  uchar adj_g = g;
+  if (adj_g == 0U) {
+    adj_g = 1U;
+  } else if (adj_g == 255U) {
+    adj_g = 254U;
+  } else {
+    // Value remains in [1, 254]
+  }
+  const double powg = std::log(static_cast<double>(adj_g) / 255.0) /
+                      std::log(static_cast<double>(FL_GRAY - FL_GRAY_RAMP) / (static_cast<double>(FL_NUM_GRAY) - 1.0));
+
+  uchar adj_b = b;
+  if (adj_b == 0U) {
+    adj_b = 1U;
+  } else if (adj_b == 255U) {
+    adj_b = 254U;
+  } else {
+    // Value remains in [1, 254]
+  }
+  const double powb = std::log(static_cast<double>(adj_b) / 255.0) /
+                      std::log(static_cast<double>(FL_GRAY - FL_GRAY_RAMP) / (static_cast<double>(FL_NUM_GRAY) - 1.0));
+
+  for (int i = 0; i < FL_NUM_GRAY; ++i) {
+    const double gray = static_cast<double>(i) / (static_cast<double>(FL_NUM_GRAY) - 1.0);
+    set_color(fl_gray_ramp(i),
+                  static_cast<uchar>(std::lround(std::pow(gray, powr) * 255.0)),
+                  static_cast<uchar>(std::lround(std::pow(gray, powg) * 255.0)),
+                  static_cast<uchar>(std::lround(std::pow(gray, powb) * 255.0)));
   }
 }
 
 
 /** Changes fl_color(FL_FOREGROUND_COLOR). */
-void Fl::foreground(uchar r, uchar g, uchar b) {
+void Fl::foreground(const uchar r, const uchar g, const uchar b) {
   Fl_Screen_Driver::fg_set = 1;
 
-  Fl::set_color(FL_FOREGROUND_COLOR,r,g,b);
+  set_color(FL_FOREGROUND_COLOR, r, g, b);
 }
 
 
@@ -71,19 +98,19 @@ void Fl::foreground(uchar r, uchar g, uchar b) {
     <P>This call may change fl_color(FL_FOREGROUND_COLOR) if it
     does not provide sufficient contrast to FL_BACKGROUND2_COLOR.
 */
-void Fl::background2(uchar r, uchar g, uchar b) {
+void Fl::background2(const uchar r, const uchar g, const uchar b) {
   Fl_Screen_Driver::bg2_set = 1;
 
-  Fl::set_color(FL_BACKGROUND2_COLOR,r,g,b);
-  Fl::set_color(FL_FOREGROUND_COLOR,
-                get_color(fl_contrast(FL_FOREGROUND_COLOR,FL_BACKGROUND2_COLOR)));
+  set_color(FL_BACKGROUND2_COLOR, r, g, b);
+  set_color(FL_FOREGROUND_COLOR,
+                get_color(fl_contrast(FL_FOREGROUND_COLOR, FL_BACKGROUND2_COLOR)));
 }
 
 
 // these are set by Fl::args() and override any system colors:
-const char *fl_fg = NULL;
-const char *fl_bg = NULL;
-const char *fl_bg2 = NULL;
+const char *fl_fg = nullptr;
+const char *fl_bg = nullptr;
+const char *fl_bg2 = nullptr;
 
 /**
  Parse a string containing a description of a color and write r, g, and b.
@@ -109,7 +136,7 @@ const char *fl_bg2 = NULL;
  \param[out] r, g, b the color components in the 0...255 range
  \return 0 if the color cannot be interpreted, 1 otherwise
  */
-int fl_parse_color(const char* p, uchar& r, uchar& g, uchar& b) {
+int fl_parse_color(const char* const p, uchar& r, uchar& g, uchar& b) {
   return Fl::screen_driver()->parse_color(p, r, g, b);
 }
 
@@ -128,7 +155,7 @@ int fl_parse_color(const char* p, uchar& r, uchar& g, uchar& b) {
 */
 void Fl::get_system_colors()
 {
-  Fl::screen_driver()->get_system_colors();
+  screen_driver()->get_system_colors();
 }
 
 
@@ -150,12 +177,15 @@ extern void     fl_thin_up_frame(int, int, int, int, Fl_Color);
 extern void     fl_thin_down_frame(int, int, int, int, Fl_Color);
 
 #ifndef FL_DOXYGEN
-const char      *Fl::scheme_ = (const char *)0;     // current scheme
-Fl_Image        *Fl::scheme_bg_ = (Fl_Image *)0;    // current background image for the scheme
+const char      *Fl::scheme_ = nullptr;     // current scheme
+Fl_Image        *Fl::scheme_bg_ = nullptr;    // current background image for the scheme
 #endif
 
-static Fl_Pixmap        tile(tile_xpm);
-
+// Lazy getter function for the static pixmap tile to avoid static init exception issues
+static Fl_Pixmap* get_tile_pixmap() {
+  static Fl_Pixmap tile_instance(tile_xpm);
+  return &tile_instance;
+}
 
 /**
   Sets the current widget scheme. NULL will use the scheme defined
@@ -183,7 +213,7 @@ static Fl_Pixmap        tile(tile_xpm);
   always be lowercase and Fl::scheme() will return this lowercase name or
   \p NULL if no scheme or the default scheme ("none" or "base") was set.
 
-  \param[in]  s   Scheme name of NULL
+  \param[in]  name   Scheme name of NULL
 
   \retval     0 if the scheme has not been set or is the default scheme
   \retval     1 if a scheme other than "none"/"base" was set
@@ -191,32 +221,48 @@ static Fl_Pixmap        tile(tile_xpm);
   \see Fl::scheme() to get the name of the current scheme
   \see Fl::is_scheme(const char*) to test if the specified scheme is set
 */
-int Fl::scheme(const char *s) {
-  if (!s) {
+int Fl::scheme(const char * const name) {
+  const char *s = name;
+  if (s == nullptr) {
     s = screen_driver()->get_system_scheme();
   }
 
-  if (s) {
-    if (!fl_ascii_strcasecmp(s, "none") || !fl_ascii_strcasecmp(s, "base") || !*s) s = NULL;
-    else if (!fl_ascii_strcasecmp(s, "gtk+")) s = fl_strdup("gtk+");
-    else if (!fl_ascii_strcasecmp(s, "plastic")) s = fl_strdup("plastic");
-    else if (!fl_ascii_strcasecmp(s, "gleam")) s = fl_strdup("gleam");
-    else if (!fl_ascii_strcasecmp(s, "oxy")) s = fl_strdup("oxy");
-    else s = NULL;
+  if (s != nullptr) {
+    if ((fl_ascii_strcasecmp(s, "none") == 0) || (fl_ascii_strcasecmp(s, "base") == 0) || (*s == '\0')) {
+      s = nullptr;
+    } else if (fl_ascii_strcasecmp(s, "gtk+") == 0) {
+      const char * allocated_scheme = fl_strdup("gtk+");
+      s = allocated_scheme;
+    } else if (fl_ascii_strcasecmp(s, "plastic") == 0) {
+      const char * allocated_scheme = fl_strdup("plastic");
+      s = allocated_scheme;
+    } else if (fl_ascii_strcasecmp(s, "gleam") == 0) {
+      const char * allocated_scheme = fl_strdup("gleam");
+      s = allocated_scheme;
+    } else if (fl_ascii_strcasecmp(s, "oxy") == 0) {
+      const char * allocated_scheme = fl_strdup("oxy");
+      s = allocated_scheme;
+    } else {
+      s = nullptr;
+    }
   }
-  if (scheme_) free((void*)scheme_);
+
+  if (scheme_ != nullptr) {
+    std::free(static_cast<void*>(const_cast<char*>(scheme_)));
+  }
   scheme_ = s;
 
   // Save the new scheme in the FLTK_SCHEME env var so that child processes
   // inherit it...
-  static char e[1024];
-  strcpy(e, "FLTK_SCHEME=");
-  if (s) strlcat(e, s, sizeof(e));
-  Fl::system_driver()->putenv(e);
+  char env_buf[1024] = "FLTK_SCHEME=";
+  if (s != nullptr) {
+    static_cast<void>(strlcat(&env_buf[0], s, sizeof(env_buf)));
+  }
+  static_cast<void>(Fl::system_driver()->putenv(&env_buf[0]));
 
   // Load the scheme...
-  reload_scheme();
-  return (s != NULL);
+  static_cast<void>(reload_scheme());
+  return (s != nullptr) ? 1 : 0;
 }
 
 /**
@@ -231,38 +277,61 @@ int Fl::scheme(const char *s) {
   \note Internal: Should this method be private?
 */
 int Fl::reload_scheme() {
-  Fl_Window *win;
-
-  if (scheme_ && !fl_ascii_strcasecmp(scheme_, "plastic")) {
+  if ((scheme_ != nullptr) && (fl_ascii_strcasecmp(scheme_, "plastic") == 0)) {
     // Update the tile image to match the background color...
-    uchar r, g, b;
-    int nr, ng, nb;
-    int i;
+    uchar r = 0U;
+    uchar g = 0U;
+    uchar b = 0U;
     // static uchar levels[3] = { 0xff, 0xef, 0xe8 };
     // OSX 10.3 and higher use a background with less contrast...
-    static uchar levels[3] = { 0xff, 0xf8, 0xf4 };
+    constexpr uchar levels[3] = { 0xffU, 0xf8U, 0xf4U };
 
     get_color(FL_GRAY, r, g, b);
 
     // printf("FL_GRAY = 0x%02x 0x%02x 0x%02x\n", r, g, b);
 
-    for (i = 0; i < 3; i ++) {
-      nr = levels[i] * r / 0xe8;
-      if (nr > 255) nr = 255;
+    constexpr char glyphs[4] = "Oo.";
 
-      ng = levels[i] * g / 0xe8;
-      if (ng > 255) ng = 255;
+    // Unrolled loop to satisfy static array bounds checking without warnings
+    int nr0 = static_cast<int>(static_cast<unsigned int>(levels[0]) * static_cast<unsigned int>(r) / 0xe8U);
+    if (nr0 > 255) { nr0 = 255; }
+    int ng0 = static_cast<int>(static_cast<unsigned int>(levels[0]) * static_cast<unsigned int>(g) / 0xe8U);
+    if (ng0 > 255) { ng0 = 255; }
+    int nb0 = static_cast<int>(static_cast<unsigned int>(levels[0]) * static_cast<unsigned int>(b) / 0xe8U);
+    if (nb0 > 255) { nb0 = 255; }
+    const int c_nr0 = nr0;
+    const int c_ng0 = ng0;
+    const int c_nb0 = nb0;
+    static_cast<void>(std::snprintf(&tile_cmap[0][0], sizeof(tile_cmap[0]), "%c c #%02x%02x%02x", glyphs[0], c_nr0, c_ng0, c_nb0));
 
-      nb = levels[i] * b / 0xe8;
-      if (nb > 255) nb = 255;
+    int nr1 = static_cast<int>(static_cast<unsigned int>(levels[1]) * static_cast<unsigned int>(r) / 0xe8U);
+    if (nr1 > 255) { nr1 = 255; }
+    int ng1 = static_cast<int>(static_cast<unsigned int>(levels[1]) * static_cast<unsigned int>(g) / 0xe8U);
+    if (ng1 > 255) { ng1 = 255; }
+    int nb1 = static_cast<int>(static_cast<unsigned int>(levels[1]) * static_cast<unsigned int>(b) / 0xe8U);
+    if (nb1 > 255) { nb1 = 255; }
+    const int c_nr1 = nr1;
+    const int c_ng1 = ng1;
+    const int c_nb1 = nb1;
+    static_cast<void>(std::snprintf(&tile_cmap[1][0], sizeof(tile_cmap[1]), "%c c #%02x%02x%02x", glyphs[1], c_nr1, c_ng1, c_nb1));
 
-      snprintf(tile_cmap[i], sizeof(tile_cmap[0]), "%c c #%02x%02x%02x", "Oo."[i], nr, ng, nb);
-      // puts(tile_cmap[i]);
+    int nr2 = static_cast<int>(static_cast<unsigned int>(levels[2]) * static_cast<unsigned int>(r) / 0xe8U);
+    if (nr2 > 255) { nr2 = 255; }
+    int ng2 = static_cast<int>(static_cast<unsigned int>(levels[2]) * static_cast<unsigned int>(g) / 0xe8U);
+    if (ng2 > 255) { ng2 = 255; }
+    int nb2 = static_cast<int>(static_cast<unsigned int>(levels[2]) * static_cast<unsigned int>(b) / 0xe8U);
+    if (nb2 > 255) { nb2 = 255; }
+    const int c_nr2 = nr2;
+    const int c_ng2 = ng2;
+    const int c_nb2 = nb2;
+    static_cast<void>(std::snprintf(&tile_cmap[2][0], sizeof(tile_cmap[2]), "%c c #%02x%02x%02x", glyphs[2], c_nr2, c_ng2, c_nb2));
+
+    Fl_Pixmap* const tile_pixmap = get_tile_pixmap();
+    tile_pixmap->uncache();
+
+    if (scheme_bg_ == nullptr) {
+      scheme_bg_ = new Fl_Tiled_Image(tile_pixmap, 0, 0);
     }
-
-    tile.uncache();
-
-    if (!scheme_bg_) scheme_bg_ = new Fl_Tiled_Image(&tile, 0, 0);
 
     // Load plastic buttons, etc...
     set_boxtype(FL_UP_FRAME,        FL_PLASTIC_UP_FRAME);
@@ -279,74 +348,61 @@ int Fl::reload_scheme() {
 
     // Use standard size scrollbars...
     Fl::scrollbar_size(16);
-  } else if (scheme_ && !fl_ascii_strcasecmp(scheme_, "gtk+")) {
-    // Use a GTK+ inspired look-n-feel...
-    if (scheme_bg_) {
+  } else if ((scheme_ != nullptr) && (
+             (fl_ascii_strcasecmp(scheme_, "gtk+") == 0) ||
+             (fl_ascii_strcasecmp(scheme_, "gleam") == 0) ||
+             (fl_ascii_strcasecmp(scheme_, "oxy") == 0))) {
+    // Shared cleanup for GTK+, Gleam, and Oxy
+    if (scheme_bg_ != nullptr) {
       delete scheme_bg_;
-      scheme_bg_ = (Fl_Image *)0;
+      scheme_bg_ = nullptr;
     }
 
-    set_boxtype(FL_UP_FRAME,        FL_GTK_UP_FRAME);
-    set_boxtype(FL_DOWN_FRAME,      FL_GTK_DOWN_FRAME);
-    set_boxtype(FL_THIN_UP_FRAME,   FL_GTK_THIN_UP_FRAME);
-    set_boxtype(FL_THIN_DOWN_FRAME, FL_GTK_THIN_DOWN_FRAME);
+    if (fl_ascii_strcasecmp(scheme_, "gtk+") == 0) {
+      set_boxtype(FL_UP_FRAME,        FL_GTK_UP_FRAME);
+      set_boxtype(FL_DOWN_FRAME,      FL_GTK_DOWN_FRAME);
+      set_boxtype(FL_THIN_UP_FRAME,   FL_GTK_THIN_UP_FRAME);
+      set_boxtype(FL_THIN_DOWN_FRAME, FL_GTK_THIN_DOWN_FRAME);
 
-    set_boxtype(FL_UP_BOX,          FL_GTK_UP_BOX);
-    set_boxtype(FL_DOWN_BOX,        FL_GTK_DOWN_BOX);
-    set_boxtype(FL_THIN_UP_BOX,     FL_GTK_THIN_UP_BOX);
-    set_boxtype(FL_THIN_DOWN_BOX,   FL_GTK_THIN_DOWN_BOX);
-    set_boxtype(FL_ROUND_UP_BOX,    FL_GTK_ROUND_UP_BOX);
-    set_boxtype(FL_ROUND_DOWN_BOX,  FL_GTK_ROUND_DOWN_BOX);
+      set_boxtype(FL_UP_BOX,          FL_GTK_UP_BOX);
+      set_boxtype(FL_DOWN_BOX,        FL_GTK_DOWN_BOX);
+      set_boxtype(FL_THIN_UP_BOX,     FL_GTK_THIN_UP_BOX);
+      set_boxtype(FL_THIN_DOWN_BOX,   FL_GTK_THIN_DOWN_BOX);
+      set_boxtype(FL_ROUND_UP_BOX,    FL_GTK_ROUND_UP_BOX);
+      set_boxtype(FL_ROUND_DOWN_BOX,  FL_GTK_ROUND_DOWN_BOX);
+    } else if (fl_ascii_strcasecmp(scheme_, "gleam") == 0) {
+      set_boxtype(FL_UP_FRAME,        FL_GLEAM_UP_FRAME);
+      set_boxtype(FL_DOWN_FRAME,      FL_GLEAM_DOWN_FRAME);
+      set_boxtype(FL_THIN_UP_FRAME,   FL_GLEAM_UP_FRAME);
+      set_boxtype(FL_THIN_DOWN_FRAME, FL_GLEAM_DOWN_FRAME);
 
-    // Use slightly thinner scrollbars...
-    Fl::scrollbar_size(15);
-  } else if (scheme_ && !fl_ascii_strcasecmp(scheme_, "gleam")) {
-    // Use a GTK+ inspired look-n-feel...
-    if (scheme_bg_) {
-      delete scheme_bg_;
-      scheme_bg_ = (Fl_Image *)0;
+      set_boxtype(FL_UP_BOX,          FL_GLEAM_UP_BOX);
+      set_boxtype(FL_DOWN_BOX,        FL_GLEAM_DOWN_BOX);
+      set_boxtype(FL_THIN_UP_BOX,     FL_GLEAM_THIN_UP_BOX);
+      set_boxtype(FL_THIN_DOWN_BOX,   FL_GLEAM_THIN_DOWN_BOX);
+      set_boxtype(FL_ROUND_UP_BOX,    FL_GLEAM_ROUND_UP_BOX);
+      set_boxtype(FL_ROUND_DOWN_BOX,  FL_GLEAM_ROUND_DOWN_BOX);
+    } else { // "oxy"
+      set_boxtype(FL_UP_FRAME,        FL_OXY_UP_FRAME);
+      set_boxtype(FL_DOWN_FRAME,      FL_OXY_DOWN_FRAME);
+      set_boxtype(FL_THIN_UP_FRAME,   FL_OXY_THIN_UP_FRAME);
+      set_boxtype(FL_THIN_DOWN_FRAME, FL_OXY_THIN_DOWN_FRAME);
+
+      set_boxtype(FL_UP_BOX,          FL_OXY_UP_BOX);
+      set_boxtype(FL_DOWN_BOX,        FL_OXY_DOWN_BOX);
+      set_boxtype(FL_THIN_UP_BOX,     FL_OXY_THIN_UP_BOX);
+      set_boxtype(FL_THIN_DOWN_BOX,   FL_OXY_THIN_DOWN_BOX);
+      set_boxtype(FL_ROUND_UP_BOX,    FL_OXY_ROUND_UP_BOX);
+      set_boxtype(FL_ROUND_DOWN_BOX,  FL_OXY_ROUND_DOWN_BOX);
     }
 
-    set_boxtype(FL_UP_FRAME,        FL_GLEAM_UP_FRAME);
-    set_boxtype(FL_DOWN_FRAME,      FL_GLEAM_DOWN_FRAME);
-    set_boxtype(FL_THIN_UP_FRAME,   FL_GLEAM_UP_FRAME);
-    set_boxtype(FL_THIN_DOWN_FRAME, FL_GLEAM_DOWN_FRAME);
-
-    set_boxtype(FL_UP_BOX,          FL_GLEAM_UP_BOX);
-    set_boxtype(FL_DOWN_BOX,        FL_GLEAM_DOWN_BOX);
-    set_boxtype(FL_THIN_UP_BOX,     FL_GLEAM_THIN_UP_BOX);
-    set_boxtype(FL_THIN_DOWN_BOX,   FL_GLEAM_THIN_DOWN_BOX);
-    set_boxtype(FL_ROUND_UP_BOX,    FL_GLEAM_ROUND_UP_BOX);
-    set_boxtype(FL_ROUND_DOWN_BOX,  FL_GLEAM_ROUND_DOWN_BOX);
-
-    // Use slightly thinner scrollbars...
-    Fl::scrollbar_size(15);
-  } else if (scheme_ && !fl_ascii_strcasecmp(scheme_, "oxy")) {
-    // Oxy scheme
-    if (scheme_bg_) {
-      delete scheme_bg_;
-      scheme_bg_ = (Fl_Image *)0;
-    }
-
-    set_boxtype(FL_UP_FRAME,        FL_OXY_UP_FRAME);
-    set_boxtype(FL_DOWN_FRAME,      FL_OXY_DOWN_FRAME);
-    set_boxtype(FL_THIN_UP_FRAME,   FL_OXY_THIN_UP_FRAME);
-    set_boxtype(FL_THIN_DOWN_FRAME, FL_OXY_THIN_DOWN_FRAME);
-
-    set_boxtype(FL_UP_BOX,          FL_OXY_UP_BOX);
-    set_boxtype(FL_DOWN_BOX,        FL_OXY_DOWN_BOX);
-    set_boxtype(FL_THIN_UP_BOX,     FL_OXY_THIN_UP_BOX);
-    set_boxtype(FL_THIN_DOWN_BOX,   FL_OXY_THIN_DOWN_BOX);
-    set_boxtype(FL_ROUND_UP_BOX,    FL_OXY_ROUND_UP_BOX);
-    set_boxtype(FL_ROUND_DOWN_BOX,  FL_OXY_ROUND_DOWN_BOX);
-
-    // Use slightly thinner scrollbars...
-    Fl::scrollbar_size(15);
+    // Use slightly thinner scrollbars for GTK+, Gleam, and Oxy...
+    scrollbar_size(15);
   } else {
     // Use the standard FLTK look-n-feel...
-    if (scheme_bg_) {
+    if (scheme_bg_ != nullptr) {
       delete scheme_bg_;
-      scheme_bg_ = (Fl_Image *)0;
+      scheme_bg_ = nullptr;
     }
 
     set_boxtype(FL_UP_FRAME,        fl_up_frame, D1, D1, D2, D2);
@@ -366,21 +422,11 @@ int Fl::reload_scheme() {
   }
 
   // Set (or clear) the background tile for all windows...
-
-  // FIXME: This makes it impossible to assign a background image
-  // and/or a label to a window. IMHO we should be able to assign a
-  // background image to a window. Currently (as of FLTK 1.3.3) there
-  // is the workaround to use a group inside the window to achieve this.
-  // See also STR #3075.
-  // AlbrechtS, 01 Mar 2015
-  //
-  // If there is already an image assigned that is not the scheme_bg_,
-  // then don't change the labeltype or assign another image. Will that
-  // fix it?
-
-  for (win = first_window(); win; win = next_window(win)) {
-    win->labeltype(scheme_bg_ ? FL_NORMAL_LABEL : FL_NO_LABEL);
-    win->align(FL_ALIGN_CENTER | FL_ALIGN_INSIDE | FL_ALIGN_CLIP);
+  for (Fl_Window *win = first_window(); win != nullptr; win = next_window(win)) {
+    win->labeltype(scheme_bg_ != nullptr ? FL_NORMAL_LABEL : FL_NO_LABEL);
+    win->align(static_cast<unsigned int>(FL_ALIGN_CENTER) |
+               static_cast<unsigned int>(FL_ALIGN_INSIDE) |
+               static_cast<unsigned int>(FL_ALIGN_CLIP));
     win->image(scheme_bg_);
     win->redraw();
   }

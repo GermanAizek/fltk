@@ -1,7 +1,7 @@
 //
 // Keyboard state routines for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2021 by Bill Spitzak and others.
+// Copyright 1998-2026 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -26,10 +26,13 @@
 
 extern char fl_key_vector[32]; // in Fl_x.cxx
 
-int Fl_X11_Screen_Driver::event_key(int k) {
-  if (k > FL_Button && k <= FL_Button+8)
-    return Fl::event_state(8<<(k-FL_Button));
-  int i;
+int Fl_X11_Screen_Driver::event_key(const int k) {
+  if (k > FL_Button && k <= FL_Button + 8) {
+    const auto shift = static_cast<unsigned int>(k - FL_Button);
+    return Fl::event_state(static_cast<int>(8U << shift));
+  }
+
+  int i = 0;
 #  ifdef __sgi
   // get some missing PC keyboard keys:
   if (k == FL_Meta_L) i = 147;
@@ -37,12 +40,18 @@ int Fl_X11_Screen_Driver::event_key(int k) {
   else if (k == FL_Menu) i = 149;
   else
 #  endif
-    i = XKeysymToKeycode(fl_display, k);
-  if (i==0) return 0;
-  return fl_key_vector[i/8] & (1 << (i%8));
+    i = static_cast<int>(XKeysymToKeycode(fl_display, static_cast<KeySym>(k)));
+
+  if (i == 0) return 0;
+
+  const auto u_i = static_cast<unsigned int>(i);
+  const auto bit_mask = static_cast<unsigned char>(1U << (u_i % 8U));
+  const auto byte_val = static_cast<unsigned char>(fl_key_vector[u_i / 8U]);
+
+  return (byte_val & bit_mask) != 0U ? 1 : 0;
 }
 
-int Fl_X11_Screen_Driver::get_key(int k) {
+int Fl_X11_Screen_Driver::get_key(const int k) {
   fl_open_display();
   XQueryKeymap(fl_display, fl_key_vector);
   return event_key(k);

@@ -130,7 +130,8 @@ void Fl_Grid::init() {
   need_layout_ = false;               // no need to calculate layout
   grid_color = (Fl_Color)0xbbeebb00;  // light green
   draw_grid_ = false;                 // don't draw grid helper lines
-  if (fl_getenv("FLTK_GRID_DEBUG"))
+  static constexpr char debug_key[] = "FLTK_GRID_DEBUG";
+  if (fl_getenv(debug_key))
     draw_grid_ = true;
 }
 
@@ -1170,19 +1171,24 @@ int Fl_Grid::computed_row_height(int row) const {
 void Fl_Grid::debug(int level) const {
   if (level <= 0)
     return;
-  fprintf(stderr, "Fl_Grid::layout(%d, %d) at (%d, %d, %d, %d)\n",
+  static constexpr char fmt1[] = "Fl_Grid::layout(%d, %d) at (%d, %d, %d, %d)\n";
+  fprintf(stderr, fmt1,
           rows_, cols_, x(), y(), w(), h());
-  fprintf(stderr, "    margins:   (%2d, %2d, %2d, %2d)\n",
+  static constexpr char fmt2[] = "    margins:   (%2d, %2d, %2d, %2d)\n";
+  fprintf(stderr, fmt2,
           margin_left_, margin_top_, margin_right_, margin_bottom_);
-  fprintf(stderr, "       gaps:   (%2d, %2d)\n",
+  static constexpr char fmt3[] = "       gaps:   (%2d, %2d)\n";
+  fprintf(stderr, fmt3,
           gap_row_, gap_col_);
   Row *row = Rows_;
   for (int r = 0; r < rows_; r++, row++) {
-    fprintf(stderr, "Row %2d: minh = %d, weight = %d, gap = %d, h = %d\n",
+    static constexpr char fmt4[] = "Row %2d: minh = %d, weight = %d, gap = %d, h = %d\n";
+    fprintf(stderr, fmt4,
             r, row->minh_, row->weight_, row->gap_, row->h_);
     Cell *cel = row->cells_;
     while (cel) {
-      fprintf(stderr, "        Cell(%2d, %2d)\n", cel->row_, cel->col_);
+      static constexpr char fmt5[] = "        Cell(%2d, %2d)\n";
+      fprintf(stderr, fmt5, cel->row_, cel->col_);
       cel = cel->next_;
     }
   }

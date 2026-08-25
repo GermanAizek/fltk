@@ -815,7 +815,7 @@ static void wl_keyboard_key(void *data, struct wl_keyboard *wl_keyboard,
 #endif
   xkb_state_key_get_utf8(seat->xkb_state, keycode, buf, sizeof(buf));
 #if (DEBUG_KEYBOARD)
-  fprintf(stderr, "utf8: '%s' e_length=%d [%d]\n", buf, (int)strlen(buf), *buf);
+  fprintf(stderr, "utf8: '%s' e_length=%d [%d]\n", buf, (int)std::string(buf).length(), (int)(unsigned char)*buf);
 #endif
   Fl::e_keysym = Fl::e_original_keysym = for_key_vector;
   if (!(Fl::e_state & FL_NUM_LOCK) && sym >= XKB_KEY_KP_Home && sym <= XKB_KEY_KP_Delete) {
@@ -1251,22 +1251,23 @@ static void registry_handle_global(void *user_data, struct wl_registry *wl_regis
            uint32_t id, const char *interface, uint32_t version) {
 //fprintf(stderr, "interface=%s version=%u\n", interface, version);
   Fl_Wayland_Screen_Driver *scr_driver = (Fl_Wayland_Screen_Driver*)Fl::screen_driver();
-  if (strcmp(interface, "wl_compositor") == 0) {
+  std::string iface{interface};
+  if (iface == "wl_compositor") {
     if (version < 4) {
       Fl::fatal("wl_compositor version >= 4 required");
     }
     scr_driver->wl_compositor = (struct wl_compositor*)wl_registry_bind(wl_registry,
            id, &wl_compositor_interface, 4);
 
-  } else if (strcmp(interface, "wl_subcompositor") == 0) {
+  } else if (iface == "wl_subcompositor") {
     scr_driver->wl_subcompositor = (struct wl_subcompositor*)wl_registry_bind(wl_registry,
            id, &wl_subcompositor_interface, 1);
 
-  } else if (strcmp(interface, "wl_shm") == 0) {
+  } else if (iface == "wl_shm") {
     scr_driver->wl_shm = (struct wl_shm*)wl_registry_bind(wl_registry,
             id, &wl_shm_interface, 1);
 
-  } else if (strcmp(interface, "wl_seat") == 0) {
+  } else if (iface == "wl_seat") {
     if (version < 3) {
       Fl::fatal("%s version 3 required but only version %i is available\n",
                 interface, version);
@@ -1304,7 +1305,7 @@ static void registry_handle_global(void *user_data, struct wl_registry *wl_regis
                                   Fl_Wayland_Screen_Driver::p_data_device_listener, NULL);
     }
 
-  } else if (strcmp(interface, wl_data_device_manager_interface.name) == 0) {
+  } else if (iface == wl_data_device_manager_interface.name) {
     if (!scr_driver->seat) scr_driver->seat =
       (struct Fl_Wayland_Screen_Driver::seat*)calloc(1,
               sizeof(struct Fl_Wayland_Screen_Driver::seat));
@@ -1321,7 +1322,7 @@ static void registry_handle_global(void *user_data, struct wl_registry *wl_regis
     }
 //fprintf(stderr, "registry_handle_global: %s\n", interface);
 
-  } else if (strcmp(interface, "wl_output") == 0) {
+  } else if (iface == "wl_output") {
     if (version < 2) {
       Fl::fatal("%s version 2 required but only version %i is available\n",
                 interface, version);
@@ -1354,25 +1355,25 @@ static void registry_handle_global(void *user_data, struct wl_registry *wl_regis
     }
 //fprintf(stderr, "wl_output: id=%d wl_output=%p \n", id, output->wl_output);
 
-  } else if (strcmp(interface, xdg_wm_base_interface.name) == 0) {
+  } else if (iface == xdg_wm_base_interface.name) {
 //fprintf(stderr, "registry_handle_global interface=%s\n", interface);
     scr_driver->xdg_wm_base = (struct xdg_wm_base *)wl_registry_bind(wl_registry, id,
                                                         &xdg_wm_base_interface, 1);
     xdg_wm_base_add_listener(scr_driver->xdg_wm_base, &xdg_wm_base_listener, NULL);
-  } else if (strstr(interface, "wf_shell_manager")) {
+  } else if (iface.find("wf_shell_manager") != std::string::npos) {
     ((pair_bool*)user_data)->found_wf_shell = true;
-  } else if (strcmp(interface, "gtk_shell1") == 0) {
+  } else if (iface == "gtk_shell1") {
     ((pair_bool*)user_data)->found_gtk_shell = true;
     //fprintf(stderr, "Running the Mutter compositor\n");
     scr_driver->seat->gtk_shell = (struct gtk_shell1*)wl_registry_bind(wl_registry, id,
                                   &gtk_shell1_interface, fl_min(version, 5));
-  } else if (strcmp(interface, "weston_desktop_shell") == 0) {
+  } else if (iface == "weston_desktop_shell") {
     Fl_Wayland_Screen_Driver::compositor = Fl_Wayland_Screen_Driver::WESTON;
     //fprintf(stderr, "Running the Weston compositor\n");
-  } else if (strcmp(interface, "org_kde_plasma_shell") == 0) {
+  } else if (iface == "org_kde_plasma_shell") {
     Fl_Wayland_Screen_Driver::compositor = Fl_Wayland_Screen_Driver::KWIN;
     //fprintf(stderr, "Running the KWin compositor\n");
-  } else if (strncmp(interface, "zowl_mach_ipc", 13) == 0) {
+  } else if (iface.substr(0, 13) == "zowl_mach_ipc") {
     Fl_Wayland_Screen_Driver::compositor = Fl_Wayland_Screen_Driver::OWL;
     //fprintf(stderr, "Running the Owl compositor\n");
     if (wl_list_length(&scr_driver->outputs) == 0) {
@@ -1387,27 +1388,27 @@ static void registry_handle_global(void *user_data, struct wl_registry *wl_regis
       wl_list_insert(&(scr_driver->outputs), &output->link);
       scr_driver->screen_count_set(1);
     }
-  } else if (strcmp(interface, zwp_text_input_manager_v3_interface.name) == 0) {
+  } else if (iface == zwp_text_input_manager_v3_interface.name) {
     scr_driver->text_input_base = (struct zwp_text_input_manager_v3 *)
       wl_registry_bind(wl_registry, id, &zwp_text_input_manager_v3_interface, 1);
 //printf("scr_driver->text_input_base=%p version=%d\n",scr_driver->text_input_base,version);
 #if HAVE_XDG_DIALOG
-  } else if (strcmp(interface, xdg_wm_dialog_v1_interface.name) == 0) {
+  } else if (iface == xdg_wm_dialog_v1_interface.name) {
     scr_driver->xdg_wm_dialog = (struct xdg_wm_dialog_v1 *)
       wl_registry_bind(wl_registry, id, &xdg_wm_dialog_v1_interface, 1);
 #endif // HAVE_XDG_DIALOG
 #if HAVE_XDG_ACTIVATION
-  } else if (strcmp(interface, xdg_activation_v1_interface.name) == 0) {
+  } else if (iface == xdg_activation_v1_interface.name) {
     scr_driver->xdg_activation = (struct xdg_activation_v1 *)
       wl_registry_bind(wl_registry, id, &xdg_activation_v1_interface, 1);
 #endif // HAVE_XDG_ACTIVATION
 #if HAVE_CURSOR_SHAPE
-  } else if (strcmp(interface, wp_cursor_shape_manager_v1_interface.name) == 0) {
+  } else if (iface == wp_cursor_shape_manager_v1_interface.name) {
     scr_driver->wp_cursor_shape_manager = (struct wp_cursor_shape_manager_v1 *)
       wl_registry_bind(wl_registry, id, &wp_cursor_shape_manager_v1_interface, 1);
 #endif // HAVE_CURSOR_SHAPE
 #if FLTK_HAVE_PEN_SUPPORT
-  } else if (strcmp(interface, zwp_tablet_manager_v2_interface.name) == 0) {
+  } else if (iface == zwp_tablet_manager_v2_interface.name) {
       struct zwp_tablet_manager_v2 *tm =
           (struct zwp_tablet_manager_v2*)wl_registry_bind(
               wl_registry, id, &zwp_tablet_manager_v2_interface, 1);

@@ -2,7 +2,7 @@
 // Fl_File_Browser routines.
 //
 // Copyright 1999-2010 by Michael Sweet.
-// Copyright 2016 by Bill Spitzak and others.
+// Copyright 2016-2026 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -36,7 +36,8 @@
 #include <FL/filename.H>
 #include <FL/fl_string_functions.h>
 #include <FL/Fl_Image.H>        // icon
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstring>
 #include "flstring.h"
 
 //
@@ -46,14 +47,12 @@
 int                                     // O - Height in pixels
 Fl_File_Browser::full_height() const
 {
-  int   i,                              // Looping var
-        th;                             // Total height of list.
+  int th = 0;                           // Total height of list.
 
-
-  for (i = 0, th = 0; i < size(); i ++)
+  for (int i = 0; i < size(); i++)
     th += item_height(find_line(i)) + linespacing();
 
-  return (th);
+  return th;
 }
 
 
@@ -64,37 +63,33 @@ Fl_File_Browser::full_height() const
 int                                     // O - Height in pixels
 Fl_File_Browser::item_height(void *p) const     // I - List item data
 {
-  FL_BLINE      *line;                  // Pointer to line
-  const char    *t;                     // Pointer into text
-  int           height;                 // Width of line
-  int           textheight;             // Height of text
-
-
   // Figure out the standard text height...
   fl_font(textfont(), textsize());
-  textheight = fl_height();
+  const int textheight = fl_height();
 
   // We always have at least 1 line...
-  height = textheight;
+  int height = textheight;
 
   // Scan for newlines...
-  line = (FL_BLINE*)p;
-  const char* line_txt = bline_txt(line);
+  auto *const line = static_cast<FL_BLINE*>(p);
+  const char* const line_txt = bline_txt(line);
 
-  if (line != NULL)
-    for (t = line_txt; *t != '\0'; t ++)
+  if (line != nullptr) {
+    for (const char *t = line_txt; *t != '\0'; t++) {
       if (*t == '\n')
         height += textheight;
+    }
+  }
 
   // If we have enabled icons then add space for them...
-  if (Fl_File_Icon::first() != NULL && height < iconsize_)
+  if (Fl_File_Icon::first() != nullptr && height < iconsize_)
     height = iconsize_;
 
   // Add space for the selection border..
   height += 2;
 
   // Return the height
-  return (height);
+  return height;
 }
 
 
@@ -105,48 +100,41 @@ Fl_File_Browser::item_height(void *p) const     // I - List item data
 int                                     // O - Width in pixels
 Fl_File_Browser::item_width(void *p) const      // I - List item data
 {
-  int           i;                      // Looping var
-  FL_BLINE      *line;                  // Pointer to line
-  const char    *t;                     // Pointer into text
-  char          *ptr,                   // Pointer into fragment
-                fragment[10240];        // Fragment of text
-  int           width,                  // Width of line
-                tempwidth;              // Width of fragment
-  int           column;                 // Current column
-  const int     *columns;               // Columns
-
-
   // Scan for newlines...
-  line    = (FL_BLINE*)p;
-  const char* line_txt = bline_txt(line);
-  columns = column_widths();
+  auto *const line = static_cast<FL_BLINE*>(p);
+  const char* const line_txt = bline_txt(line);
+  const int *const columns = column_widths();
 
   // Set the font and size...
-  if (line_txt[strlen(line_txt) - 1] == '/')
-    fl_font(textfont() | FL_BOLD, textsize());
+  const size_t txt_len = strlen(line_txt);
+  if (txt_len > 0 && line_txt[txt_len - 1] == '/')
+    fl_font(static_cast<Fl_Font>(static_cast<unsigned int>(textfont()) | static_cast<unsigned int>(FL_BOLD)), textsize());
   else
     fl_font(textfont(), textsize());
 
-  if (strchr(line_txt, '\n') == NULL &&
-      strchr(line_txt, column_char()) == NULL)
+  int width = 0;
+
+  if (strchr(line_txt, '\n') == nullptr &&
+      strchr(line_txt, column_char()) == nullptr)
   {
     // Do a fast width calculation...
-    width = (int)fl_width(line_txt);
+    width = static_cast<int>(fl_width(line_txt));
   }
   else
   {
     // More than 1 line or have columns; find the maximum width...
-    width     = 0;
-    tempwidth = 0;
-    column    = 0;
+    int tempwidth = 0;
+    int column = 0;
+    char fragment[10240];
+    char *ptr = fragment;
 
-    for (t = line_txt, ptr = fragment; *t != '\0'; t ++)
+    for (const char *t = line_txt; *t != '\0'; t++) {
       if (*t == '\n')
       {
         // Newline - nul terminate this fragment and get the width...
         *ptr = '\0';
 
-        tempwidth += (int)fl_width(fragment);
+        tempwidth += static_cast<int>(fl_width(fragment));
 
         // Update the max width as needed...
         if (tempwidth > width)
@@ -160,14 +148,17 @@ Fl_File_Browser::item_width(void *p) const      // I - List item data
       else if (*t == column_char())
       {
         // Advance to the next column...
-        column ++;
-        if (columns)
+        column++;
+        if (columns != nullptr)
         {
-          for (i = 0, tempwidth = 0; i < column && columns[i]; i ++)
+          tempwidth = 0;
+          for (int i = 0; i < column && columns[i] != 0; i++)
             tempwidth += columns[i];
         }
         else
-          tempwidth = column * (int)(fl_height() * 0.6 * 8.0);
+        {
+          tempwidth = column * static_cast<int>(fl_height() * 0.6 * 8.0);
+        }
 
         if (tempwidth > width)
           width = tempwidth;
@@ -175,14 +166,17 @@ Fl_File_Browser::item_width(void *p) const      // I - List item data
         ptr = fragment;
       }
       else
+      {
         *ptr++ = *t;
+      }
+    }
 
     if (ptr > fragment)
     {
       // Nul terminate this fragment and get the width...
       *ptr = '\0';
 
-      tempwidth += (int)fl_width(fragment);
+      tempwidth += static_cast<int>(fl_width(fragment));
 
       // Update the max width as needed...
       if (tempwidth > width)
@@ -191,14 +185,14 @@ Fl_File_Browser::item_width(void *p) const      // I - List item data
   }
 
   // If we have enabled icons then add space for them...
-  if (Fl_File_Icon::first() != NULL)
+  if (Fl_File_Icon::first() != nullptr)
     width += iconsize_ + 8;
 
   // Add space for the selection border..
   width += 2;
 
   // Return the width
-  return (width);
+  return width;
 }
 
 
@@ -208,85 +202,75 @@ Fl_File_Browser::item_width(void *p) const      // I - List item data
 
 void
 Fl_File_Browser::item_draw(void *p,     // I - List item data
-                           int  X,      // I - Upper-lefthand X coordinate
-                           int  Y,      // I - Upper-lefthand Y coordinate
-                           int  W,      // I - Width of item
-                           int  H) const// I - Height of item
+                           int  X,      // I - Upper-lefthand X coordinate // NOLINT(bugprone-easily-swappable-parameters)
+                           int  Y,      // I - Upper-lefthand Y coordinate // NOLINT(bugprone-easily-swappable-parameters)
+                           int  W,      // I - Width of item               // NOLINT(bugprone-easily-swappable-parameters)
+    const int  H) const// I - Height of item              // NOLINT(bugprone-easily-swappable-parameters)
 {
-  int           i;                      // Looping var
-  FL_BLINE      *line;                  // Pointer to line
-  Fl_Color      c;                      // Text color
-  const char    *t;                     // Pointer into text
-  char          *ptr,                   // Pointer into fragment
-                fragment[10240];        // Fragment of text
-  int           width,                  // Width of line
-                height;                 // Height of line
-  int           column;                 // Current column
-  const int     *columns;               // Columns
-
-
   // Draw the list item text...
-  line = (FL_BLINE*)p;
-  const char* line_txt = bline_txt(line);
-  const char line_flags = bline_flags(line);
-  const void* line_data = bline_data(line);
+  auto *const line = static_cast<FL_BLINE*>(p);
+  const char* const line_txt = bline_txt(line);
+  const auto line_flags = static_cast<unsigned char>(bline_flags(line));
+  const void* const line_data = bline_data(line);
 
-  if (line_txt[strlen(line_txt) - 1] == '/')
-    fl_font(textfont() | FL_BOLD, textsize());
+  const size_t txt_len = strlen(line_txt);
+  if (txt_len > 0 && line_txt[txt_len - 1] == '/')
+    fl_font(static_cast<Fl_Font>(static_cast<unsigned int>(textfont()) | static_cast<unsigned int>(FL_BOLD)), textsize());
   else
     fl_font(textfont(), textsize());
 
-  if (line_flags & BLINE_SELECTED)
-    c = fl_contrast(textcolor(), selection_color());
-  else
-    c = textcolor();
+  const Fl_Color c = ((line_flags & static_cast<unsigned int>(BLINE_SELECTED)) != 0U)
+                       ? fl_contrast(textcolor(), selection_color())
+                       : textcolor();
 
-  if (Fl_File_Icon::first() == NULL)
+  if (Fl_File_Icon::first() == nullptr)
   {
     // No icons, just draw the text...
-    X ++;
+    X++;
     W -= 2;
   }
   else
   {
     // Draw the icon if it is set...
-    if (line_data)
-      ((Fl_File_Icon *)line_data)->draw(X, Y + (H - iconsize_) / 2,
-                                        iconsize_, iconsize_,
-                                        (line_flags & BLINE_SELECTED) ? FL_YELLOW :
-                                                                        FL_LIGHT2,
-                                        active_r());
+    if (line_data != nullptr)
+      static_cast<Fl_File_Icon*>(const_cast<void*>(line_data))->draw(
+          X, Y + (H - iconsize_) / 2,
+          iconsize_, iconsize_,
+          ((line_flags & static_cast<unsigned int>(BLINE_SELECTED)) != 0U) ? FL_YELLOW : FL_LIGHT2,
+          active_r());
 
     // Draw the text offset to the right...
     X += iconsize_ + 9;
     W -= iconsize_ - 10;
   }
   // Center the text vertically...
-  height = fl_height();
+  int height = fl_height();
 
-  for (t = line_txt; *t != '\0'; t ++)
+  for (const char *t = line_txt; *t != '\0'; t++) {
     if (*t == '\n')
       height += fl_height();
+  }
   Y += (H - height) / 2;
 
   // Draw the text...
-  line    = (FL_BLINE *)p;
-  columns = column_widths();
-  width   = 0;
-  column  = 0;
+  const int *const columns = column_widths();
+  int width = 0;
+  int column = 0;
+  char fragment[10240];
+  char *ptr = fragment;
 
-  if (active_r())
+  if (active_r() != 0)
     fl_color(c);
   else
     fl_color(fl_inactive(c));
 
-  for (t = line_txt, ptr = fragment; *t != '\0'; t ++) {
+  for (const char *t = line_txt; *t != '\0'; t++) {
     if (*t == '\n') {
       // Newline - nul terminate this fragment and draw it...
       *ptr = '\0';
 
       fl_draw(fragment, X + width, Y, W - width, fl_height(),
-              (Fl_Align)(FL_ALIGN_LEFT | FL_ALIGN_CLIP), 0, 0);
+              static_cast<Fl_Align>(FL_ALIGN_LEFT | FL_ALIGN_CLIP), nullptr, 0);
 
       // Point back to the start of the fragment...
       ptr    = fragment;
@@ -299,36 +283,40 @@ Fl_File_Browser::item_draw(void *p,     // I - List item data
 
       int cW = W - width; // Clip width...
 
-      if (columns) {
+      if (columns != nullptr) {
         // Try clipping inside this column...
-        for (i = 0; i < column && columns[i]; i ++) { ; }
+        int i = 0;
+        for (; i < column && columns[i] != 0; i++) { /* empty */ }
 
-        if (columns[i])
+        if (columns[i] != 0)
           cW = columns[i];
       }
 
       fl_draw(fragment, X + width, Y, cW, fl_height(),
-              (Fl_Align)(FL_ALIGN_LEFT | FL_ALIGN_CLIP), 0, 0);
+              static_cast<Fl_Align>(FL_ALIGN_LEFT | FL_ALIGN_CLIP), nullptr, 0);
 
       // Advance to the next column...
-      column ++;
-      if (columns) {
-        for (i = 0, width = 0; i < column && columns[i]; i ++)
+      column++;
+      if (columns != nullptr) {
+        width = 0;
+        for (int i = 0; i < column && columns[i] != 0; i++)
           width += columns[i];
       }
-      else
-        width = column * (int)(fl_height() * 0.6 * 8.0);
+      else {
+        width = column * static_cast<int>(fl_height() * 0.6 * 8.0);
+      }
       ptr = fragment;
     }
-    else
+    else {
       *ptr++ = *t;
+    }
   }
   if (ptr > fragment) {
     // Nul terminate this fragment and draw it...
     *ptr = '\0';
 
     fl_draw(fragment, X + width, Y, W - width, fl_height(),
-            (Fl_Align)(FL_ALIGN_LEFT | FL_ALIGN_CLIP), 0, 0);
+            static_cast<Fl_Align>(FL_ALIGN_LEFT | FL_ALIGN_CLIP), nullptr, 0);
   }
 }
 
@@ -342,20 +330,19 @@ Fl_File_Browser::Fl_File_Browser(int        X,  // I - Upper-lefthand X coordina
                                  int        W,  // I - Width in pixels
                                  int        H,  // I - Height in pixels
                                  const char *l) // I - Label text
-    : Fl_Browser(X, Y, W, H, l)
+    : Fl_Browser(X, Y, W, H, l),
+      directory_(""),
+      pattern_("*"),
+      errmsg_(nullptr),
+      filetype_(FILES),
+      iconsize_(static_cast<uchar>(3 * textsize() / 2))
 {
-  // Initialize the filter pattern, current directory, and icon size...
-  pattern_   = "*";
-  directory_ = "";
-  iconsize_  = (uchar)(3 * textsize() / 2);
-  filetype_  = FILES;
-  errmsg_    = NULL;
 }
 
 
 // DTOR
 Fl_File_Browser::~Fl_File_Browser() {
-  errmsg(NULL);       // free()s prev errmsg, if any
+  errmsg(nullptr);       // free()s prev errmsg, if any
 }
 
 
@@ -365,8 +352,11 @@ Fl_File_Browser::~Fl_File_Browser() {
   void errmsg(const char *emsg);
  */
 void Fl_File_Browser::errmsg(const char* emsg) {
-  if ( errmsg_ ) { free((void*)errmsg_); errmsg_ = NULL; }
-  errmsg_ = emsg ? fl_strdup(emsg) : NULL;
+  if (errmsg_ != nullptr) {
+    std::free(const_cast<char*>(errmsg_));
+    errmsg_ = nullptr;
+  }
+  errmsg_ = (emsg != nullptr) ? fl_strdup(emsg) : nullptr;
 }
 
 
@@ -387,13 +377,9 @@ int                                             // O - Number of files loaded
 Fl_File_Browser::load(const char     *directory,// I - Directory to load
                       Fl_File_Sort_F *sort)     // I - Sort function to use
 {
-  int           i;                              // Looping var
-  int           num_files;                      // Number of files in directory
-  int           num_dirs;                       // Number of directories in list
-  char          filename[4096];                 // Current file
-  Fl_File_Icon  *icon;                          // Icon to use
+  char filename[4096];                          // Current file
 
-  errmsg(NULL); // clear errors first
+  errmsg(nullptr); // clear errors first
 
 //  printf("Fl_File_Browser::load(\"%s\")\n", directory);
 
@@ -401,21 +387,24 @@ Fl_File_Browser::load(const char     *directory,// I - Directory to load
 
   directory_ = directory;
 
-  if (!directory) {
+  if (directory == nullptr) {
     errmsg("NULL directory specified");
     return 0;
   }
+
+  int num_files = 0;
 
   if (directory_[0] == '\0') {
     //
     // No directory specified; for UNIX list all mount points.  For DOS
     // list all valid drive letters...
     //
-    if ((icon = Fl_File_Icon::find("any", Fl_File_Icon::DEVICE)) == NULL)
+    Fl_File_Icon *icon = Fl_File_Icon::find("any", Fl_File_Icon::DEVICE);
+    if (icon == nullptr)
       icon = Fl_File_Icon::find("any", Fl_File_Icon::DIRECTORY);
-    num_files = Fl::system_driver()->file_browser_load_filesystem(this, filename, (int)sizeof(filename), icon);
+    num_files = Fl::system_driver()->file_browser_load_filesystem(this, filename, static_cast<int>(sizeof(filename)), icon);
   } else {
-    dirent **files;        // Files in in directory
+    dirent **files = nullptr;        // Files in directory
     char emsg[1024] = "";
 
     // Build the file list, check for errors
@@ -430,28 +419,29 @@ Fl_File_Browser::load(const char     *directory,// I - Directory to load
       return 0;
     }
 
-    for (i = 0, num_dirs = 0; i < num_files; i ++) {
-      if (strcmp(files[i]->d_name, "./")) {
+    int num_dirs = 0;
+    for (int i = 0; i < num_files; i++) {
+      if (strcmp(files[i]->d_name, "./") != 0) {
         fl_snprintf(filename, sizeof(filename), "%s/%s", directory_, files[i]->d_name);
 
-        icon = Fl_File_Icon::find(filename);
-        if ((icon && icon->type() == Fl_File_Icon::DIRECTORY) ||
-            Fl::system_driver()->filename_isdir_quick(filename)) {
-          num_dirs ++;
+        Fl_File_Icon *const icon = Fl_File_Icon::find(filename);
+        if ((icon != nullptr && icon->type() == Fl_File_Icon::DIRECTORY) ||
+            (Fl::system_driver()->filename_isdir_quick(filename) != 0)) {
+          num_dirs++;
           insert(num_dirs, files[i]->d_name, icon);
         } else if (filetype_ == FILES &&
-                   fl_filename_match(files[i]->d_name, pattern_)) {
+                   fl_filename_match(files[i]->d_name, pattern_) != 0) {
           add(files[i]->d_name, icon);
         }
       }
 
-      free(files[i]);
+      std::free(static_cast<void*>(files[i]));
     }
 
-    free(files);
+    std::free(static_cast<void*>(files));
   }
 
-  return (num_files);
+  return num_files;
 }
 
 
@@ -463,7 +453,7 @@ void
 Fl_File_Browser::filter(const char *pattern)    // I - Pattern string
 {
   // If pattern is NULL set the pattern to "*"...
-  if (pattern)
+  if (pattern != nullptr)
     pattern_ = pattern;
   else
     pattern_ = "*";

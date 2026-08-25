@@ -16,156 +16,172 @@
 //
 
 #include <FL/Fl_FPort.H>
-#include <string.h>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
 
 Fl_FPort::Fl_FPort() : fport_cb_(nullptr), fport_user_data_(nullptr),
-                       state_(WAIT_SYNC), frame_length_(0), frame_type_(0), 
-                       buf_idx_(0), flags_(0), rssi_(0), escape_next_(false) {
-  memset(channels_, 0, sizeof(channels_));
-  memset(buffer_, 0, sizeof(buffer_));
-  
+                       channels_{}, buffer_{}, state_(WAIT_SYNC),
+                       frame_length_(0U), frame_type_(0U), buf_idx_(0U), flags_(0U),
+                       rssi_(0U), escape_next_(false) {
   // Register the internal serial callback
-  Fl_Serial_Port::callback(serial_cb, this);
+  callback(serial_cb, this);
 }
 
-Fl_FPort::~Fl_FPort() {
-}
+Fl_FPort::~Fl_FPort() = default;
 
-int Fl_FPort::open(const char* port_name) {
-  if (Fl_Serial_Port::open(port_name) != 0) {
-    return -1;
+int Fl_FPort::open(const char* const port_name) {
+  int result = -1;
+
+  if (Fl_Serial_Port::open(port_name) == 0) {
+    // Configure for FPort: 115200 baud, 8N1
+    static_cast<void>(set_baud_rate(115200));
+    static_cast<void>(set_data_bits(DATA_8));
+    static_cast<void>(set_parity(PARITY_NONE));
+    static_cast<void>(set_stop_bits(STOP_1));
+    result = 0;
   }
-  
-  // Configure for FPort: 115200 baud, 8N1
-  set_baud_rate(115200);
-  set_data_bits(DATA_8);
-  set_parity(PARITY_NONE);
-  set_stop_bits(STOP_1);
-  
-  return 0;
+
+  return result;
 }
 
-void Fl_FPort::fport_callback(Fl_FPort_Callback cb, void* user_data) {
+void Fl_FPort::fport_callback(const Fl_FPort_Callback cb, void* const user_data) {
   fport_cb_ = cb;
   fport_user_data_ = user_data;
 }
 
-uint16_t Fl_FPort::channel(int ch) const {
-  if (ch >= 1 && ch <= 16) {
-    return channels_[ch - 1];
+uint16_t Fl_FPort::channel(const int ch) const {
+  uint16_t val = 0U;
+
+  if ((ch >= 1) && (ch <= 16)) {
+    const size_t idx = static_cast<size_t>(static_cast<unsigned int>(ch) - 1U);
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+    val = channels_[idx];
   }
-  return 0;
+
+  return val;
 }
 
-void Fl_FPort::serial_cb(Fl_Serial_Port* p, void* data) {
-  Fl_FPort* fport = (Fl_FPort*)data;
-  uint8_t buf[256];
-  int bytes_read = p->read_data(buf, sizeof(buf));
-  if (bytes_read > 0) {
-    for (int i = 0; i < bytes_read; i++) {
-      fport->process_byte(buf[i]);
+void Fl_FPort::serial_cb(Fl_Serial_Port* const p, void* const data) {
+  if ((p != nullptr) && (data != nullptr)) {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
+    auto* const fport = static_cast<Fl_FPort*>(data);
+    uint8_t buf[256] = {};
+    const int bytes_read = p->read_data(&buf[0], sizeof(buf));
+
+    if (bytes_read > 0) {
+      const size_t count = static_cast<size_t>(static_cast<unsigned int>(bytes_read));
+      for (size_t i = 0U; i < count; i++) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+        fport->process_byte(buf[i]);
+      }
     }
   }
 }
 
 void Fl_FPort::process_byte(uint8_t b) {
-  if (b == 0x7E) {
+  if (b == 0x7EU) {
     // Start of frame
     state_ = WAIT_LENGTH;
     escape_next_ = false;
-    return;
-  }
-  
-  if (state_ == WAIT_SYNC) {
-    return;
-  }
-  
-  // Handle byte stuffing
-  if (b == 0x7D) {
+  } else if (state_ == WAIT_SYNC) {
+    // Drop byte while waiting for sync frame
+  } else if (b == 0x7DU) {
+    // Handle byte stuffing flag
     escape_next_ = true;
-    return;
-  }
-  if (escape_next_) {
-    b ^= 0x20;
-    escape_next_ = false;
-  }
-  
-  switch (state_) {
-    case WAIT_LENGTH:
-      frame_length_ = b;
-      state_ = WAIT_TYPE;
-      break;
-      
-    case WAIT_TYPE:
-      frame_type_ = b;
-      buf_idx_ = 0;
-      if (frame_length_ > 1) { // -1 for type
-        state_ = WAIT_PAYLOAD;
-      } else {
-        state_ = WAIT_SYNC;
-      }
-      break;
-      
-    case WAIT_PAYLOAD:
-      buffer_[buf_idx_++] = b;
-      
-      // Expected payload length: frame_length - 1 (type) + 1 (checksum)
-      if (buf_idx_ >= frame_length_) {
-        // Full packet received, check checksum
-        uint16_t sum = frame_length_ + frame_type_;
-        
-        for (int i = 0; i < frame_length_ - 1; i++) {
-          sum += buffer_[i];
+  } else {
+    if (escape_next_) {
+      b ^= 0x20U;
+      escape_next_ = false;
+    }
+
+    switch (state_) {
+      case WAIT_LENGTH:
+        frame_length_ = b;
+        state_ = WAIT_TYPE;
+        break;
+
+      case WAIT_TYPE:
+        frame_type_ = b;
+        buf_idx_ = 0U;
+        if (frame_length_ > 1U) { // -1 for type
+          state_ = WAIT_PAYLOAD;
+        } else {
+          state_ = WAIT_SYNC;
         }
-        
-        // FrSky Checksum logic
-        sum += sum >> 8;
-        sum &= 0xFF;
-        uint8_t checksum = 0xFF - sum;
-        
-        uint8_t received_checksum = buffer_[frame_length_ - 1];
-        
-        if (checksum == received_checksum) {
-          if (frame_type_ == 0x00 && frame_length_ >= 25) { // Control (RC) frame
-            decode_rc_frame();
-            if (fport_cb_) {
-              fport_cb_(this, fport_user_data_);
+        break;
+
+      case WAIT_PAYLOAD:
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+        buffer_[buf_idx_] = b;
+        buf_idx_++;
+
+        // Expected payload length: frame_length - 1 (type) + 1 (checksum)
+        if (buf_idx_ >= static_cast<size_t>(frame_length_)) {
+          // Full packet received, check checksum
+          auto sum = static_cast<uint16_t>(static_cast<uint16_t>(frame_length_) + static_cast<uint16_t>(frame_type_));
+
+          const size_t payload_len = static_cast<size_t>(frame_length_ - 1U);
+          for (size_t i = 0U; i < payload_len; i++) {
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+            sum = static_cast<uint16_t>(sum + static_cast<uint16_t>(buffer_[i]));
+          }
+
+          // FrSky Checksum logic
+          sum = static_cast<uint16_t>(sum + static_cast<uint16_t>(sum >> 8U));
+          sum &= 0x00FFU;
+          const auto checksum = static_cast<uint8_t>(0xFFU - static_cast<uint8_t>(sum));
+
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+          const uint8_t received_checksum = buffer_[static_cast<size_t>(frame_length_ - 1U)];
+
+          if (checksum == received_checksum) {
+            if ((frame_type_ == 0x00U) && (frame_length_ >= 25U)) { // Control (RC) frame
+              decode_rc_frame();
+              if (fport_cb_ != nullptr) {
+                fport_cb_(this, fport_user_data_);
+              }
             }
           }
+
+          state_ = WAIT_SYNC;
         }
-        
+        break;
+
+      default:
         state_ = WAIT_SYNC;
-      }
-      break;
-      
-    default:
-      state_ = WAIT_SYNC;
-      break;
+        break;
+    }
   }
 }
 
 void Fl_FPort::decode_rc_frame() {
+  const auto b = [this](const size_t idx) -> uint32_t {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+    return static_cast<uint32_t>(buffer_[idx]);
+  };
+
   // FPort packs SBUS channels identically to SBUS (11 bits per channel)
-  channels_[0]  = (buffer_[0]       | (buffer_[1] << 8))                      & 0x07FF;
-  channels_[1]  = ((buffer_[1] >> 3) | (buffer_[2] << 5))                      & 0x07FF;
-  channels_[2]  = ((buffer_[2] >> 6) | (buffer_[3] << 2) | (buffer_[4] << 10)) & 0x07FF;
-  channels_[3]  = ((buffer_[4] >> 1) | (buffer_[5] << 7))                      & 0x07FF;
-  channels_[4]  = ((buffer_[5] >> 4) | (buffer_[6] << 4))                      & 0x07FF;
-  channels_[5]  = ((buffer_[6] >> 7) | (buffer_[7] << 1) | (buffer_[8] << 9))  & 0x07FF;
-  channels_[6]  = ((buffer_[8] >> 2) | (buffer_[9] << 6))                      & 0x07FF;
-  channels_[7]  = ((buffer_[9] >> 5) | (buffer_[10] << 3))                     & 0x07FF;
-  channels_[8]  = (buffer_[11]       | (buffer_[12] << 8))                     & 0x07FF;
-  channels_[9]  = ((buffer_[12] >> 3)| (buffer_[13] << 5))                     & 0x07FF;
-  channels_[10] = ((buffer_[13] >> 6)| (buffer_[14] << 2)| (buffer_[15] << 10))& 0x07FF;
-  channels_[11] = ((buffer_[15] >> 1)| (buffer_[16] << 7))                     & 0x07FF;
-  channels_[12] = ((buffer_[16] >> 4)| (buffer_[17] << 4))                     & 0x07FF;
-  channels_[13] = ((buffer_[17] >> 7)| (buffer_[18] << 1)| (buffer_[19] << 9)) & 0x07FF;
-  channels_[14] = ((buffer_[19] >> 2)| (buffer_[20] << 6))                     & 0x07FF;
-  channels_[15] = ((buffer_[20] >> 5)| (buffer_[21] << 3))                     & 0x07FF;
-  
+  channels_[0]  = static_cast<uint16_t>((b(0U)          | (b(1U) << 8U))                  & 0x07FFU);
+  channels_[1]  = static_cast<uint16_t>(((b(1U) >> 3U)  | (b(2U) << 5U))                  & 0x07FFU);
+  channels_[2]  = static_cast<uint16_t>(((b(2U) >> 6U)  | (b(3U) << 2U)  | (b(4U) << 10U)) & 0x07FFU);
+  channels_[3]  = static_cast<uint16_t>(((b(4U) >> 1U)  | (b(5U) << 7U))                  & 0x07FFU);
+  channels_[4]  = static_cast<uint16_t>(((b(5U) >> 4U)  | (b(6U) << 4U))                  & 0x07FFU);
+  channels_[5]  = static_cast<uint16_t>(((b(6U) >> 7U)  | (b(7U) << 1U)  | (b(8U) << 9U))  & 0x07FFU);
+  channels_[6]  = static_cast<uint16_t>(((b(8U) >> 2U)  | (b(9U) << 6U))                  & 0x07FFU);
+  channels_[7]  = static_cast<uint16_t>(((b(9U) >> 5U)  | (b(10U) << 3U))                 & 0x07FFU);
+  channels_[8]  = static_cast<uint16_t>((b(11U)         | (b(12U) << 8U))                 & 0x07FFU);
+  channels_[9]  = static_cast<uint16_t>(((b(12U) >> 3U) | (b(13U) << 5U))                 & 0x07FFU);
+  channels_[10] = static_cast<uint16_t>(((b(13U) >> 6U) | (b(14U) << 2U) | (b(15U) << 10U)) & 0x07FFU);
+  channels_[11] = static_cast<uint16_t>(((b(15U) >> 1U) | (b(16U) << 7U))                 & 0x07FFU);
+  channels_[12] = static_cast<uint16_t>(((b(16U) >> 4U) | (b(17U) << 4U))                 & 0x07FFU);
+  channels_[13] = static_cast<uint16_t>(((b(17U) >> 7U) | (b(18U) << 1U) | (b(19U) << 9U))  & 0x07FFU);
+  channels_[14] = static_cast<uint16_t>(((b(19U) >> 2U) | (b(20U) << 6U))                 & 0x07FFU);
+  channels_[15] = static_cast<uint16_t>(((b(20U) >> 5U) | (b(21U) << 3U))                 & 0x07FFU);
+
   // SBUS Flags
   flags_ = buffer_[22];
-  
+
   // RSSI
   rssi_ = buffer_[23];
 }

@@ -20,6 +20,7 @@
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/platform.H>
+#include <string>
 #include "flstring.h"
 #include "drivers/X11/Fl_X11_Screen_Driver.H"
 #include "Fl_Window_Driver.H"
@@ -133,24 +134,31 @@ int Fl_X11_Screen_Driver::dnd(int unused) {
         // contains at least one CR LF, then we flag the data as
         // both a URI list (MIME media type "text/uri-list") and
         // plain text.  Otherwise, we just say it is plain text.
-        if ((!strncmp(fl_selection_buffer[0], "file:///", 8) ||
-             !strncmp(fl_selection_buffer[0], "ftp://", 6) ||
-             !strncmp(fl_selection_buffer[0], "http://", 7) ||
-             !strncmp(fl_selection_buffer[0], "https://", 8) ||
-             !strncmp(fl_selection_buffer[0], "ipp://", 6) ||
-             !strncmp(fl_selection_buffer[0], "ldap:", 5) ||
-             !strncmp(fl_selection_buffer[0], "mailto:", 7) ||
-             !strncmp(fl_selection_buffer[0], "news:", 5) ||
-             !strncmp(fl_selection_buffer[0], "smb://", 6)) &&
-            !strchr(fl_selection_buffer[0], ' ') &&
-            strstr(fl_selection_buffer[0], "\r\n")) {
-          // Send file/URI list...
-          fl_sendClientMessage(target_window, fl_XdndEnter, source_window, dndversion<<24,
-                               fl_XdndURIList, fl_XaUtf8String, XA_STRING);
+        if (fl_selection_buffer[0] != nullptr) {
+          std::string sel(fl_selection_buffer[0]);
+          if ((sel.compare(0, 8, "file:///") == 0 ||
+               sel.compare(0, 6, "ftp://") == 0 ||
+               sel.compare(0, 7, "http://") == 0 ||
+               sel.compare(0, 8, "https://") == 0 ||
+               sel.compare(0, 6, "ipp://") == 0 ||
+               sel.compare(0, 5, "ldap:") == 0 ||
+               sel.compare(0, 7, "mailto:") == 0 ||
+               sel.compare(0, 5, "news:") == 0 ||
+               sel.compare(0, 6, "smb://") == 0) &&
+              (sel.find(' ') == std::string::npos) &&
+              (sel.find("\r\n") != std::string::npos)) {
+            // Send file/URI list...
+            fl_sendClientMessage(target_window, fl_XdndEnter, source_window, (unsigned long)dndversion<<24,
+                                 (unsigned long)fl_XdndURIList, (unsigned long)fl_XaUtf8String, (unsigned long)XA_STRING);
+          } else {
+            // Send plain text...
+            fl_sendClientMessage(target_window, fl_XdndEnter, source_window, (unsigned long)dndversion<<24,
+                                 (unsigned long)fl_XaUtf8String, (unsigned long)XA_STRING, 0UL);
+          }
         } else {
-          // Send plain text...
-          fl_sendClientMessage(target_window, fl_XdndEnter, source_window, dndversion<<24,
-                               fl_XaUtf8String, XA_STRING, 0);
+          // No data in selection buffer, send plain text
+          fl_sendClientMessage(target_window, fl_XdndEnter, source_window, (unsigned long)dndversion<<24,
+                               (unsigned long)fl_XaUtf8String, (unsigned long)XA_STRING, 0UL);
         }
       }
     }

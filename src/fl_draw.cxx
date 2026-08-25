@@ -28,12 +28,12 @@
 #include <FL/platform.H>        // fl_open_display()
 
 #include "flstring.h"
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <vector>
 
-char fl_draw_shortcut;  // set by fl_labeltypes.cxx
+char fl_draw_shortcut = 0;  // set by fl_labeltypes.cxx
 
-static char* underline_at;
+static char* underline_at = nullptr;
 
 /*
  Extract the part of text that fits into the given maximum width.
@@ -52,25 +52,24 @@ static char* underline_at;
 
  \return pointer to the next character in the input text
  */
-static const char* expand_text_(const char* from, char*& buf, int maxbuf, double maxw, int& n,
-               double &width, int wrap, int draw_symbols) {
+static const char* expand_text_(const char* const from, char*& buf, const int maxbuf, const double maxw, int& n,
+                                double &width, const int wrap, const int draw_symbols) {
   // Reset underline_at to null
-  underline_at = NULL;
+  underline_at = nullptr;
 
   // Initialize the total width to 0
-  double w = 0;
+  double w = 0.0;
 
   // Check if the caller wants to use the internal buffer
-  static int l_local_buff = 500;
-  static char *local_buf = (char*)malloc(l_local_buff); // initial buffer allocation
+  static std::vector<char> local_buf(500);
 
   // Calculate the end pointer of the buffer
-  char* e;
+  char* e = nullptr;
   if (maxbuf == 0) {
-    buf = local_buf;
-    e = buf + l_local_buff - 4;
+    buf = local_buf.data();
+    e = buf + local_buf.size() - 4;
   } else {
-    e = buf+(maxbuf-4);
+    e = buf + (maxbuf - 4);
   }
 
   // Initialize the output pointer to the buffer
@@ -85,17 +84,17 @@ static const char* expand_text_(const char* from, char*& buf, int maxbuf, double
   // Iterate over the input text
   const char* p = from;
   for (;; p++) {
-    int c = *p & 255;
+    const auto c = static_cast<unsigned int>(static_cast<unsigned char>(*p));
 
     // Check for end of line, space, or '\n'
-    if (!c || c == ' ' || c == '\n') {
+    if (c == 0 || c == ' ' || c == '\n') {
       // Check for word wrap
-      if (word_start < p && wrap) {
+      if (word_start < p && wrap != 0) {
         // Calculate the new width
-        double newwidth = w + fl_width(word_end, (int) (o-word_end) );
+        const double newwidth = w + fl_width(word_end, static_cast<int>(o - word_end));
 
         // Check if the new width exceeds the maximum width
-        if (word_end > buf && int(newwidth) > maxw) { // break before this word
+        if (word_end > buf && static_cast<int>(newwidth) > static_cast<int>(maxw)) { // break before this word
           o = word_end;
           p = word_start;
           break;
@@ -106,56 +105,60 @@ static const char* expand_text_(const char* from, char*& buf, int maxbuf, double
       }
 
       // Check for end of line
-      if (!c) break;
-      else if (c == '\n') {p++; break;}
+      if (c == 0) break;
+      if (c == '\n') { p++; break; }
 
       // Update the word start pointer
-      word_start = p+1;
+      word_start = p + 1;
     }
 
     // Check if the buffer needs to be enlarged
     if (o > e) {
-      if (maxbuf) break; // don't overflow buffer
-      l_local_buff += int(o - e) + 200; // enlarge buffer
-      size_t delta_o = (o - local_buf);
-      size_t delta_end = (word_end - local_buf);
-      local_buf = (char*)realloc(local_buf, l_local_buff);
-      buf = local_buf;
-      e = local_buf + l_local_buff - 4; // update pointers to buffer content
-      o = local_buf + delta_o;
-      word_end = local_buf + delta_end;
+      if (maxbuf != 0) break; // don't overflow buffer
+      const size_t delta_o = static_cast<size_t>(o - local_buf.data());
+      const size_t delta_end = static_cast<size_t>(word_end - local_buf.data());
+      const size_t new_size = local_buf.size() + static_cast<size_t>(o - e) + 200;
+      local_buf.resize(new_size);
+      buf = local_buf.data();
+      e = local_buf.data() + local_buf.size() - 4; // update pointers to buffer content
+      o = local_buf.data() + delta_o;
+      word_end = local_buf.data() + delta_end;
     }
 
     // Process the character based on its type
     if (c == '\t') {
       // Process tab character
-      for (c = fl_utf_nb_char((uchar*)buf, (int) (o-buf) )%8; c<8 && o<e; c++)
-           *o++ = ' ';
-    } else if (c == '&' && fl_draw_shortcut && *(p+1)) {
+      for (int tab_idx = fl_utf_nb_char(reinterpret_cast<uchar*>(buf), static_cast<int>(o - buf)) % 8; tab_idx < 8 && o < e; tab_idx++)
+        *o++ = ' ';
+    } else if (c == '&' && fl_draw_shortcut != 0 && *(p + 1) != '\0') {
       // Process '&' character
-      if (*(p+1) == '&') {p++; *o++ = '&';}
-      else if (fl_draw_shortcut != 2) underline_at = o;
+      if (*(p + 1) == '&') {
+        p++;
+        *o++ = '&';
+      } else if (fl_draw_shortcut != 2) {
+        underline_at = o;
+      }
     } else if (c < ' ' || c == 127) { // ^X
       // Process control characters
       *o++ = '^';
-      *o++ = c ^ 0x40;
-    } else if (c == '@' && draw_symbols) { // Symbol???
+      *o++ = static_cast<char>(c ^ 0x40U);
+    } else if (c == '@' && draw_symbols != 0) { // Symbol???
       // Process '@' character
-      if (p[1] && p[1] != '@')  break;
-      *o++ = c;
-      if (p[1]) p++;
+      if (p[1] != '\0' && p[1] != '@') break;
+      *o++ = static_cast<char>(c);
+      if (p[1] != '\0') p++;
     } else {
       // Process regular characters
-      *o++ = c;
+      *o++ = static_cast<char>(c);
     }
   }
 
   // Calculate the final width
-  width = w + fl_width(word_end, (int) (o-word_end));
+  width = w + fl_width(word_end, static_cast<int>(o - word_end));
 
   // Add the null terminator and set the number of characters
-  *o = 0;
-  n = (int)(o-buf);
+  *o = '\0';
+  n = static_cast<int>(o - buf);
 
   return p;
 }
@@ -181,114 +184,105 @@ static const char* expand_text_(const char* from, char*& buf, int maxbuf, double
  \return pointer to the next character in the input text
  */
 const char*
-fl_expand_text(const char* from, char* buf, int maxbuf, double maxw, int& n,
-               double &width, int wrap, int draw_symbols) {
-  return expand_text_(from,  buf, maxbuf, maxw,  n, width,  wrap,  draw_symbols);
+fl_expand_text(const char* const from, char* buf, const int maxbuf, const double maxw, int& n,
+               double &width, const int wrap, const int draw_symbols) {
+  return expand_text_(from, buf, maxbuf, maxw, n, width, wrap, draw_symbols);
 }
 
 // Caution: put the documentation next to the function's declaration in fl_draw.H for Doxygen
 // to see default argument values.
 void fl_draw(
     const char* str,    // the (multi-line) string
-    int x, int y, int w, int h, // bounding box
-    Fl_Align align,
-    void (*callthis)(const char*,int,int,int),
-    Fl_Image* img, int draw_symbols, int spacing)
+    const int x, const int y, const int w, const int h, // bounding box
+    const Fl_Align align,
+    void (* const callthis)(const char*,int,int,int),
+    Fl_Image* img, const int draw_symbols, const int spacing)
 {
-  char *linebuf = NULL;       // Pointer to a buffer managed by expand_text_
-  const char* p;              // Scratch pointer into text, multiple use
-  const char* e;              // Scratch pointer into text, multiple use
-  int buflen = 0;             // Number of bytes copied into linebuf
-                              // by expand_text_
+  char *linebuf = nullptr;    // Pointer to a buffer managed by expand_text_
+  int buflen = 0;             // Number of bytes copied into linebuf by expand_text_
   char symbol[2][255];        // Copy of symbol text at start and end of str
-  int symwidth[2];            // Width and height of symbols (always square)
-  int symoffset;
-  int symtotal;               // Combined width of both sybols
-  int imgtotal;               // Width of image if image is to the left or right
-  int imgvert = ((align&FL_ALIGN_IMAGE_NEXT_TO_TEXT)==0); // True if image is
-                              // above or below text
-  int lines;                  // Number of text lines including '\n' and wrapping
+  int symwidth[2] = {0, 0};   // Width and height of symbols (always square)
+  const int imgvert = ((align & FL_ALIGN_IMAGE_NEXT_TO_TEXT) == 0) ? 1 : 0; // True if image is above or below text
+  int lines = 0;              // Number of text lines including '\n' and wrapping
   double width = 0.0;         // width of the longest text line
-  int height = fl_height();   // Height of a line of text
-
+  const int height = fl_height();   // Height of a line of text
 
   // If the image is set as a backdrop, ignore it in this function
-  if (img && (align & FL_ALIGN_IMAGE_BACKDROP)) img = 0;
+  if (img && (align & FL_ALIGN_IMAGE_BACKDROP)) img = nullptr;
 
   symbol[0][0] = '\0';
-  symwidth[0]  = 0;
   symbol[1][0] = '\0';
-  symwidth[1]  = 0;
 
   // Find the symbol at the start and end of the string
-  if (draw_symbols) {
-    if (str && str[0] == '@' && str[1] && str[1] != '@') {
-      char *symptr;
+  if (draw_symbols != 0) {
+    if (str && str[0] == '@' && str[1] != '\0' && str[1] != '@') {
+      char *symptr = symbol[0];
       // Start with a symbol...
-      for (symptr = symbol[0];
-           *str && !fl_ascii_isspace(*str) && symptr < (symbol[0] + sizeof(symbol[0]) - 1);
+      for (; *str && !fl_ascii_isspace(*str) && symptr < (symbol[0] + sizeof(symbol[0]) - 1);
            *symptr++ = *str++) {/*empty*/}
       *symptr = '\0';
       if (fl_ascii_isspace(*str)) str++;
       symwidth[0] = (w < h ? w : h);
     }
 
-    if (str && (p = strrchr(str, '@')) != NULL && p > (str + 1) && p[-1] != '@') {
-      strlcpy(symbol[1], p, sizeof(symbol[1]));
-      symwidth[1] = (w < h ? w : h);
+    if (str) {
+      const char* const p_sym = strrchr(str, '@');
+      if (p_sym != nullptr && p_sym > (str + 1) && p_sym[-1] != '@') {
+        strlcpy(symbol[1], p_sym, sizeof(symbol[1]));
+        symwidth[1] = (w < h ? w : h);
+      }
     }
   }
 
   // Width and height of both symbols combined
-  symtotal = symwidth[0] + symwidth[1];
+  int symtotal = symwidth[0] + symwidth[1];
   // Image width if image is to the left or right of the text, else 0
-  imgtotal = (img && (align&FL_ALIGN_IMAGE_NEXT_TO_TEXT)) ? img->w() + spacing : 0;
+  const int imgtotal = (img && (align & FL_ALIGN_IMAGE_NEXT_TO_TEXT)) ? img->w() + spacing : 0;
 
   int strw = 0;               // Width of text only without symbols
-  int strh;                   // Height of text only without symbols
 
   // Count how many lines and put the last one into the buffer:
   if (str) {
-    for (p = str, lines=0; p;) {
-      e = expand_text_(p, linebuf, 0, w - symtotal - imgtotal, buflen, width,
-                         align&FL_ALIGN_WRAP, draw_symbols);
-      if (strw<width) strw = (int)width;
+    for (const char* p = str; p != nullptr;) {
+      const char* const e = expand_text_(p, linebuf, 0, w - symtotal - imgtotal, buflen, width,
+                                         align & FL_ALIGN_WRAP, draw_symbols);
+      if (strw < static_cast<int>(width)) strw = static_cast<int>(width);
       lines++;
-      if (!*e || (*e == '@' && e[1] != '@' && draw_symbols)) break;
+      if (!*e || (*e == '@' && e[1] != '@' && draw_symbols != 0)) break;
       p = e;
     }
-  } else lines = 0;
+  }
 
   // Fix the size of the symbols if there is at least one line of text to print
-  if (lines) {
-    if (symwidth[0]) symwidth[0] = lines * height;
-    if (symwidth[1]) symwidth[1] = lines * height;
+  if (lines != 0) {
+    if (symwidth[0] != 0) symwidth[0] = lines * height;
+    if (symwidth[1] != 0) symwidth[1] = lines * height;
   }
 
   // Width and height of both symbols combined
   symtotal = symwidth[0] + symwidth[1];
   // Height of text only
-  strh = lines * fl_height();
+  const int strh = lines * fl_height();
 
   // Figure out vertical position of the first element
-  int xpos;                   // Position of image or text
-  int ypos;                   // Position of image or text
-  int imgh = img && imgvert ? img->h() + spacing : 0; // Height of image if image is above or below text
-  int imgw[2] = {0, 0};       // Width of image on the left and right side of the text
+  int xpos = 0;
+  int ypos = 0;
+  const int imgh = (img && imgvert != 0) ? img->h() + spacing : 0; // Height of image if image is above or below text
+  int imgw[2] = {0, 0};                                             // Width of image on the left and right side of the text
 
-  symoffset = 0;
+  int symoffset = 0;
 
   // Figure out vertical position of the first line of text or top image
   if (align & FL_ALIGN_BOTTOM) {
-    ypos = y+h-(lines-1)*height-imgh;
+    ypos = y + h - (lines - 1) * height - imgh;
   } else if (align & FL_ALIGN_TOP) {
-    ypos = y+height;
+    ypos = y + height;
   } else {
-    ypos = y+(h-lines*height-imgh)/2+height;
+    ypos = y + (h - lines * height - imgh) / 2 + height;
   }
 
   // Draw the image if located *above* the text
-  if (img && imgvert && !(align & FL_ALIGN_TEXT_OVER_IMAGE)) {
+  if (img && imgvert != 0 && !(align & FL_ALIGN_TEXT_OVER_IMAGE)) {
     if (img->w() > symoffset) symoffset = img->w();
 
     if (align & FL_ALIGN_LEFT) {
@@ -304,7 +298,7 @@ void fl_draw(
   }
 
   // Draw the image if either on the *left* or *right* side of the text
-  if (img && !imgvert) {
+  if (img && imgvert == 0) {
     if (align & FL_ALIGN_TEXT_OVER_IMAGE) {
       // Image is to the right of the text
       imgw[1] = img->w() + spacing;
@@ -330,7 +324,7 @@ void fl_draw(
       }
     }
     // Find the vertical position of the image
-    int yimg;
+    int yimg = 0;
     if (align & FL_ALIGN_TOP) {
       yimg = ypos - height;
     } else if (align & FL_ALIGN_BOTTOM) {
@@ -344,29 +338,27 @@ void fl_draw(
 
   // Now draw all the text lines
   if (str) {
-    int desc = fl_descent();
-    for (p=str; ; ypos += height) {
-      if (lines>1) {
-        e = expand_text_(p, linebuf, 0, w - symtotal - imgtotal, buflen,
-                         width, align&FL_ALIGN_WRAP, draw_symbols);
-      } else {
-        e = "";
-      }
+    const int desc = fl_descent();
+    for (const char* p = str; ; ypos += height) {
+      const char* const e = (lines > 1) ? expand_text_(p, linebuf, 0, w - symtotal - imgtotal, buflen,
+                                                 width, align & FL_ALIGN_WRAP, draw_symbols)
+                                        : "";
 
-      if (width > symoffset) symoffset = (int)(width + 0.5);
+      const auto rounded_w = static_cast<int>(std::lround(width));
+      if (rounded_w > symoffset) symoffset = rounded_w;
 
       if (align & FL_ALIGN_LEFT) {
         xpos = x + symwidth[0] + imgw[0];
       } else if (align & FL_ALIGN_RIGHT) {
-        xpos = x + w - (int)(width + .5) - symwidth[1] - imgw[1];
+        xpos = x + w - rounded_w - symwidth[1] - imgw[1];
       } else {
-        xpos = x + (w - (int)(width + .5) - symtotal - imgw[0] - imgw[1]) / 2 + symwidth[0] + imgw[0];
+        xpos = x + (w - rounded_w - symtotal - imgw[0] - imgw[1]) / 2 + symwidth[0] + imgw[0];
       }
 
-      callthis(linebuf,buflen,xpos,ypos-desc);
+      callthis(linebuf, buflen, xpos, ypos - desc);
 
       if (underline_at && underline_at >= linebuf && underline_at < (linebuf + buflen))
-        callthis("_",1,xpos+int(fl_width(linebuf,(int) (underline_at-linebuf))),ypos-desc);
+        callthis("_", 1, xpos + static_cast<int>(fl_width(linebuf, static_cast<int>(underline_at - linebuf))), ypos - desc);
 
       if (!*e || (*e == '@' && e[1] != '@')) break;
       p = e;
@@ -374,7 +366,7 @@ void fl_draw(
   }
 
   // Draw the image if the image is *below* the text
-  if (img && imgvert && (align & FL_ALIGN_TEXT_OVER_IMAGE)) {
+  if (img && imgvert != 0 && (align & FL_ALIGN_TEXT_OVER_IMAGE)) {
     if (img->w() > symoffset) symoffset = img->w();
 
     if (align & FL_ALIGN_LEFT) {
@@ -389,7 +381,7 @@ void fl_draw(
   }
 
   // Draw the symbols, if any...
-  if (symwidth[0]) {
+  if (symwidth[0] != 0) {
     // Draw the leading symbol to the left of the text
     if (align & FL_ALIGN_LEFT) {
       xpos = x;
@@ -410,7 +402,7 @@ void fl_draw(
     fl_draw_symbol(symbol[0], xpos, ypos, symwidth[0], symwidth[0], fl_color());
   }
 
-  if (symwidth[1]) {
+  if (symwidth[1] != 0) {
     // Draw the trailing symbol to the right of the text
     if (align & FL_ALIGN_LEFT) {
       xpos = x + symoffset + symwidth[0];
@@ -435,15 +427,15 @@ void fl_draw(
 // Caution: put the documentation next to the function's declaration in fl_draw.H for Doxygen
 // to see default argument values.
 void fl_draw(
-  const char* str,
-  int x, int y, int w, int h,
-  Fl_Align align,
-  Fl_Image* img,
-  int draw_symbols,
-  int spacing)
+  const char* const str,
+  const int x, const int y, const int w, const int h,
+  const Fl_Align align,
+  Fl_Image* const img,
+  const int draw_symbols,
+  const int spacing)
 {
   if ((!str || !*str) && !img) return;
-  if (w && h && !fl_not_clipped(x, y, w, h) && (align & FL_ALIGN_INSIDE)) return;
+  if (w != 0 && h != 0 && !fl_not_clipped(x, y, w, h) && (align & FL_ALIGN_INSIDE)) return;
   if (align & FL_ALIGN_CLIP)
     fl_push_clip(x, y, w, h);
   fl_draw(str, x, y, w, h, align, fl_draw, img, draw_symbols, spacing);
@@ -481,57 +473,53 @@ void fl_draw(
   fl_measure(s, wi, hi);       // returns pixel width/height of string in current font
   \endcode
 */
-void fl_measure(const char* str, int& w, int& h, int draw_symbols) {
-  if (!str || !*str) {w = 0; h = 0; return;}
+void fl_measure(const char* str, int& w, int& h, const int draw_symbols) {
+  if (!str || !*str) { w = 0; h = 0; return; }
   h = fl_height();
-  char *linebuf = NULL;
-  const char* p;
-  const char* e;
-  int buflen;
-  int lines;
-  double width=0;
+  char *linebuf = nullptr;
+  int buflen = 0;
+  int lines = 0;
+  double width = 0.0;
   int W = 0;
-  int symwidth[2], symtotal;
+  int symwidth[2] = {0, 0};      // size of symbols (if any)
 
-  symwidth[0] = 0;      // size of symbol at beginning of string (if any)
-  symwidth[1] = 0;      // size of symbol at end of string (if any)
-
-  if (draw_symbols) {
+  if (draw_symbols != 0) {
     // Symbol at beginning of string?
-    const char *sym2 = (str[0]=='@' && str[1]=='@') ? str+2 : str;      // sym2 check will skip leading @@
+    const char *sym2 = (str[0] == '@' && str[1] == '@') ? str + 2 : str; // sym2 check will skip leading @@
     if (str[0] == '@' && str[1] != '@') {
       while (*str && !fl_ascii_isspace(*str)) { ++str; }         // skip over symbol
       if (fl_ascii_isspace(*str)) ++str;                         // skip over trailing space
-      sym2 = str;                                       // sym2 check will skip leading symbol
+      sym2 = str;                                                // sym2 check will skip leading symbol
       symwidth[0] = h;
     }
     // Symbol at end of string?
-    if ((p=strchr(sym2,'@')) != NULL && p[1] != '@') {
+    const char* const p_sym = strchr(sym2, '@');
+    if (p_sym != nullptr && p_sym[1] != '@') {
       symwidth[1] = h;
     }
   }
 
-  symtotal = symwidth[0] + symwidth[1];
+  int symtotal = symwidth[0] + symwidth[1];
 
-  for (p = str, lines=0; p;) {
-//    e = expand(p, linebuf, w - symtotal, buflen, width, w != 0, draw_symbols);
-    e = expand_text_(p, linebuf, 0, w - symtotal, buflen, width,
-                        w != 0, draw_symbols);
-    if ((int)ceil(width) > W) W = (int)ceil(width);
+  for (const char* p = str; p != nullptr;) {
+    const char* const e = expand_text_(p, linebuf, 0, w - symtotal, buflen, width,
+                                       w != 0, draw_symbols);
+    const auto ceil_w = static_cast<int>(std::ceil(width));
+    if (ceil_w > W) W = ceil_w;
     lines++;
-    if (!*e || (*e == '@' && e[1] != '@' && draw_symbols)) break;
+    if (!*e || (*e == '@' && e[1] != '@' && draw_symbols != 0)) break;
     p = e;
   }
 
-  if ((symwidth[0] || symwidth[1]) && lines) {
-    if (symwidth[0]) symwidth[0] = lines * fl_height();
-    if (symwidth[1]) symwidth[1] = lines * fl_height();
+  if ((symwidth[0] != 0 || symwidth[1] != 0) && lines != 0) {
+    if (symwidth[0] != 0) symwidth[0] = lines * fl_height();
+    if (symwidth[1] != 0) symwidth[1] = lines * fl_height();
   }
 
   symtotal = symwidth[0] + symwidth[1];
 
   w = W + symtotal;
-  h = lines*h;
+  h = lines * h;
 }
 
 /**
@@ -544,7 +532,7 @@ void fl_measure(const char* str, int& w, int& h, int draw_symbols) {
   The size of the font is measured in pixels and not "points".
   Lines should be spaced \p size pixels apart or more.
 */
-void fl_font(Fl_Font face, Fl_Fontsize fsize) {
+void fl_font(const Fl_Font face, const Fl_Fontsize fsize) {
   if (!fl_graphics_driver)
     fl_open_display();
   fl_graphics_driver->font(face, fsize);
@@ -566,13 +554,14 @@ void fl_font(Fl_Font face, Fl_Fontsize fsize) {
   \todo  In the future, when the XFT issues are resolved, this function
          should simply return the 'size' value.
 */
-int fl_height(int font, int size) {
-    if ( font == fl_font() && size == fl_size() ) return(fl_height());
-    int tf = fl_font(), ts = fl_size();   // save
-    fl_font(font,size);
-    int height = fl_height();
-    fl_font(tf,ts);                       // restore
-    return(height);
+int fl_height(const int font, const int size) {
+    if (font == fl_font() && size == fl_size()) return fl_height();
+    const int tf = fl_font();
+    const int ts = fl_size();   // save
+    fl_font(font, size);
+    const int height = fl_height();
+    fl_font(tf, ts);            // restore
+    return height;
 }
 
 /** Removes any GUI scaling factor in subsequent drawing operations.
@@ -588,7 +577,7 @@ float fl_override_scale() {
 
 /** Restores the GUI scaling factor in subsequent drawing operations.
  \param s Value returned by a previous call to fl_override_scale(). */
-void fl_restore_scale(float s) {
+void fl_restore_scale(const float s) {
   fl_graphics_driver->restore_scale(s);
 }
 
@@ -614,17 +603,16 @@ void fl_restore_scale(float s) {
   \since 1.4.0
 */
 
-void fl_draw_check(Fl_Rect bb, Fl_Color col) {
+void fl_draw_check(const Fl_Rect bb, const Fl_Color col) {
 
-  const int md = 6; // max. d1 value: 3 * md + 1 pixels wide
+  constexpr int md = 6; // max. d1 value: 3 * md + 1 pixels wide
   int tx = bb.x();
   int ty = bb.y();
   int tw = bb.w();
   int th = bb.h();
-  int lh = 3;       // line height 3 means 4 pixels
-  int d1, d2;
+  int lh = 3;           // line height 3 means 4 pixels
 
-  Fl_Color saved_color = fl_color();
+  const Fl_Color saved_color = fl_color();
 
   // make sure there's a free 1-pixel border if the area is large enough
   if (tw > 10) {
@@ -636,8 +624,8 @@ void fl_draw_check(Fl_Rect bb, Fl_Color col) {
     th -= 2;
   }
   // calculate d1, the width and height of the left part of the check mark
-  d1 = tw / 3;
-  d2 = 2 * d1;
+  int d1 = tw / 3;
+  int d2 = 2 * d1;
   if (d1 > md) {
     d1 = md;
     d2 = 2 * d1;
@@ -645,7 +633,7 @@ void fl_draw_check(Fl_Rect bb, Fl_Color col) {
   // make sure the height fits
   if (d2 + lh + 1 > th) {
     d2 = th - lh - 1;
-    d1 = (d2+1) / 2;
+    d1 = (d2 + 1) / 2;
   }
   // check minimal size (box too small)
   if (d1 < 2) {
@@ -662,25 +650,7 @@ void fl_draw_check(Fl_Rect bb, Fl_Color col) {
   tx = bb.x() + (bb.w() - tw + 1) / 2;  // x position (centered)
   ty = bb.y() + (bb.h() - th + 1) / 2;  // y position (centered)
 
-  // Set DEBUG_FRAME to 1 - 3 for debugging (0 otherwise)
-  // Bit 1 set: draws a green background (the entire given box)
-  // Bit 2 set: draws a red frame around the check mark (the bounding box)
-  // The background (1) can be used to test correct positioning by the widget code
-
-#define DEBUG_FRAME (0)
-#if (DEBUG_FRAME)
-  if (DEBUG_FRAME & 1) {    // 1 = background
-    fl_color(0x88dd8800);
-    fl_rectf(bb.x(), bb.y(), bb.w(), bb.h());
-  }
-  if (DEBUG_FRAME & 2) {    // 2 = bounding box
-    fl_color(0xff000000);
-    fl_rect(tx, ty, tw, th);
-  }
-#endif
-
   // draw the check mark
-
   fl_color(col);
 
   fl_begin_complex_polygon();
@@ -720,13 +690,7 @@ void fl_draw_check(Fl_Rect bb, Fl_Color col) {
 
   \since 1.4.0
  */
-void fl_draw_circle(int x, int y, int d, Fl_Color color) {
-#define DEBUG_DRAW_CIRCLE (0) // bit 1 = draw bounding box (green)
-#if (DEBUG_DRAW_CIRCLE & 0)
-  Fl_Color current = fl_color();
-  fl_rectf(x, y, d, d, FL_GREEN);
-  fl_color(current);
-#endif
+void fl_draw_circle(const int x, const int y, const int d, const Fl_Color color) {
   fl_graphics_driver->draw_circle(x, y, d, color);
 }
 
@@ -755,19 +719,14 @@ void fl_draw_circle(int x, int y, int d, Fl_Color color) {
 
   \since 1.4.0
 */
-void fl_draw_radio(int x, int y, int d, Fl_Color color) {
+void fl_draw_radio(const int x, const int y, const int d, const Fl_Color color) {
 
-  Fl_Color current = fl_color();
-
-#if (0) // DEBUG: draw bounding box
-  fl_color(fl_lighter(FL_RED));
-  fl_rectf(x, y, d, d);
-#endif
+  const Fl_Color current = fl_color();
 
   if (Fl::is_scheme("gtk+")) {
     fl_color(color);
     fl_pie(x, y, d, d, 0.0, 360.0);
-    Fl_Color icol = fl_color_average(FL_WHITE, color, 0.2f);
+    const Fl_Color icol = fl_color_average(FL_WHITE, color, 0.2f);
     fl_draw_circle(x + 2, y + 2, d - 4, icol);
     fl_color(fl_color_average(FL_WHITE, color, 0.5));
     fl_arc(x + 1, y + 1, d - 1, d - 1, 60.0, 180.0);
