@@ -1333,7 +1333,8 @@ Node *Widget_Class_Node::make(Strategy strategy) {
     p = p->parent;
   }
   Widget_Class_Node *myo = new Widget_Class_Node();
-  myo->name("UserInterface");
+  static const char name_ui[] = "UserInterface";
+  myo->name(name_ui);
 
   if (!this->o) {// template widget
     this->o = new Fl_Window(100,100);

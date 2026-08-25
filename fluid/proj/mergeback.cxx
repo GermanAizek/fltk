@@ -209,9 +209,10 @@ std::string Mergeback::read_and_unindent_block(long start, long end) {
  */
 int Mergeback::ask_user_to_merge(const std::string &code_filename, const std::string &project_filename) {
   if (tag_error) {
-    fluid_message("Comparing\n  \"%s\"\nto\n  \"%s\"\n\n"
+    static constexpr char msg[] = "Comparing\n  \"%s\"\nto\n  \"%s\"\n\n"
                "MergeBack found an error in line %d while reading tags\n"
-               "from the source code. Merging code back is not possible.",
+               "from the source code. Merging code back is not possible.";
+    fluid_message(msg,
                code_filename.c_str(), project_filename.c_str(), line_no);
     return -1;
   }
@@ -219,11 +220,12 @@ int Mergeback::ask_user_to_merge(const std::string &code_filename, const std::st
     return 0;
   }
   if (num_changed_structure && !num_changed_code) {
-    fluid_message("Comparing\n  \"%1$s\"\nto\n  \"%2$s\"\n\n"
+    static constexpr char msg[] = "Comparing\n  \"%1$s\"\nto\n  \"%2$s\"\n\n"
                "MergeBack found %3$d modifications in the project structure\n"
                "of the source code. These kind of changes can not be\n"
                "merged back and will be lost when the source code is\n"
-               "generated again from the open project.",
+               "generated again from the open project.";
+    fluid_message(msg,
                code_filename.c_str(), project_filename.c_str(), num_changed_structure);
     return -1;
   }
@@ -252,10 +254,12 @@ int Mergeback::ask_user_to_merge(const std::string &code_filename, const std::st
                num_changed_structure, num_possible_override);
     return -1;
   } else {
+    static constexpr char cancel_txt[] = "Cancel";
+    static constexpr char merge_txt[] = "Merge";
     msg +=    "\n\nClick Cancel to abort the MergeBack operation.\n"
     "Click Merge to merge all code changes back into\n"
     "the open project.";
-    int c = fluid_choice(msg.c_str(), "Cancel", "Merge", nullptr,
+    int c = fluid_choice(msg.c_str(), cancel_txt, merge_txt, nullptr,
                       code_filename.c_str(), project_filename.c_str(),
                       num_changed_code, num_uid_not_found,
                       num_changed_structure, num_possible_override);

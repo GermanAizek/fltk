@@ -463,7 +463,8 @@ Grid_Tab::Grid_Tab(int X, int Y, int W, int H, const char* L) :
     o->align(Fl_Align(FL_ALIGN_LEFT));
     { auto* o = widget_grid_rows = new fluid::widget::Formula_Input(85, 30, 40, 20, "Rows:");
       (void)o;
-      widget_grid_rows->tooltip("Number of horizontal rows in the Grid group");
+      static constexpr char rows_tooltip[] = "Number of horizontal rows in the Grid group";
+      widget_grid_rows->tooltip(rows_tooltip);
       widget_grid_rows->box(FL_DOWN_BOX);
       widget_grid_rows->color(FL_BACKGROUND2_COLOR);
       widget_grid_rows->selection_color(FL_SELECTION_COLOR);
@@ -496,7 +497,8 @@ Grid_Tab::Grid_Tab(int X, int Y, int W, int H, const char* L) :
     } // Fl_Group* o
     { auto* o = widget_grid_cols = new fluid::widget::Formula_Input(165, 30, 40, 20, "Columns:");
       (void)o;
-      widget_grid_cols->tooltip("Number of vertical columns in the Grid group");
+      static constexpr char cols_tooltip[] = "Number of vertical columns in the Grid group";
+      widget_grid_cols->tooltip(cols_tooltip);
       widget_grid_cols->box(FL_DOWN_BOX);
       widget_grid_cols->color(FL_BACKGROUND2_COLOR);
       widget_grid_cols->selection_color(FL_SELECTION_COLOR);
@@ -541,7 +543,8 @@ Grid_Tab::Grid_Tab(int X, int Y, int W, int H, const char* L) :
     wp_grid_margin->align(Fl_Align(FL_ALIGN_LEFT));
     { auto* o = new Fl_Value_Input(85, 70, 55, 20, "Left:");
       (void)o;
-      o->tooltip("Left margin in group.");
+      static constexpr char left_tooltip[] = "Left margin in group.";
+      o->tooltip(left_tooltip);
       o->labelsize(11);
       o->maximum(1000);
       o->step(1);
@@ -551,7 +554,8 @@ Grid_Tab::Grid_Tab(int X, int Y, int W, int H, const char* L) :
     } // Fl_Value_Input* o
     { auto* o = new Fl_Value_Input(145, 70, 55, 20, "Top:");
       (void)o;
-      o->tooltip("Top margin in group.");
+      static constexpr char top_tooltip[] = "Top margin in group.";
+      o->tooltip(top_tooltip);
       o->labelsize(11);
       o->maximum(1000);
       o->step(1);
@@ -561,7 +565,8 @@ Grid_Tab::Grid_Tab(int X, int Y, int W, int H, const char* L) :
     } // Fl_Value_Input* o
     { auto* o = new Fl_Value_Input(205, 70, 55, 20, "Right:");
       (void)o;
-      o->tooltip("Right margin in group.");
+      static constexpr char right_tooltip[] = "Right margin in group.";
+      o->tooltip(right_tooltip);
       o->labelsize(11);
       o->maximum(1000);
       o->step(1);
@@ -571,7 +576,8 @@ Grid_Tab::Grid_Tab(int X, int Y, int W, int H, const char* L) :
     } // Fl_Value_Input* o
     { auto* o = new Fl_Value_Input(265, 70, 55, 20, "Bottom:");
       (void)o;
-      o->tooltip("Bottom margin in group.");
+      static constexpr char bottom_tooltip[] = "Bottom margin in group.";
+      o->tooltip(bottom_tooltip);
       o->labelsize(11);
       o->maximum(1000);
       o->step(1);
@@ -593,7 +599,8 @@ Grid_Tab::Grid_Tab(int X, int Y, int W, int H, const char* L) :
     wp_grid_gaps->align(Fl_Align(FL_ALIGN_LEFT));
     { auto* o = new Fl_Value_Input(85, 105, 55, 20, "Row:");
       (void)o;
-      o->tooltip("Gap between children.");
+      static constexpr char row_gap_tooltip[] = "Gap between children.";
+      o->tooltip(row_gap_tooltip);
       o->labelsize(11);
       o->maximum(1000);
       o->step(1);
@@ -603,7 +610,8 @@ Grid_Tab::Grid_Tab(int X, int Y, int W, int H, const char* L) :
     } // Fl_Value_Input* o
     { auto* o = new Fl_Value_Input(145, 105, 55, 20, "Col:");
       (void)o;
-      o->tooltip("Gap between children.");
+      static constexpr char col_gap_tooltip[] = "Gap between children.";
+      o->tooltip(col_gap_tooltip);
       o->labelsize(11);
       o->maximum(1000);
       o->step(1);
