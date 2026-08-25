@@ -17,13 +17,14 @@
 
 #include <FL/Fl_Audio_Sink.H>
 #include "Fl_Audio_Sink_Driver.H"
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
+#include <cstdint>
 
-Fl_Audio_Sink::Fl_Audio_Sink(const char *device_name, int sample_rate, int channels, int bit_depth)
-  : driver_(0), device_(0), sample_rate_(sample_rate), channels_(channels), bit_depth_(bit_depth),
+Fl_Audio_Sink::Fl_Audio_Sink(const char *device_name, int32_t sample_rate, int32_t channels, int32_t bit_depth)
+  : driver_(nullptr), device_(nullptr), sample_rate_(sample_rate), channels_(channels), bit_depth_(bit_depth),
     volume_(1.0), buffer_size_(16384), bytes_written_(0), state_(StoppedState) {
-  if (device_name) {
+  if (device_name != nullptr) {
     device_ = strdup(device_name);
   }
   driver_ = Fl_Audio_Sink_Driver::new_audio_sink_driver(this);
@@ -31,26 +32,26 @@ Fl_Audio_Sink::Fl_Audio_Sink(const char *device_name, int sample_rate, int chann
 
 Fl_Audio_Sink::~Fl_Audio_Sink() {
   state_ = StoppedState;
-  if (driver_) {
+  if (driver_ != nullptr) {
     delete driver_;
-    driver_ = 0;
+    driver_ = nullptr;
   }
-  if (device_) {
+  if (device_ != nullptr) {
     free(device_);
-    device_ = 0;
+    device_ = nullptr;
   }
 }
 
 void Fl_Audio_Sink::start() {
   state_ = ActiveState;
-  if (driver_) {
+  if (driver_ != nullptr) {
     driver_->start();
   }
 }
 
 void Fl_Audio_Sink::stop() {
   state_ = StoppedState;
-  if (driver_) {
+  if (driver_ != nullptr) {
     driver_->stop();
   }
 }
@@ -58,7 +59,7 @@ void Fl_Audio_Sink::stop() {
 void Fl_Audio_Sink::suspend() {
   if (state_ == ActiveState) {
     state_ = SuspendedState;
-    if (driver_) {
+    if (driver_ != nullptr) {
       driver_->suspend();
     }
   }
@@ -67,7 +68,7 @@ void Fl_Audio_Sink::suspend() {
 void Fl_Audio_Sink::resume() {
   if (state_ == SuspendedState) {
     state_ = ActiveState;
-    if (driver_) {
+    if (driver_ != nullptr) {
       driver_->resume();
     }
   }
@@ -76,17 +77,17 @@ void Fl_Audio_Sink::resume() {
 void Fl_Audio_Sink::reset() {
   bytes_written_ = 0;
   state_ = StoppedState;
-  if (driver_) {
+  if (driver_ != nullptr) {
     driver_->reset();
   }
 }
 
 int Fl_Audio_Sink::write(const void *data, int num_bytes) {
-  if (!data || num_bytes <= 0 || state_ != ActiveState) {
+  if ((data == nullptr) || (num_bytes <= 0) || (state_ != ActiveState)) {
     return 0;
   }
   int written = num_bytes;
-  if (driver_) {
+  if (driver_ != nullptr) {
     written = driver_->write(data, num_bytes);
   }
   bytes_written_ += written;
@@ -107,7 +108,7 @@ void Fl_Audio_Sink::set_buffer_size(int size) {
 
 int Fl_Audio_Sink::bytes_free() const {
   if (state_ != ActiveState) return 0;
-  if (driver_) {
+  if (driver_ != nullptr) {
     return driver_->bytes_free();
   }
   return buffer_size_;

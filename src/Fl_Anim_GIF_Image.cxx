@@ -54,21 +54,21 @@ public:
 
   class RGBA_Color {
   private:
-    uchar m_r{0U};
-    uchar m_g{0U};
-    uchar m_b{0U};
-    uchar m_alpha{static_cast<uchar>(Transparency::T_NONE)};
+    std::uint8_t m_r{0U};
+    std::uint8_t m_g{0U};
+    std::uint8_t m_b{0U};
+    std::uint8_t m_alpha{static_cast<std::uint8_t>(Transparency::T_NONE)};
 
   public:
     constexpr RGBA_Color() = default;
-    constexpr RGBA_Color(uchar r_val, uchar g_val, uchar b_val, uchar a_val = static_cast<uchar>(Transparency::T_NONE))
+    constexpr RGBA_Color(std::uint8_t r_val, std::uint8_t g_val, std::uint8_t b_val, std::uint8_t a_val = static_cast<std::uint8_t>(Transparency::T_NONE))
       : m_r(r_val), m_g(g_val), m_b(b_val), m_alpha(a_val) {}
 
-    uchar r() const { return m_r; }
-    uchar g() const { return m_g; }
-    uchar b() const { return m_b; }
-    uchar alpha() const { return m_alpha; }
-    void set_alpha(uchar a_val) { m_alpha = a_val; }
+    std::uint8_t r() const { return m_r; }
+    std::uint8_t g() const { return m_g; }
+    std::uint8_t b() const { return m_b; }
+    std::uint8_t alpha() const { return m_alpha; }
+    void set_alpha(std::uint8_t a_val) { m_alpha = a_val; }
   };
 
   class GifFrame {
@@ -80,10 +80,10 @@ public:
     float m_average_weight{-1.0F};
     Dispose m_dispose{Dispose::DISPOSE_UNDEF};
     int m_transparent_color_index{-1};
-    unsigned short m_x{0U};
-    unsigned short m_y{0U};
-    unsigned short m_w{0U};
-    unsigned short m_h{0U};
+    std::uint16_t m_x{0U};
+    std::uint16_t m_y{0U};
+    std::uint16_t m_w{0U};
+    std::uint16_t m_h{0U};
     RGBA_Color m_transparent_color{};
     bool m_desaturated{false};
 
@@ -111,17 +111,17 @@ public:
     int transparent_color_index() const { return m_transparent_color_index; }
     void set_transparent_color_index(const int val) { m_transparent_color_index = val; }
 
-    unsigned short x() const { return m_x; }
-    void set_x(const unsigned short val) { m_x = val; }
+    std::uint16_t x() const { return m_x; }
+    void set_x(const std::uint16_t val) { m_x = val; }
 
-    unsigned short y() const { return m_y; }
-    void set_y(const unsigned short val) { m_y = val; }
+    std::uint16_t y() const { return m_y; }
+    void set_y(const std::uint16_t val) { m_y = val; }
 
-    unsigned short w() const { return m_w; }
-    void set_w(const unsigned short val) { m_w = val; }
+    std::uint16_t w() const { return m_w; }
+    void set_w(const std::uint16_t val) { m_w = val; }
 
-    unsigned short h() const { return m_h; }
-    void set_h(const unsigned short val) { m_h = val; }
+    std::uint16_t h() const { return m_h; }
+    void set_h(const std::uint16_t val) { m_h = val; }
 
     const RGBA_Color &transparent_color() const { return m_transparent_color; }
     void set_transparent_color(const RGBA_Color &val) { m_transparent_color = val; }
@@ -151,7 +151,7 @@ public:
 private:
   Fl_Anim_GIF_Image *anim{nullptr};
   std::vector<GifFrame> frames{};
-  std::unique_ptr<uchar[]> offscreen{nullptr};
+  std::unique_ptr<std::uint8_t[]> offscreen{nullptr};
   GifFrame frame{};
   float average_weight{-1.0F};
   Fl_Color average_color{FL_BLACK};
@@ -212,10 +212,10 @@ void Fl_Anim_GIF_Image::FrameInfo::copy(const FrameInfo &fi) {
     const auto u_idx = static_cast<size_t>(i);
 
     if (fi.optimize_mem) {
-      frames[u_idx].set_x(static_cast<unsigned short>(std::round(static_cast<double>(fi.frames[u_idx].x()) * scale_factor_x)));
-      frames[u_idx].set_y(static_cast<unsigned short>(std::round(static_cast<double>(fi.frames[u_idx].y()) * scale_factor_y)));
-      frames[u_idx].set_w(static_cast<unsigned short>(std::round(static_cast<double>(fi.frames[u_idx].w()) * scale_factor_x)));
-      frames[u_idx].set_h(static_cast<unsigned short>(std::round(static_cast<double>(fi.frames[u_idx].h()) * scale_factor_y)));
+      frames[u_idx].set_x(static_cast<std::uint16_t>(std::round(static_cast<double>(fi.frames[u_idx].x()) * scale_factor_x)));
+      frames[u_idx].set_y(static_cast<std::uint16_t>(std::round(static_cast<double>(fi.frames[u_idx].y()) * scale_factor_y)));
+      frames[u_idx].set_w(static_cast<std::uint16_t>(std::round(static_cast<double>(fi.frames[u_idx].w()) * scale_factor_x)));
+      frames[u_idx].set_h(static_cast<std::uint16_t>(std::round(static_cast<double>(fi.frames[u_idx].h()) * scale_factor_y)));
     }
 
     if (fi.frames[u_idx].rgb() != nullptr) {
@@ -243,14 +243,14 @@ void Fl_Anim_GIF_Image::FrameInfo::dispose(int frame_idx) {
           set_to_background(frame_idx);
         } else if (offscreen != nullptr) {
           const auto u_prev = static_cast<size_t>(prev);
-          uchar *dst = offscreen.get();
+          std::uint8_t *dst = offscreen.get();
           const int px = static_cast<int>(frames[u_prev].x());
           const int py = static_cast<int>(frames[u_prev].y());
           int pw = static_cast<int>(frames[u_prev].w());
           int ph = static_cast<int>(frames[u_prev].h());
 
           if (frames[u_prev].rgb() != nullptr) {
-            const auto *src = reinterpret_cast<const uchar*>(frames[u_prev].rgb()->data()[0]);
+            const auto *src = reinterpret_cast<const std::uint8_t*>(frames[u_prev].rgb()->data()[0]);
             if ((px == 0) && (py == 0) && (pw == canvas_w) && (ph == canvas_h)) {
               const size_t total_bytes = static_cast<size_t>(canvas_w) * static_cast<size_t>(canvas_h) * 4U;
               (void)std::copy_n(src, total_bytes, dst);
@@ -300,9 +300,9 @@ bool Fl_Anim_GIF_Image::FrameInfo::load(const char *name, const unsigned char *d
 
 void Fl_Anim_GIF_Image::FrameInfo::on_extension_data(const Fl_GIF_Image::GIF_FRAME &gf) {
   if (gf.bptr != nullptr) {
-    const uchar *ext = gf.bptr;
-    if (std::equal(ext, ext + 11U, reinterpret_cast<const uchar*>("NETSCAPE2.0"))) {
-      const uchar *params = ext + 11U;
+    const std::uint8_t *ext = reinterpret_cast<const std::uint8_t*>(gf.bptr);
+    if (std::equal(ext, ext + 11U, reinterpret_cast<const std::uint8_t*>("NETSCAPE2.0"))) {
+      const std::uint8_t *params = ext + 11U;
       loop_count = static_cast<int>(params[1]) | (static_cast<int>(params[2]) << 8U);
     }
   }
@@ -320,65 +320,65 @@ void Fl_Anim_GIF_Image::FrameInfo::on_frame_data(Fl_GIF_Image::GIF_FRAME &gf) {
       canvas_w = gf.width;
       canvas_h = gf.height;
       const size_t total_bytes = static_cast<size_t>(canvas_w) * static_cast<size_t>(canvas_h) * 4U;
-      offscreen = std::unique_ptr<uchar[]>(new uchar[total_bytes]);
+      offscreen = std::unique_ptr<std::uint8_t[]>(new std::uint8_t[total_bytes]);
       (void)std::fill_n(offscreen.get(), total_bytes, 0U);
 
       background_color_index = ((gf.clrs != 0) && (gf.bkgd < gf.clrs)) ? gf.bkgd : -1;
       if ((background_color_index >= 0) && (gf.cpal != nullptr)) {
-        background_color = RGBA_Color(gf.cpal[background_color_index].r,
-                                      gf.cpal[background_color_index].g,
-                                      gf.cpal[background_color_index].b);
+        background_color = RGBA_Color(static_cast<std::uint8_t>(gf.cpal[background_color_index].r),
+                                      static_cast<std::uint8_t>(gf.cpal[background_color_index].g),
+                                      static_cast<std::uint8_t>(gf.cpal[background_color_index].b));
       }
     }
 
-    frame.set_x(static_cast<unsigned short>(gf.x));
-    frame.set_y(static_cast<unsigned short>(gf.y));
-    frame.set_w(static_cast<unsigned short>(gf.w));
-    frame.set_h(static_cast<unsigned short>(gf.h));
+    frame.set_x(static_cast<std::uint16_t>(gf.x));
+    frame.set_y(static_cast<std::uint16_t>(gf.y));
+    frame.set_w(static_cast<std::uint16_t>(gf.w));
+    frame.set_h(static_cast<std::uint16_t>(gf.h));
     frame.set_delay(convert_delay(delay));
     frame.set_transparent_color_index(((gf.trans != 0) && (gf.trans < gf.clrs)) ? gf.trans : -1);
     frame.set_dispose(static_cast<Dispose>(gf.dispose));
 
     if ((frame.transparent_color_index() >= 0) && (gf.cpal != nullptr)) {
-      frame.set_transparent_color(RGBA_Color(gf.cpal[frame.transparent_color_index()].r,
-                                             gf.cpal[frame.transparent_color_index()].g,
-                                             gf.cpal[frame.transparent_color_index()].b));
+      frame.set_transparent_color(RGBA_Color(static_cast<std::uint8_t>(gf.cpal[frame.transparent_color_index()].r),
+                                             static_cast<std::uint8_t>(gf.cpal[frame.transparent_color_index()].g),
+                                             static_cast<std::uint8_t>(gf.cpal[frame.transparent_color_index()].b)));
     }
 
     dispose(static_cast<int>(frames.size()) - 1);
 
     if (offscreen != nullptr) {
-      const uchar *bits = gf.bptr;
+      const std::uint8_t *bits = reinterpret_cast<const std::uint8_t*>(gf.bptr);
       const size_t total_canvas = static_cast<size_t>(canvas_w) * static_cast<size_t>(canvas_h) * 4U;
-      uchar *off_start = offscreen.get();
-      const uchar *endp = off_start + total_canvas;
+      std::uint8_t *off_start = offscreen.get();
+      const std::uint8_t *endp = off_start + total_canvas;
 
       for (int y = static_cast<int>(frame.y()); y < (static_cast<int>(frame.y()) + static_cast<int>(frame.h())); ++y) {
         for (int x = static_cast<int>(frame.x()); x < (static_cast<int>(frame.x()) + static_cast<int>(frame.w())); ++x) {
-          const uchar c = *bits++;
-          if (c == static_cast<uchar>(gf.trans)) {
+          const std::uint8_t c = *bits++;
+          if (c == static_cast<std::uint8_t>(gf.trans)) {
             continue;
           }
-          uchar *buf = off_start + (static_cast<size_t>(y) * static_cast<size_t>(canvas_w) * 4U + (static_cast<size_t>(x) * 4U));
+          std::uint8_t *buf = off_start + (static_cast<size_t>(y) * static_cast<size_t>(canvas_w) * 4U + (static_cast<size_t>(x) * 4U));
           if (buf >= endp) {
             continue;
           }
           if (gf.cpal != nullptr) {
-            *buf++ = gf.cpal[c].r;
-            *buf++ = gf.cpal[c].g;
-            *buf++ = gf.cpal[c].b;
-            *buf = static_cast<uchar>(Transparency::T_NONE);
+            *buf++ = static_cast<std::uint8_t>(gf.cpal[c].r);
+            *buf++ = static_cast<std::uint8_t>(gf.cpal[c].g);
+            *buf++ = static_cast<std::uint8_t>(gf.cpal[c].b);
+            *buf = static_cast<std::uint8_t>(Transparency::T_NONE);
           }
         }
       }
 
       if (optimize_mem) {
         const size_t frame_bytes = static_cast<size_t>(frame.w()) * static_cast<size_t>(frame.h()) * 4U;
-        auto *buf = new uchar[frame_bytes];
-        uchar *dest = buf;
+        auto *buf = new std::uint8_t[frame_bytes];
+        std::uint8_t *dest = buf;
         for (int y = static_cast<int>(frame.y()); y < (static_cast<int>(frame.y()) + static_cast<int>(frame.h())); ++y) {
           for (int x = static_cast<int>(frame.x()); x < (static_cast<int>(frame.x()) + static_cast<int>(frame.w())); ++x) {
-            const uchar *src = off_start + (static_cast<size_t>(y) * static_cast<size_t>(canvas_w) * 4U + static_cast<size_t>(x) * 4U);
+            const std::uint8_t *src = off_start + (static_cast<size_t>(y) * static_cast<size_t>(canvas_w) * 4U + static_cast<size_t>(x) * 4U);
             if (src < endp) {
               (void)std::copy_n(src, 4U, dest);
             }
@@ -387,13 +387,13 @@ void Fl_Anim_GIF_Image::FrameInfo::on_frame_data(Fl_GIF_Image::GIF_FRAME &gf) {
         }
         frame.set_rgb(new Fl_RGB_Image(buf, frame.w(), frame.h(), 4));
       } else {
-        auto *buf = new uchar[total_canvas];
+        auto *buf = new std::uint8_t[total_canvas];
         (void)std::copy_n(off_start, total_canvas, buf);
         frame.set_rgb(new Fl_RGB_Image(buf, canvas_w, canvas_h, 4));
       }
 
       if (frame.rgb() != nullptr) {
-        frame.rgb()->alloc_array = 1;
+        frame.rgb()->alloc_array = static_cast<char>(1);
       }
     }
 
@@ -414,10 +414,10 @@ void Fl_Anim_GIF_Image::FrameInfo::resize(int W, int H) {
 
   for (auto &f : frames) {
     if (optimize_mem) {
-      f.set_x(static_cast<unsigned short>(std::round(static_cast<double>(f.x()) * scale_factor_x)));
-      f.set_y(static_cast<unsigned short>(std::round(static_cast<double>(f.y()) * scale_factor_y)));
-      f.set_w(static_cast<unsigned short>(std::round(static_cast<double>(f.w()) * scale_factor_x)));
-      f.set_h(static_cast<unsigned short>(std::round(static_cast<double>(f.h()) * scale_factor_y)));
+      f.set_x(static_cast<std::uint16_t>(std::round(static_cast<double>(f.x()) * scale_factor_x)));
+      f.set_y(static_cast<std::uint16_t>(std::round(static_cast<double>(f.y()) * scale_factor_y)));
+      f.set_w(static_cast<std::uint16_t>(std::round(static_cast<double>(f.w()) * scale_factor_x)));
+      f.set_h(static_cast<std::uint16_t>(std::round(static_cast<double>(f.h()) * scale_factor_y)));
     }
   }
   canvas_w = W;
@@ -462,15 +462,15 @@ void Fl_Anim_GIF_Image::FrameInfo::set_to_background(const int frame_idx) const 
     }
 
     if (tp == bg || tp < 0) {
-      color.set_alpha(static_cast<uchar>(Transparency::T_FULL));
+      color.set_alpha(static_cast<std::uint8_t>(Transparency::T_FULL));
     } else {
-      color.set_alpha(static_cast<uchar>(Transparency::T_NONE));
+      color.set_alpha(static_cast<std::uint8_t>(Transparency::T_NONE));
     }
 
     const size_t total_canvas = static_cast<size_t>(canvas_w) * static_cast<size_t>(canvas_h) * 4U;
-    uchar *start = offscreen.get();
-    for (uchar *p = start + total_canvas - 4U; p >= start; p -= 4) {
-      const auto *color_bytes = reinterpret_cast<const uchar*>(&color);
+    std::uint8_t *start = offscreen.get();
+    for (std::uint8_t *p = start + total_canvas - 4U; p >= start; p -= 4) {
+      const auto *color_bytes = reinterpret_cast<const std::uint8_t*>(&color);
       (void)std::copy_n(color_bytes, 4U, p);
     }
   }
