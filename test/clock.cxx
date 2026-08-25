@@ -19,7 +19,7 @@
 #include <FL/Fl_Clock.H>
 #include <FL/Fl_Round_Clock.H>
 
-const int dev_test = 0;  // 1 = enable non-standard colors and no-shadow tests
+constexpr int dev_test = 0;  // 1 = enable non-standard colors and no-shadow tests
 
 // close all windows when the user closes one of the windows
 

@@ -33,7 +33,7 @@
 
 void align_widget_cb(Fl_Widget*, void *user_data)
 {
-  const int max = 32768, min = -32768;
+  constexpr int max = 32768, min = -32768;
   int how = (int)(fl_intptr_t)(user_data);
   int left, right, top, bot, wdt, hgt, n;
   int changed = 0;

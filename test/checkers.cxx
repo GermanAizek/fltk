@@ -69,27 +69,27 @@ char forcejumps = 1;            // is forced jumps rule in effect?
 
 // scoring parameters: (all divided by 5 from original code)
 // some signs seem to be backwards, marked them with (-) in comment
-const int spiece = 800;         // value of a piece
-const int sking = 1200;         // value of a king
-const int sadvan = 160;         // value of mypieces/theirpieces-1
+constexpr int spiece = 800;         // value of a piece
+constexpr int sking = 1200;         // value of a king
+constexpr int sadvan = 160;         // value of mypieces/theirpieces-1
 // const int smobil = ?         // moves *enemy* can make w/o being jumped
-const int sallpin = 80;         // mobil == 0
-const int sdeny = 10;           // moves enemy can make that will be jumped
-const int spin = 32;            // enemy pieces that have no move except jumped
-const int sthreat = -10;        // enemy pieces we can jump if not moved (-)
-const int sgrad = 1;            // score of piece positions
-const int sback = 10;           // back row occupied so enemy can't make king
-const int smoc2 = 200;          // more mobility, more center
-const int smoc3 = -8;           // less mobility, less center
-const int smoc4 = -80;          // more mobility, less center
-const int smode2 = -14;         // less mobility, less denied
-const int smode3 = -40;         // more mobility, more denied (-)
-const int sdemmo = -20;         // more denied, more moves (-)
-const int scent = 10;           // pieces in center
-const int skcent = 100;         // kings in center
+constexpr int sallpin = 80;         // mobil == 0
+constexpr int sdeny = 10;           // moves enemy can make that will be jumped
+constexpr int spin = 32;            // enemy pieces that have no move except jumped
+constexpr int sthreat = -10;        // enemy pieces we can jump if not moved (-)
+constexpr int sgrad = 1;            // score of piece positions
+constexpr int sback = 10;           // back row occupied so enemy can't make king
+constexpr int smoc2 = 200;          // more mobility, more center
+constexpr int smoc3 = -8;           // less mobility, less center
+constexpr int smoc4 = -80;          // more mobility, less center
+constexpr int smode2 = -14;         // less mobility, less denied
+constexpr int smode3 = -40;         // more mobility, more denied (-)
+constexpr int sdemmo = -20;         // more denied, more moves (-)
+constexpr int scent = 10;           // pieces in center
+constexpr int skcent = 100;         // kings in center
 
-const int depthpenalty=4;       // guess
-const int noise=2;              // values less or eq to this apart are eq
+constexpr int depthpenalty=4;       // guess
+constexpr int noise=2;              // values less or eq to this apart are eq
 
 // const int sattackking = 4;   // not used
 // const int sattackpiece = 3;
@@ -614,7 +614,7 @@ node* undomove() {
   return n;
 }
 
-const char _usermoves[] =
+constexpr char _usermoves[] =
 "B1D1F1H1A2C2E2G2??B3D3F3H3A4C4E4G4??B5D5F5H5A6C6E6G6??B7D7F7H7A8C8E8G8??";
 
 // #define usermoves(x,y) _usermoves[2*((x)-5)+(y)-1]
@@ -1048,7 +1048,7 @@ void Board::animate(node* move, int backwards) {
   int y1 = squarey(f);
   int x2 = squarex(t);
   int y2 = squarey(t);
-  const int STEPS=35;
+  constexpr int STEPS=35;
   for (int j=0; j<STEPS; j++) {
     int x = x1+(x2-x1)*j/STEPS;
     int y = y1+(y2-y1)*j/STEPS;

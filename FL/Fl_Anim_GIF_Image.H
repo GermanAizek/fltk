@@ -22,6 +22,7 @@ class Fl_Image;
 class Fl_Widget;
 
 #include <FL/Fl_GIF_Image.H>
+#include <cstdint>
 
 // Load and display animated GIF images
 class FL_EXPORT Fl_Anim_GIF_Image : public Fl_GIF_Image {
@@ -78,10 +79,10 @@ public:
   };
 
   // -- constructors and destructor
-  Fl_Anim_GIF_Image(const char *filename, Fl_Widget *canvas_widget = 0, unsigned short flags = 0);
+  Fl_Anim_GIF_Image(const char *filename, Fl_Widget *canvas_widget = nullptr, std::uint16_t flags = 0U);
   Fl_Anim_GIF_Image(const char* imagename, const unsigned char *data,
-                    const size_t length, Fl_Widget *canvas_widget = 0,
-                    unsigned short flags = 0);
+                    const size_t length, Fl_Widget *canvas_widget = nullptr,
+                    std::uint16_t flags = 0U);
   Fl_Anim_GIF_Image();
   ~Fl_Anim_GIF_Image() override;
 

@@ -74,7 +74,7 @@ public:
       fl_color(FL_WHITE);
       fl_rectf(X, Y, W, H);
       fl_color(FL_LIGHT2);
-      const int side = 4, side2 = 2 * side;
+      constexpr int side = 4, side2 = 2 * side;
       for (int j = Y; j < Y + H; j += side) {
         for (int i = X + (j - Y) % side2; i < X + W; i += side2) {
           fl_rectf(i, j, side, side);

@@ -27,8 +27,8 @@
 
 // These constants define the image dimensions and
 // the number of frames of the animation
-const unsigned int dim = 256;
-const unsigned int frames = 48;
+constexpr unsigned int dim = 256;
+constexpr unsigned int frames = 48;
 
 static Fl_RGB_Image *img[frames];
 static uchar curframe;
@@ -37,7 +37,7 @@ static void make_images() {
 
   unsigned i;
   for (i = 0; i < frames; i++) {
-    const unsigned size = dim * dim * 4;
+    constexpr unsigned size = dim * dim * 4;
     uchar *data = new uchar[size];
 
     memset(data, 0, size);
@@ -57,9 +57,9 @@ static void make_images() {
     else
       alpha = uchar(255 * (((frames / 2) - (i - frames / 2)) / ((float) frames / 2)));
 
-    const int spherew = 60;
-    const int spherex = (dim - spherew) / 2;
-    const int maxdist = (spherew / 2) * (spherew / 2);
+    constexpr int spherew = 60;
+    constexpr int spherex = (dim - spherew) / 2;
+    constexpr int maxdist = (spherew / 2) * (spherew / 2);
     for (x = spherex; x < spherex + spherew; x++) {
       for (y = 20; y < 20 + spherew; y++) {
 
@@ -88,8 +88,8 @@ static void make_images() {
     const float pos = (i / (float) frames) * 2 - 0.5f;
 
     const int xoffset = int(pos * dim);
-    const int yoffset = 2 * dim / 3;
-    const int w = dim / 4;
+    constexpr int yoffset = 2 * dim / 3;
+    constexpr int w = dim / 4;
 
     for (x = -w; x < w; x++) {
       if (x + xoffset < 0 || x + xoffset >= (int)dim)

@@ -46,9 +46,9 @@ int N = 0;
 // shadows 'leaking' outside their widget bounding boxes (x,y,w,h).
 // Is this intentional?
 
-static const int outline = 0; // draw 1-px red frame around all boxes
-static const int box_bg  = 0; // draw white background inside all boxes
-static const int inactive  = 0; // deactivate boxes and use green background
+static constexpr int outline = 0; // draw 1-px red frame around all boxes
+static constexpr int box_bg  = 0; // draw white background inside all boxes
+static constexpr int inactive  = 0; // deactivate boxes and use green background
 
 class BoxGroup : public Fl_Group {
   public:

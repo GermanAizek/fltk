@@ -83,8 +83,8 @@ void timer_cb(void *) {
 
   static int stop = 0;
   static int n = 0;
-  const double delta = 5.0;   // delay of popups
-  const int nmax = 10;        // limit no. of popups
+  constexpr double delta = 5.0;   // delay of popups
+  constexpr int nmax = 10;        // limit no. of popups
 
   n++;
   if (n >= nmax)

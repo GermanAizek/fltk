@@ -1,5 +1,5 @@
 
-static const char * const comment_text[] = {
+static constexpr char * const comment_text[] = {
   // GNU Public License/GPL Header
     "//\n"
     "// NameOfProgram, ShortDescription\n"

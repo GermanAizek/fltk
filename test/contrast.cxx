@@ -302,8 +302,8 @@ void color_cb(Fl_Widget *w, void *v) {
 
 int main(int argc, char **argv) {
 
-  const int bw = 58;
-  const int bh = 30;
+  constexpr int bw = 58;
+  constexpr int bh = 30;
   int cw = 16 * bw + 10;
   int ch = 16 * bh + 10;
   int ww = cw + 10;
@@ -323,9 +323,9 @@ int main(int argc, char **argv) {
 
   // sliders for label color (gray, red, green, blue)
 
-  const int sx = 10 + bw;
-  const int sw = 5 * bw;
-  const int sh = 25;
+  constexpr int sx = 10 + bw;
+  constexpr int sw = 5 * bw;
+  constexpr int sh = 25;
   int sy = ch + 10;
 
   Fl_Hor_Value_Slider *gray = new Fl_Hor_Value_Slider(sx, sy, sw, sh, "gray");

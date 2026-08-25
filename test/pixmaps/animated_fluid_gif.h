@@ -1,5 +1,5 @@
 
-static const size_t animated_fluid_gif_size = 2545;
+static constexpr size_t animated_fluid_gif_size = 2545;
 static const unsigned char animated_fluid_gif[] =
 {71,73,70,56,57,97,96,0,96,0,132,31,0,0,1,0,3,31,63,46,48,45,0,54,108,78,80,
 77,64,123,116,124,126,123,125,173,98,107,166,116,171,204,63,220,233,19,253,254,
