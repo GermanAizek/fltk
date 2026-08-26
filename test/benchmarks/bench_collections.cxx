@@ -43,7 +43,10 @@ FLTK_REGISTER_BENCHMARK(bench_Fl_Multi_Browser);
 
 static BenchmarkResult bench_Fl_Check_Browser() {
   return benchmark_fltk_widget<Fl_Check_Browser>("Fl_Check_Browser", "Browsers & Tables", "FL/Fl_Check_Browser.H",
-    nullptr, [](Fl_Check_Browser* b) { b->clear(); }, "check_browser_clear");
+    [](Fl_Check_Browser* b) {
+      for (int i = 0; i < 20; i++) b->add("Sample check item text", i % 2);
+    },
+    [](Fl_Check_Browser* b) { b->clear(); }, "check_browser_clear");
 }
 FLTK_REGISTER_BENCHMARK(bench_Fl_Check_Browser);
 

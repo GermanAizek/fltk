@@ -314,7 +314,14 @@ FLTK_REGISTER_BENCHMARK(bench_Fl_STANAG4586);
 static BenchmarkResult bench_Fl_IRIG106_Ch10() {
   return benchmark_fltk_class<Fl_IRIG106_Ch10>("Fl_IRIG106_Ch10", "Avionics & Defense", "FL/Fl_IRIG106_Ch10.H",
     []() { return new Fl_IRIG106_Ch10(); },
-    [](Fl_IRIG106_Ch10* i) { (void)i; }, "irig106_noop");
+    [](Fl_IRIG106_Ch10* i) {
+      static const uint8_t pkt[32] = {
+        0x25, 0xEB, 0x01, 0x00, 32, 0, 0, 0, 8, 0, 0, 0,
+        0x19, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        1, 2, 3, 4, 5, 6, 7, 8
+      };
+      i->feed_raw_packet(pkt, sizeof(pkt));
+    }, "feed_packet");
 }
 FLTK_REGISTER_BENCHMARK(bench_Fl_IRIG106_Ch10);
 

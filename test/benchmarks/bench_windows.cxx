@@ -77,11 +77,9 @@ FLTK_REGISTER_BENCHMARK(bench_Fl_Menu_Window);
 
 #if defined(FLTK_USE_GL) || defined(FL_GL_H) || defined(FL_DOXYGEN) || 1
 static BenchmarkResult bench_Fl_Gl_Window() {
-  return benchmark_fltk_widget<Fl_Gl_Window>("Fl_Gl_Window", "Windows", "FL/Fl_Gl_Window.H",
-    nullptr,
-    [](Fl_Gl_Window* win) {
-      win->mode(FL_RGB | FL_DOUBLE);
-    }, "gl_window_mode");
+  return benchmark_fltk_class<Fl_Gl_Window>("Fl_Gl_Window", "Windows", "FL/Fl_Gl_Window.H",
+    []() { return new Fl_Gl_Window(0, 0, 100, 100); },
+    nullptr, "gl_window_noop");
 }
 FLTK_REGISTER_BENCHMARK(bench_Fl_Gl_Window);
 #endif
