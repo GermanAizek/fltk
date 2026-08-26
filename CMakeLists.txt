@@ -74,7 +74,7 @@ else()
   if(MSVC)
     set(CMAKE_CXX_STANDARD        20 CACHE STRING "Minimal C++ Standard")
   else()
-    set(CMAKE_CXX_STANDARD        11 CACHE STRING "Minimal C++ Standard")
+    set(CMAKE_CXX_STANDARD        17 CACHE STRING "Minimal C++ Standard")
   endif()
 endif()
 
