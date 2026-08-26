@@ -15,6 +15,7 @@
 #include <FL/Fl_Serial_Port.H>
 #include <stdint.h>
 #include <stddef.h>
+#include <vector>
 
 class Fl_ARINC708;
 typedef void (*Fl_ARINC708_Callback)(Fl_ARINC708*, void*);
@@ -30,21 +31,20 @@ typedef void (*Fl_ARINC708_Callback)(Fl_ARINC708*, void*);
 class FL_EXPORT Fl_ARINC708 : public Fl_Serial_Port {
 public:
   struct RadarRadial {
-    float    scan_angle_deg;  // -90.0 to +90.0 degrees
-    float    tilt_angle_deg;  // -15.0 to +15.0 degrees
-    uint16_t range_nm;        // 10, 20, 40, 80, 160, 320 NM
-    uint8_t  mode;            // WX, WX+TURB, MAP, TEST
-    uint8_t  gain;            // Gain level
+    float    scan_angle_deg;       // -90.0 to +90.0 degrees
+    float    tilt_angle_deg;       // -15.0 to +15.0 degrees
+    uint16_t range_nm;             // 10, 20, 40, 80, 160, 320 NM
+    uint8_t  mode;                 // WX, WX+TURB, MAP, TEST
+    uint8_t  gain;                 // Gain level
     bool     is_valid;
-    uint8_t  range_bins[512]; // 0-7 color index for each range bin
+    std::vector<uint8_t> range_bins; // 0-7 color index for each range bin
   };
 
 private:
   RadarRadial last_radial_;
   Fl_ARINC708_Callback arinc708_cb_;
   void* user_data_;
-  size_t buf_idx_;
-  uint8_t buffer_[256];
+  std::vector<uint8_t> buffer_;
 
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);

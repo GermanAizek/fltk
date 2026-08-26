@@ -14,8 +14,6 @@
 Fl_IRIG106_Ch10::Fl_IRIG106_Ch10()
   : irig_cb_(nullptr), user_data_(nullptr), buf_idx_(0), payload_len_(0) {
   memset(&last_header_, 0, sizeof(last_header_));
-  memset(buffer_, 0, sizeof(buffer_));
-  memset(payload_, 0, sizeof(payload_));
   Fl_Serial_Port::callback(serial_cb, this);
 }
 
@@ -49,20 +47,23 @@ void Fl_IRIG106_Ch10::serial_cb(Fl_Serial_Port* p, void* data) {
 
 void Fl_IRIG106_Ch10::process_byte(uint8_t b) {
   if (buf_idx_ == 0 && b != 0x25) return;
-  if (buf_idx_ == 1 && b != 0xEB) { buf_idx_ = 0; return; }
+  if (buf_idx_ == 1 && b != 0xEB) { buf_idx_ = 0; buffer_.clear(); return; }
 
-  buffer_[buf_idx_++] = b;
+  buffer_.push_back(b);
+  buf_idx_++;
 
   if (buf_idx_ >= 24) {
     uint32_t pkt_len = buffer_[4] | (buffer_[5] << 8) | (buffer_[6] << 16) | (buffer_[7] << 24);
-    if (pkt_len < 24 || pkt_len > sizeof(buffer_)) {
+    if (pkt_len < 24 || pkt_len > 1048576) {
       buf_idx_ = 0;
+      buffer_.clear();
       return;
     }
 
     if (buf_idx_ == pkt_len) {
-      feed_raw_packet(buffer_, pkt_len);
+      feed_raw_packet(buffer_.data(), pkt_len);
       buf_idx_ = 0;
+      buffer_.clear();
     }
   }
 }
@@ -94,8 +95,9 @@ void Fl_IRIG106_Ch10::feed_raw_packet(const uint8_t* pkt, size_t len) {
 
   payload_len_ = len - 24;
   if (payload_len_ > 0) {
-    if (payload_len_ > sizeof(payload_)) payload_len_ = sizeof(payload_);
-    memcpy(payload_, pkt + 24, payload_len_);
+    payload_.assign(pkt + 24, pkt + 24 + payload_len_);
+  } else {
+    payload_.clear();
   }
 
   if (irig_cb_) {

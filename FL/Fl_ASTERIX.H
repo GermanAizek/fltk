@@ -15,6 +15,7 @@
 #include <FL/Fl_Serial_Port.H>
 #include <stdint.h>
 #include <stddef.h>
+#include <vector>
 
 class Fl_ASTERIX;
 typedef void (*Fl_ASTERIX_Callback)(Fl_ASTERIX*, void*);
@@ -58,8 +59,7 @@ private:
   Cat021Record last_record_;
   Fl_ASTERIX_Callback asterix_cb_;
   void* user_data_;
-  size_t buf_idx_;
-  uint8_t buffer_[2048];
+  std::vector<uint8_t> buffer_;
 
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);

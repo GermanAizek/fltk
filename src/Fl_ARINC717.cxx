@@ -13,8 +13,12 @@
 
 Fl_ARINC717::Fl_ARINC717() 
   : current_word_idx_(0), raw_bit_count_(0), arinc717_cb_(nullptr), user_data_(nullptr) {
-  memset(&current_subframe_, 0, sizeof(current_subframe_));
-  memset(raw_bit_buf_, 0, sizeof(raw_bit_buf_));
+  current_subframe_.word_count = 0;
+  current_subframe_.sync_word = 0;
+  current_subframe_.subframe_num = 0;
+  current_subframe_.is_valid = false;
+  raw_bit_buf_[0] = 0;
+  raw_bit_buf_[1] = 0;
   Fl_Serial_Port::callback(serial_cb, this);
 }
 
@@ -47,7 +51,9 @@ void Fl_ARINC717::serial_cb(Fl_Serial_Port* p, void* data) {
 }
 
 void Fl_ARINC717::process_byte(uint8_t b) {
-  raw_bit_buf_[raw_bit_count_++] = b;
+  if (raw_bit_count_ < 2) {
+    raw_bit_buf_[raw_bit_count_++] = b;
+  }
   if (raw_bit_count_ >= 2) {
     uint16_t w = ((uint16_t)raw_bit_buf_[0] << 8) | raw_bit_buf_[1];
     w &= 0x0FFF; // 12 bits
@@ -60,23 +66,24 @@ void Fl_ARINC717::feed_raw_word(uint16_t word_12bit) {
   uint16_t sync = word_12bit & 0x0FFF;
   if (sync == 0x247 || sync == 0x5B8 || sync == 0xA47 || sync == 0xDB8) {
     // New subframe detected
-    if (current_word_idx_ > 0 && arinc717_cb_) {
-      current_subframe_.word_count = current_word_idx_;
+    if (!current_subframe_.words.empty() && arinc717_cb_) {
+      current_subframe_.word_count = current_subframe_.words.size();
       current_subframe_.is_valid = true;
       arinc717_cb_(this, user_data_);
     }
     
     current_word_idx_ = 0;
+    current_subframe_.words.clear();
     current_subframe_.sync_word = sync;
     if (sync == 0x247) current_subframe_.subframe_num = 1;
     else if (sync == 0x5B8) current_subframe_.subframe_num = 2;
     else if (sync == 0xA47) current_subframe_.subframe_num = 3;
     else if (sync == 0xDB8) current_subframe_.subframe_num = 4;
     
-    current_subframe_.words[current_word_idx_++] = sync;
+    current_subframe_.words.push_back(sync);
   } else {
-    if (current_word_idx_ < 512) {
-      current_subframe_.words[current_word_idx_++] = word_12bit & 0x0FFF;
+    if (current_subframe_.words.size() < 512) {
+      current_subframe_.words.push_back(word_12bit & 0x0FFF);
     }
   }
 }
@@ -90,6 +97,7 @@ void Fl_ARINC717::feed_subframe(uint8_t sf_num, const uint16_t* words, size_t co
   else current_subframe_.sync_word = 0xDB8;
 
   size_t copy_cnt = (count > 512) ? 512 : count;
+  current_subframe_.words.resize(copy_cnt);
   current_subframe_.words[0] = current_subframe_.sync_word;
   for (size_t i = 1; i < copy_cnt; i++) {
     current_subframe_.words[i] = words[i] & 0x0FFF;

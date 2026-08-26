@@ -12,9 +12,13 @@
 #include <string.h>
 
 Fl_ARINC708::Fl_ARINC708()
-  : arinc708_cb_(nullptr), user_data_(nullptr), buf_idx_(0) {
-  memset(&last_radial_, 0, sizeof(last_radial_));
-  memset(buffer_, 0, sizeof(buffer_));
+  : arinc708_cb_(nullptr), user_data_(nullptr) {
+  last_radial_.scan_angle_deg = 0.0f;
+  last_radial_.tilt_angle_deg = 0.0f;
+  last_radial_.range_nm = 0;
+  last_radial_.mode = 0;
+  last_radial_.gain = 0;
+  last_radial_.is_valid = false;
   Fl_Serial_Port::callback(serial_cb, this);
 }
 
@@ -47,20 +51,20 @@ void Fl_ARINC708::serial_cb(Fl_Serial_Port* p, void* data) {
 }
 
 void Fl_ARINC708::process_byte(uint8_t b) {
-  if (buf_idx_ == 0 && b != 0x70) return;
-  if (buf_idx_ == 1 && b != 0x88) { buf_idx_ = 0; return; }
+  if (buffer_.empty() && b != 0x70) return;
+  if (buffer_.size() == 1 && b != 0x88) { buffer_.clear(); return; }
 
-  buffer_[buf_idx_++] = b;
+  buffer_.push_back(b);
 
   // ARINC 708 raw packet payload (200 bytes for 1600 bits)
-  if (buf_idx_ == 200) {
+  if (buffer_.size() == 200) {
     int16_t raw_scan = (buffer_[2] << 8) | buffer_[3];
     int16_t raw_tilt = (buffer_[4] << 8) | buffer_[5];
     uint16_t range = (buffer_[6] << 8) | buffer_[7];
     uint8_t mode = buffer_[8];
 
-    feed_radial((float)raw_scan * 0.1f, (float)raw_tilt * 0.1f, range, mode, buffer_ + 10, 188);
-    buf_idx_ = 0;
+    feed_radial((float)raw_scan * 0.1f, (float)raw_tilt * 0.1f, range, mode, buffer_.data() + 10, 188);
+    buffer_.clear();
   }
 }
 
@@ -74,7 +78,9 @@ void Fl_ARINC708::feed_radial(float scan_angle, float tilt, uint16_t range, uint
 
   size_t copy_bins = (bin_count > 512) ? 512 : bin_count;
   if (bins && copy_bins > 0) {
-    memcpy(last_radial_.range_bins, bins, copy_bins);
+    last_radial_.range_bins.assign(bins, bins + copy_bins);
+  } else {
+    last_radial_.range_bins.clear();
   }
 
   if (arinc708_cb_) {

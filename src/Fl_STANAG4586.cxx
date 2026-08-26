@@ -12,9 +12,14 @@
 #include <string.h>
 
 Fl_STANAG4586::Fl_STANAG4586()
-  : stanag_cb_(nullptr), user_data_(nullptr), buf_idx_(0) {
-  memset(&last_msg_, 0, sizeof(last_msg_));
-  memset(buffer_, 0, sizeof(buffer_));
+  : stanag_cb_(nullptr), user_data_(nullptr) {
+  last_msg_.vehicle_id = 0;
+  last_msg_.sync = 0;
+  last_msg_.message_id = 0;
+  last_msg_.payload_len = 0;
+  last_msg_.subsystem_id = 0;
+  last_msg_.sequence_num = 0;
+  last_msg_.is_valid = false;
   Fl_Serial_Port::callback(serial_cb, this);
 }
 
@@ -47,20 +52,20 @@ void Fl_STANAG4586::serial_cb(Fl_Serial_Port* p, void* data) {
 }
 
 void Fl_STANAG4586::process_byte(uint8_t b) {
-  if (buf_idx_ == 0 && b != 0x45) return;
-  if (buf_idx_ == 1 && b != 0x86) { buf_idx_ = 0; return; }
+  if (buffer_.empty() && b != 0x45) return;
+  if (buffer_.size() == 1 && b != 0x86) { buffer_.clear(); return; }
 
-  buffer_[buf_idx_++] = b;
+  buffer_.push_back(b);
 
-  if (buf_idx_ >= 12) {
+  if (buffer_.size() >= 12) {
     uint16_t len = (buffer_[10] << 8) | buffer_[11];
-    if (buf_idx_ == (size_t)(12 + len)) {
+    if (buffer_.size() == (size_t)(12 + len)) {
       uint16_t mid = (buffer_[2] << 8) | buffer_[3];
       uint32_t vid = (buffer_[4] << 24) | (buffer_[5] << 16) | (buffer_[6] << 8) | buffer_[7];
       uint8_t sub = buffer_[8];
 
-      feed_message(mid, vid, sub, buffer_ + 12, len);
-      buf_idx_ = 0;
+      feed_message(mid, vid, sub, buffer_.data() + 12, len);
+      buffer_.clear();
     }
   }
 }
@@ -72,10 +77,12 @@ void Fl_STANAG4586::feed_message(uint16_t msg_id, uint32_t v_id, uint8_t subsys,
   last_msg_.subsystem_id = subsys;
   last_msg_.sequence_num++;
   last_msg_.is_valid = true;
+  last_msg_.payload_len = len;
 
-  last_msg_.payload_len = (len > sizeof(last_msg_.payload)) ? sizeof(last_msg_.payload) : len;
-  if (payload && last_msg_.payload_len > 0) {
-    memcpy(last_msg_.payload, payload, last_msg_.payload_len);
+  if (payload && len > 0) {
+    last_msg_.payload.assign(payload, payload + len);
+  } else {
+    last_msg_.payload.clear();
   }
 
   if (stanag_cb_) {

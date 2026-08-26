@@ -15,6 +15,7 @@
 #include <FL/Fl_Serial_Port.H>
 #include <stdint.h>
 #include <stddef.h>
+#include <vector>
 
 class Fl_IRIG106_Ch10;
 typedef void (*Fl_IRIG106_Callback)(Fl_IRIG106_Ch10*, void*);
@@ -53,8 +54,8 @@ private:
   void* user_data_;
   size_t buf_idx_;
   size_t payload_len_;
-  uint8_t buffer_[4096];
-  uint8_t payload_[4096];
+  std::vector<uint8_t> buffer_;
+  std::vector<uint8_t> payload_;
 
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);
@@ -67,7 +68,7 @@ public:
   void irig_callback(Fl_IRIG106_Callback cb, void* user_data = nullptr);
 
   const PacketHeader& last_header() const { return last_header_; }
-  const uint8_t* last_payload() const { return payload_; }
+  const uint8_t* last_payload() const { return payload_.empty() ? nullptr : payload_.data(); }
   size_t last_payload_len() const { return payload_len_; }
 
   void feed_raw_packet(const uint8_t* pkt_data, size_t len);

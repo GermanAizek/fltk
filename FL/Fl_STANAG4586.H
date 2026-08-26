@@ -15,6 +15,7 @@
 #include <FL/Fl_Serial_Port.H>
 #include <stdint.h>
 #include <stddef.h>
+#include <vector>
 
 class Fl_STANAG4586;
 typedef void (*Fl_STANAG4586_Callback)(Fl_STANAG4586*, void*);
@@ -32,22 +33,21 @@ typedef void (*Fl_STANAG4586_Callback)(Fl_STANAG4586*, void*);
 class FL_EXPORT Fl_STANAG4586 : public Fl_Serial_Port {
 public:
   struct DliMessage {
-    uint32_t vehicle_id;      // Unique Vehicle ID
-    uint16_t sync;            // 0x4586
-    uint16_t message_id;      // STANAG 4586 Message ID
+    uint32_t vehicle_id;           // Unique Vehicle ID
+    uint16_t sync;                 // 0x4586
+    uint16_t message_id;           // STANAG 4586 Message ID
     uint16_t payload_len;
-    uint8_t  subsystem_id;    // Subsystem (0: Airframe, 1: EO/IR, 2: SAR)
+    uint8_t  subsystem_id;         // Subsystem (0: Airframe, 1: EO/IR, 2: SAR)
     uint8_t  sequence_num;
     bool     is_valid;
-    uint8_t  payload[1024];
+    std::vector<uint8_t> payload;
   };
 
 private:
   DliMessage last_msg_;
   Fl_STANAG4586_Callback stanag_cb_;
   void* user_data_;
-  size_t buf_idx_;
-  uint8_t buffer_[1024];
+  std::vector<uint8_t> buffer_;
 
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);

@@ -23,9 +23,11 @@
 #define SLIP_ESC_END 0xDC
 #define SLIP_ESC_ESC 0xDD
 
-Fl_AFDX::Fl_AFDX() : afdx_cb_(nullptr), afdx_user_data_(nullptr), buf_idx_(0), escape_flag_(false) {
-  memset(buffer_, 0, sizeof(buffer_));
-  memset(&last_frame_, 0, sizeof(last_frame_));
+Fl_AFDX::Fl_AFDX() : afdx_cb_(nullptr), afdx_user_data_(nullptr), escape_flag_(false) {
+  last_frame_.payload_length = 0;
+  last_frame_.virtual_link = 0;
+  last_frame_.seq_num = 0;
+  last_frame_.is_valid = false;
   
   // Register the internal serial callback
   Fl_Serial_Port::callback(serial_cb, this);
@@ -77,29 +79,29 @@ void Fl_AFDX::process_byte(uint8_t b) {
       escape_flag_ = true;
       return;
     } else if (b == SLIP_END) {
-      if (buf_idx_ > 0) {
-        decode_frame(buffer_, buf_idx_);
+      if (!buffer_.empty()) {
+        decode_frame(buffer_.data(), (int)buffer_.size());
         if (last_frame_.is_valid && afdx_cb_) {
           afdx_cb_(this, afdx_user_data_);
         }
-        buf_idx_ = 0;
+        buffer_.clear();
       }
       return;
     }
   }
 
-  if (buf_idx_ < (int)sizeof(buffer_)) {
-    buffer_[buf_idx_++] = b;
+  if (buffer_.size() < 65536) {
+    buffer_.push_back(b);
   } else {
     // Buffer overflow, drop the frame and reset
-    buf_idx_ = 0;
+    buffer_.clear();
   }
 }
 
 void Fl_AFDX::feed_raw_frame(const uint8_t* data, int len) {
-  if (len > 0 && len <= (int)sizeof(buffer_)) {
-    memcpy(buffer_, data, len);
-    decode_frame(buffer_, len);
+  if (len > 0) {
+    buffer_.assign(data, data + len);
+    decode_frame(buffer_.data(), len);
     if (last_frame_.is_valid && afdx_cb_) {
       afdx_cb_(this, afdx_user_data_);
     }

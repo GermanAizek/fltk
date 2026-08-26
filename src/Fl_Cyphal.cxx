@@ -12,9 +12,17 @@
 #include <string.h>
 
 Fl_Cyphal::Fl_Cyphal()
-  : cyphal_cb_(nullptr), user_data_(nullptr), buf_idx_(0) {
-  memset(&last_transfer_, 0, sizeof(last_transfer_));
-  memset(buffer_, 0, sizeof(buffer_));
+  : cyphal_cb_(nullptr), user_data_(nullptr) {
+  last_transfer_.port_id = 0;
+  last_transfer_.payload_len = 0;
+  last_transfer_.priority = 0;
+  last_transfer_.src_node_id = 0;
+  last_transfer_.dst_node_id = 0;
+  last_transfer_.transfer_id = 0;
+  last_transfer_.is_service = false;
+  last_transfer_.start_of_transfer = false;
+  last_transfer_.end_of_transfer = false;
+  last_transfer_.is_valid = false;
   Fl_Serial_Port::callback(serial_cb, this);
 }
 
@@ -47,14 +55,14 @@ void Fl_Cyphal::serial_cb(Fl_Serial_Port* p, void* data) {
 }
 
 void Fl_Cyphal::process_byte(uint8_t b) {
-  if (buf_idx_ == 0 && b != 0xC0) return; // Cyphal serial delimiter
-  buffer_[buf_idx_++] = b;
+  if (buffer_.empty() && b != 0xC0) return; // Cyphal serial delimiter
+  buffer_.push_back(b);
 
-  if (buf_idx_ >= 8) {
+  if (buffer_.size() >= 8) {
     uint16_t len = (buffer_[1] << 8) | buffer_[2];
-    if (buf_idx_ == (size_t)(8 + len)) {
-      feed_transfer(buffer_[3], (buffer_[4] << 8) | buffer_[5], buffer_[6] != 0, buffer_[7], 255, 0, buffer_ + 8, len);
-      buf_idx_ = 0;
+    if (buffer_.size() == (size_t)(8 + len)) {
+      feed_transfer(buffer_[3], (buffer_[4] << 8) | buffer_[5], buffer_[6] != 0, buffer_[7], 255, 0, buffer_.data() + 8, len);
+      buffer_.clear();
     }
   }
 }
@@ -69,10 +77,12 @@ void Fl_Cyphal::feed_transfer(uint8_t priority, uint16_t port_id, bool is_servic
   last_transfer_.start_of_transfer = true;
   last_transfer_.end_of_transfer = true;
   last_transfer_.is_valid = true;
+  last_transfer_.payload_len = len;
 
-  last_transfer_.payload_len = (len > sizeof(last_transfer_.payload)) ? sizeof(last_transfer_.payload) : len;
-  if (payload && last_transfer_.payload_len > 0) {
-    memcpy(last_transfer_.payload, payload, last_transfer_.payload_len);
+  if (payload && len > 0) {
+    last_transfer_.payload.assign(payload, payload + len);
+  } else {
+    last_transfer_.payload.clear();
   }
 
   if (cyphal_cb_) {

@@ -20,6 +20,7 @@
 
 #include "Fl_Export.H"
 #include <FL/Fl_Serial_Port.H>
+#include <vector>
 
 class Fl_AFDX;
 typedef void (*Fl_AFDX_Callback)(Fl_AFDX*, void*);
@@ -54,9 +55,8 @@ private:
   FrameInfo last_frame_;
   Fl_AFDX_Callback afdx_cb_;
   void* afdx_user_data_;
-  uint16_t buf_idx_;
   bool escape_flag_;
-  uint8_t buffer_[2048]; // Max AFDX frame is 1518 bytes + SLIP overhead
+  std::vector<uint8_t> buffer_; // Dynamic AFDX frame buffer
 
   // Internal serial callback to feed the parser
   static void serial_cb(Fl_Serial_Port* p, void* data);
@@ -91,7 +91,7 @@ public:
     Gets the raw frame buffer.
     \return Pointer to the internal frame buffer.
   */
-  const uint8_t* raw_buffer() const { return buffer_; }
+  const uint8_t* raw_buffer() const { return buffer_.empty() ? nullptr : buffer_.data(); }
   
   // For unit testing: manually feed a byte into the parser
   void feed_byte(uint8_t b) { process_byte(b); }

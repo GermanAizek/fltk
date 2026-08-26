@@ -13,9 +13,8 @@
 #include <stdio.h>
 
 Fl_ASTERIX::Fl_ASTERIX()
-  : asterix_cb_(nullptr), user_data_(nullptr), buf_idx_(0) {
+  : asterix_cb_(nullptr), user_data_(nullptr) {
   memset(&last_record_, 0, sizeof(last_record_));
-  memset(buffer_, 0, sizeof(buffer_));
   Fl_Serial_Port::callback(serial_cb, this);
 }
 
@@ -48,23 +47,23 @@ void Fl_ASTERIX::serial_cb(Fl_Serial_Port* p, void* data) {
 }
 
 void Fl_ASTERIX::process_byte(uint8_t b) {
-  if (buf_idx_ == 0 && b != 21 && b != 48 && b != 8) return; // Support Cat 021, 048, 008
-  buffer_[buf_idx_++] = b;
+  if (buffer_.empty() && b != 21 && b != 48 && b != 8) return; // Support Cat 021, 048, 008
+  buffer_.push_back(b);
 
-  if (buf_idx_ >= 3) {
+  if (buffer_.size() >= 3) {
     uint16_t block_len = (buffer_[1] << 8) | buffer_[2];
-    if (block_len < 3 || block_len > 2048) {
-      buf_idx_ = 0;
+    if (block_len < 3 || block_len > 65535) {
+      buffer_.clear();
       return;
     }
-    if (buf_idx_ == block_len) {
+    if (buffer_.size() == block_len) {
       // Decode ASTERIX Data Block
       last_record_.category = buffer_[0];
-      last_record_.sac = buffer_[3];
-      last_record_.sic = buffer_[4];
+      last_record_.sac = buffer_.size() > 3 ? buffer_[3] : 0;
+      last_record_.sic = buffer_.size() > 4 ? buffer_[4] : 0;
       last_record_.is_valid = true;
       if (asterix_cb_) asterix_cb_(this, user_data_);
-      buf_idx_ = 0;
+      buffer_.clear();
     }
   }
 }
