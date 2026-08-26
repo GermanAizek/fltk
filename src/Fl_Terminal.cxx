@@ -535,41 +535,18 @@ void Fl_Terminal::Cursor::scroll(int nrows) {
 /////////////////////////////////////
 
 // Ctor
-Fl_Terminal::Utf8Char::Utf8Char(void) {
-  text_[0]   = ' ';
-  len_       = 1;
-  attrib_    = 0;
-  charflags_ = 0;
-  fgcolor_   = 0xffffff00;
-  bgcolor_   = 0xffffffff;   // special color: doesn't draw, 'shows thru' to box()
-}
-
-// copy ctor
-Fl_Terminal::Utf8Char::Utf8Char(const Utf8Char& src) {
-  // local instance not initialized yet; init first, then copy text
-  text_[0]   = ' ';
-  len_       = 1;
-  attrib_    = src.attrib_;
-  charflags_ = src.charflags_;
-  fgcolor_   = src.fgcolor_;
-  bgcolor_   = src.bgcolor_;
-  text_utf8_(src.text_utf8(), src.length());    // copy the src text
-}
-
-// assignment
-Fl_Terminal::Utf8Char& Fl_Terminal::Utf8Char::operator=(const Utf8Char& src) {
-  // local instance is already initialized, so just change its contents
-  text_utf8_(src.text_utf8(), src.length());    // local copy src text
-  attrib_    = src.attrib_;
-  charflags_ = src.charflags_;
-  fgcolor_   = src.fgcolor_;
-  bgcolor_   = src.bgcolor_;
-  return *this;
-}
-
-// dtor
-Fl_Terminal::Utf8Char::~Utf8Char(void) {
-  len_ = 0;
+Fl_Terminal::Utf8Char::Utf8Char(void)
+  : fgcolor_(0xffffff00),
+    bgcolor_(0xffffffff),
+    len_(1),
+    attrib_(0),
+    charflags_(0),
+    pad_(0)
+{
+  text_[0] = ' ';
+  text_[1] = 0;
+  text_[2] = 0;
+  text_[3] = 0;
 }
 
 // Set 'text_' to valid UTF-8 string 'text'.
@@ -744,7 +721,7 @@ void Fl_Terminal::RingBuffer::new_copy(int drows, int dcols, int hrows, const Ch
   while ((src_row >= src_stop_row) && (dst_row >= 0)) {
     Utf8Char *src = u8c_ring_row(src_row);
     Utf8Char *dst = new_ring_chars + (dst_row*dst_cols);
-    for (int col=0; col<tcols; col++ ) *dst++ = *src++;
+    memcpy(dst, src, tcols * sizeof(Utf8Char));
     --src_row;
     --dst_row;
   }
@@ -827,7 +804,7 @@ bool Fl_Terminal::RingBuffer::is_disp_ring_row(int grow) const {
 void Fl_Terminal::RingBuffer::move_disp_row(int src_row, int dst_row) {
   Utf8Char *src = u8c_disp_row(src_row);
   Utf8Char *dst = u8c_disp_row(dst_row);
-  for (int col=0; col<disp_cols(); col++) *dst++ = *src++;
+  memmove(dst, src, disp_cols() * sizeof(Utf8Char));
 }
 
 // Clear the display rows 'sdrow' thru 'edrow' inclusive using specified CharStyle 'style'
@@ -1194,46 +1171,42 @@ Fl_Terminal::Utf8Char* Fl_Terminal::u8c_cursor(void) {
 //    NOTE: 'newsize' should always be at least 'ring_cols()'..
 //
 void Fl_Terminal::init_tabstops(int newsize) {
-  if (newsize > tabstops_size_) {                 // enlarge?
-    char *oldstops = tabstops_;                   // save old stops
-    int   oldsize  = tabstops_size_;              // save old size
-    tabstops_ = (char*)malloc(newsize);           // alloc new
-    for (int t=0; t<newsize; t++) {               // init new tabstops:
-      tabstops_[t] = (oldstops && t<oldsize)
-                       ? oldstops[t]              // copy old
-                       : ((t % 8) == 0) ? 1 : 0;  // new defaults
+  int oldsize = (int)tabstops_.size();
+  if (newsize > oldsize) {
+    tabstops_.resize(newsize);
+    for (int t = oldsize; t < newsize; t++) {
+      tabstops_[t] = ((t % 8) == 0) ? 1 : 0;
     }
-    if (oldstops) free((void*)oldstops);          // dump old stops
-    tabstops_size_ = newsize;
-  } else {
-    // Same size or smaller? Do nothing -- just keep old tabstops
   }
 }
 
 // Reset all tabstops to default 8th char
 void Fl_Terminal::default_tabstops(void) {
   init_tabstops(ring_cols());                // issue #882
-  for (int t=1; t<tabstops_size_; t++)       // t=1: skip 0
+  int sz = (int)tabstops_.size();
+  for (int t=1; t<sz; t++)                   // t=1: skip 0
     tabstops_[t] = ((t % 8) == 0) ? 1 : 0;   // every 8th char is a tabstop
 }
 
 // Clear all tabstops
 void Fl_Terminal::clear_all_tabstops(void) const {
-  memset(tabstops_, 0, tabstops_size_);
+  const_cast<std::vector<char>&>(tabstops_).assign(tabstops_.size(), 0);
 }
 
 // Set/clear tabstop at current cursor x position
 //    val: 0 clears tabstop, 1 sets tabstop
 //
 void Fl_Terminal::set_tabstop(void) const {
-  int index = clamp(cursor_col(), 0, tabstops_size_-1);    // clamp cursor pos
-  tabstops_[index] = 1;                                    // set/clr tabstop
+  if (tabstops_.empty()) return;
+  int index = clamp(cursor_col(), 0, (int)tabstops_.size() - 1);    // clamp cursor pos
+  const_cast<std::vector<char>&>(tabstops_)[index] = 1;             // set tabstop
 }
 
 // Clear tabstop at current cursor x position
 void Fl_Terminal::clear_tabstop(void) const {
-  int index = clamp(cursor_col(), 0, tabstops_size_-1);    // clamp cursor pos
-  tabstops_[index] = 0;                                    // clear tabstop
+  if (tabstops_.empty()) return;
+  int index = clamp(cursor_col(), 0, (int)tabstops_.size() - 1);    // clamp cursor pos
+  const_cast<std::vector<char>&>(tabstops_)[index] = 0;             // clear tabstop
 }
 
 // Apply settings to scrollbar appropriate for h/v scrolling.
@@ -1354,7 +1327,7 @@ void Fl_Terminal::refit_disp_to_screen(void) {
           scroll(1);                            // scroll up to create blank lines at bottom
         }
         // Handle enlarging ring's display
-        ring_.resize(display_rows()+1, dcols, hist_rows(), *current_style_);
+        ring_.resize(display_rows()+1, dcols, hist_rows(), current_style_);
       }
     } else {                                    // shrinking widget?
       for (int i=0; i<(-drow_diff); i++) {      // carefully loop thru each row change
@@ -1365,7 +1338,7 @@ void Fl_Terminal::refit_disp_to_screen(void) {
         } else {                                // CASE 4: need to move cursor + lines up into hist
           cursor_up(-1, false);                 // move cursor down to follow ring_.resize()
           // Handle shrinking ring's display up into history
-          ring_.resize(display_rows()-1, dcols, hist_rows(), *current_style_);
+          ring_.resize(display_rows()-1, dcols, hist_rows(), current_style_);
         }
       }
     }
@@ -1412,7 +1385,7 @@ void Fl_Terminal::resize_display_rows(int drows) {
   int new_dcols = ring_cols();               // keep cols the same
   int new_hrows = hist_rows() - drow_diff;   // keep disp:hist ratio same
   if (new_hrows<0) new_hrows = 0;            // don't let hist be <0
-  ring_.resize(drows, new_dcols, new_hrows, *current_style_);
+  ring_.resize(drows, new_dcols, new_hrows, current_style_);
   // ..update cursor/selections to track text position
   cursor_.scroll(-drow_diff);
   select_.clear();                  // clear any mouse selection
@@ -1429,7 +1402,7 @@ void Fl_Terminal::resize_display_columns(int dcols) {
   // No changes? early exit
   if (dcols == disp_cols()) return;
   // Change cols, preserves previous content if possible
-  ring_.resize(disp_rows(), dcols, hist_rows(), *current_style_);
+  ring_.resize(disp_rows(), dcols, hist_rows(), current_style_);
   update_scrollbar();
 }
 
@@ -1455,10 +1428,10 @@ void Fl_Terminal::update_screen(bool font_changed) {
   if (font_changed) {
     // Change font and current_style's font height
     if (!fontsize_defer_) { // issue 837
-      //DEBUG fprintf(stderr, "update_screen(font change): row/cols=%d/%d, cs.width=%d, cs.height=%d\n", display_rows(), display_columns(), current_style_->charwidth(), current_style_->fontheight());
-      fl_font(current_style_->fontface(), current_style_->fontsize());
+      //DEBUG fprintf(stderr, "update_screen(font change): row/cols=%d/%d, cs.width=%d, cs.height=%d\n", display_rows(), display_columns(), current_style_.charwidth(), current_style_.fontheight());
+      fl_font(current_style_.fontface(), current_style_.fontsize());
     }
-    cursor_.h(current_style_->fontheight());
+    cursor_.h(current_style_.fontheight());
   }
   // Update the scrn_* values
   update_screen_xywh();
@@ -1478,7 +1451,7 @@ int Fl_Terminal::history_rows(void) const {
 */
 void Fl_Terminal::history_rows(int hrows) {
   if (hrows == history_rows()) return;        // no change? done
-  ring_.resize(disp_rows(), disp_cols(), hrows, *current_style_);
+  ring_.resize(disp_rows(), disp_cols(), hrows, current_style_);
   update_screen(false);                       // false: no font change
   display_modified();
 }
@@ -1515,7 +1488,7 @@ int Fl_Terminal::display_rows(void) const {
 */
 void Fl_Terminal::display_rows(int drows) {
   if (drows == disp_rows()) return;           // no change? early exit
-  ring_.resize(drows, disp_cols(), hist_rows(), *current_style_);
+  ring_.resize(drows, disp_cols(), hist_rows(), current_style_);
   update_screen(false);                       // false: no font change ?NEED?
   refit_disp_to_screen();
 }
@@ -1547,19 +1520,19 @@ int Fl_Terminal::display_columns(void) const {
 void Fl_Terminal::display_columns(int dcols) {
   if (dcols == disp_cols()) return;           // no change? early exit
   // Change cols, preserves previous content if possible
-  ring_.resize(disp_rows(), dcols, hist_rows(), *current_style_);
+  ring_.resize(disp_rows(), dcols, hist_rows(), current_style_);
   update_screen(false);                       // false: no font change ?NEED?
   refit_disp_to_screen();
 }
 
 /** Return reference to internal current style for rendering text. */
 Fl_Terminal::CharStyle& Fl_Terminal::current_style(void) const {
-  return *current_style_;
+  return const_cast<CharStyle&>(current_style_);
 }
 
 /** Set current style for rendering text. */
 void Fl_Terminal::current_style(const CharStyle& sty) const {
-  *current_style_ = sty;
+  const_cast<CharStyle&>(current_style_) = sty;
 }
 
 /**
@@ -1613,7 +1586,7 @@ void Fl_Terminal::margin_bottom(int val) {
   as they are monospace.
 */
 void Fl_Terminal::textfont(Fl_Font val) {
-  current_style_->fontface(val);
+  current_style_.fontface(val);
   update_screen(true);
   display_modified();
 }
@@ -1627,7 +1600,7 @@ void Fl_Terminal::textfont(Fl_Font val) {
   Changing this will affect the display_rows() and display_columns().
 */
 void Fl_Terminal::textsize(Fl_Fontsize val) {
-  current_style_->fontsize(val);
+  current_style_.fontsize(val);
   update_screen(true);
   // Changing font size affects #lines in display, so resize it
   refit_disp_to_screen();
@@ -1663,7 +1636,7 @@ void Fl_Terminal::textsize(Fl_Fontsize val) {
   \see textfgcolor_default(Fl_Color)
 */
 void Fl_Terminal::textfgcolor_xterm(uchar val) const {
-  current_style_->fgcolor_xterm(val);
+  current_style_.fgcolor_xterm(val);
 }
 
 /**
@@ -1695,7 +1668,7 @@ void Fl_Terminal::textfgcolor_xterm(uchar val) const {
   \see textbgcolor_default(Fl_Color)
 */
 void Fl_Terminal::textbgcolor_xterm(uchar val) const {
-  current_style_->bgcolor_xterm(val);
+  current_style_.bgcolor_xterm(val);
 }
 
 /**
@@ -1752,7 +1725,7 @@ void Fl_Terminal::color(Fl_Color val) {
   \see textfgcolor_default(Fl_Color), textfgcolor_xterm(uchar)
 */
 void Fl_Terminal::textfgcolor(Fl_Color val) const {
-  current_style_->fgcolor(val);         // also clears FG_XTERM charflag
+  current_style_.fgcolor(val);         // also clears FG_XTERM charflag
 }
 
 /**
@@ -1779,7 +1752,7 @@ void Fl_Terminal::textfgcolor(Fl_Color val) const {
   \see textbgcolor_default(Fl_Color), textbgcolor_xterm(uchar)
 */
 void Fl_Terminal::textbgcolor(Fl_Color val) const {
-  current_style_->bgcolor(val);         // also clears BG_XTERM charflag
+  current_style_.bgcolor(val);         // also clears BG_XTERM charflag
 }
 
 /**
@@ -1791,7 +1764,7 @@ void Fl_Terminal::textbgcolor(Fl_Color val) const {
   \see textfgcolor(Fl_Color)
 */
 void Fl_Terminal::textfgcolor_default(Fl_Color val) const {
-  current_style_->defaultfgcolor(val);
+  current_style_.defaultfgcolor(val);
 }
 
 /**
@@ -1807,7 +1780,7 @@ void Fl_Terminal::textfgcolor_default(Fl_Color val) const {
   \see textbgcolor(Fl_Color)
 */
 void Fl_Terminal::textbgcolor_default(Fl_Color val) const {
-  current_style_->defaultbgcolor(val);
+  current_style_.defaultbgcolor(val);
 }
 
 /**
@@ -1817,7 +1790,7 @@ void Fl_Terminal::textbgcolor_default(Fl_Color val) const {
  \see Fl_Terminal::Attrib
 */
 void Fl_Terminal::textattrib(uchar val) const {
-  current_style_->attrib(val);
+  current_style_.attrib(val);
 }
 
 /**
@@ -1827,7 +1800,7 @@ void Fl_Terminal::textattrib(uchar val) const {
  \see textattrib(uchar), Fl_Terminal::Attrib
 */
 uchar Fl_Terminal::textattrib() const {
-  return current_style_->attrib();
+  return current_style_.attrib();
 }
 
 /**
@@ -1840,7 +1813,7 @@ int Fl_Terminal::x_to_glob_col(int X, int grow, int &gcol, bool &gcr) const {
   int cx = scrn_.x();                               // leftmost char x position
   const Utf8Char *u8c = utf8_char_at_glob(grow, 0);
   for (gcol=0; gcol<ring_cols(); gcol++,u8c++) {    // walk the cols looking for X
-    u8c->fl_font_set(*current_style_);              // pwidth_int() needs fl_font set
+    u8c->fl_font_set(current_style_);              // pwidth_int() needs fl_font set
     int cx2 = cx + u8c->pwidth_int();               // char x2 (right edge of char)
     if (X >= cx && X < cx2) {
       gcr = (X > ((cx+cx2)/2));                     // X is in right half of character
@@ -1867,7 +1840,7 @@ int Fl_Terminal::xy_to_glob_rowcol(int X, int Y, int &grow, int &gcol, bool &gcr
   // Find toprow of what's currently drawn on screen
   int toprow = disp_srow() - scrollbar->value();
   // Find row the 'Y' value is in
-  grow = toprow + ( (Y-scrn_.y()) / current_style_->fontheight());
+  grow = toprow + ( (Y-scrn_.y()) / current_style_.fontheight());
   return x_to_glob_col(X, grow, gcol, gcr);
 }
 
@@ -1959,7 +1932,7 @@ void Fl_Terminal::clear_eod(void) {
 void Fl_Terminal::clear_eol(void) {
   Utf8Char *u8c = u8c_disp_row(cursor_.row()) + cursor_.col();  // start at cursor
   for (int col=cursor_.col(); col<disp_cols(); col++)           // run from cursor to eol
-    (u8c++)->clear(*current_style_);
+    (u8c++)->clear(current_style_);
   //TODO: Clear mouse selection?
 }
 
@@ -1967,7 +1940,7 @@ void Fl_Terminal::clear_eol(void) {
 void Fl_Terminal::clear_sol(void) {
   Utf8Char *u8c = u8c_disp_row(cursor_.row());  // start at sol
   for (int col=0; col<=cursor_.col(); col++)    // run from sol to cursor
-    (u8c++)->clear(*current_style_);
+    (u8c++)->clear(current_style_);
   //TODO: Clear mouse selection?
 }
 
@@ -1975,7 +1948,7 @@ void Fl_Terminal::clear_sol(void) {
 void Fl_Terminal::clear_line(int drow) {
   Utf8Char *u8c = u8c_disp_row(drow);           // start at sol
   for (int col=0; col<disp_cols(); col++)       // run to eol
-    (u8c++)->clear(*current_style_);
+    (u8c++)->clear(current_style_);
   //TODO: Clear mouse selection?
 }
 
@@ -2223,7 +2196,7 @@ void Fl_Terminal::select_line(int grow) {
 */
 void Fl_Terminal::scroll(int rows) {
   // Scroll the ring
-  ring_.scroll(rows, *current_style_);
+  ring_.scroll(rows, current_style_);
   if (rows > 0) update_scrollbar();      // scroll up? changes hist, so scrollbar affected
   else          clear_mouse_selection(); // scroll dn? clear mouse select; it might wrap ring
 }
@@ -2245,7 +2218,7 @@ void Fl_Terminal::insert_rows(int count) {
   while (dst_drow >= cursor_.row()) {                            // walk srcrow to curs line
     Utf8Char *dst = u8c_disp_row(dst_drow--);
     for (int dcol=0; dcol<disp_cols(); dcol++)
-      dst++->clear(*current_style_);
+      dst++->clear(current_style_);
   }
   clear_mouse_selection();
 }
@@ -2268,7 +2241,7 @@ void Fl_Terminal::delete_rows(int count) {
   while (dst_drow < disp_rows()) {                                // walk srcrow to EOD
     Utf8Char *dst = u8c_disp_row(dst_drow++);
     for (int dcol=0; dcol<disp_cols(); dcol++)
-      dst++->clear(*current_style_);
+      dst++->clear(current_style_);
   }
   clear_mouse_selection();
 }
@@ -2296,7 +2269,7 @@ void Fl_Terminal::insert_char_eol(char c, int drow, int dcol, int rep) {
   //
   rep = clamp(rep, 0, disp_cols());                     // sanity
   if (rep == 0) return;
-  const CharStyle &style = *current_style_;
+  const CharStyle &style = current_style_;
   Utf8Char *src = u8c_disp_row(drow)+disp_cols()-1-rep; // start src at 'g'
   Utf8Char *dst = u8c_disp_row(drow)+disp_cols()-1;     // start dst at 'j'
   for (int col=(disp_cols()-1); col>=dcol; col--) {     // loop col in reverse: eol -> dcol
@@ -2317,7 +2290,7 @@ void Fl_Terminal::insert_char(char c, int rep) {
 void Fl_Terminal::delete_chars(int drow, int dcol, int rep) {
   rep = clamp(rep, 0, disp_cols());                // sanity
   if (rep == 0) return;
-  const CharStyle &style = *current_style_;
+  const CharStyle &style = current_style_;
   Utf8Char *u8c = u8c_disp_row(drow);
   for (int col=dcol; col<disp_cols(); col++)                      // delete left-to-right
     if (col+rep >= disp_cols()) u8c[col].text_ascii(' ', style);  // blanks
@@ -2341,7 +2314,7 @@ void Fl_Terminal::clear_history(void) {
   for (int hrow=0; hrow<hist_rows(); hrow++) {
     Utf8Char *u8c = u8c_hist_row(hrow);          // walk history rows..
     for (int hcol=0; hcol<hist_cols(); hcol++) { // ..and history cols
-      (u8c++)->clear(*current_style_);
+      (u8c++)->clear(current_style_);
     }
   }
   // Adjust scrollbar (hist_use changed)
@@ -2353,7 +2326,7 @@ void Fl_Terminal::clear_history(void) {
   mouse selection, homes cursor, resets tabstops. Same as \c "<ESC>c"
 */
 void Fl_Terminal::reset_terminal(void) {
-  current_style_->sgr_reset();        // reset current style
+  current_style_.sgr_reset();        // reset current style
   clear_screen_home();                // clear screen, home cursor
   clear_history();
   clear_mouse_selection();
@@ -2533,10 +2506,11 @@ void Fl_Terminal::cursor_crlf(int count) {
 void Fl_Terminal::cursor_tab_right(int count) {
   count = clamp(count, 1, disp_cols());           // sanity
   int X = cursor_.col();
+  int tab_sz = (int)tabstops_.size();
   while (count-- > 0) {
     // Find next tabstop
     while (++X < disp_cols()) {
-      if ( (X<tabstops_size_) && tabstops_[X] )   // found?
+      if ( (X < tab_sz) && tabstops_[X] )         // found?
         { cursor_.col(X); return; }               // move cur, done
     }
   }
@@ -2547,9 +2521,10 @@ void Fl_Terminal::cursor_tab_right(int count) {
 void Fl_Terminal::cursor_tab_left(int count) {
   count = clamp(count, 1, disp_cols());           // sanity
   int X = cursor_.col();
+  int tab_sz = (int)tabstops_.size();
   while ( count-- > 0 )
     while ( --X > 0 )                             // search for tabstop
-      if ( (X<tabstops_size_) && tabstops_[X] )   // found?
+      if ( (X < tab_sz) && tabstops_[X] )         // found?
         { cursor_.col(X); return; }               // move cur, done
   cursor_sol();
 }
@@ -2663,7 +2638,7 @@ void Fl_Terminal::handle_SGR(void) {     // ESC[...m?
   int tot = esc.total_vals();
   // Handle ESC[m or ESC[;m
   if (tot == 0)
-    { current_style_->sgr_reset(); return; }
+    { current_style_.sgr_reset(); return; }
   // Handle ESC[#;#;#...m
   int rgbcode = 0;                   // 0=none, 38=fg, 48=bg
   int rgbmode = 0;                   // 0=none, 1="2", 2=<r>, 3=<g>, 4=<b>
@@ -2689,9 +2664,9 @@ void Fl_Terminal::handle_SGR(void) {     // ESC[...m?
       case 3: g=clamp(val,0,255); ++rgbmode; continue;  // parse grn value
       case 4: b=clamp(val,0,255);                       // parse blu value
         switch (rgbcode) {
-          case 38: current_style_->fgcolor(r,g,b);      // Set fg rgb
+          case 38: current_style_.fgcolor(r,g,b);      // Set fg rgb
                    break;
-          case 48: current_style_->bgcolor(r,g,b);      // Set bg rgb
+          case 48: current_style_.bgcolor(r,g,b);      // Set bg rgb
                    break;
         }
         rgbcode = rgbmode = 0;                          // done w/rgb mode parsing
@@ -2699,42 +2674,42 @@ void Fl_Terminal::handle_SGR(void) {     // ESC[...m?
     }
     if (val < 10) {                                     // Set attribute? (bold,underline..)
       switch (val) {
-        case 0: current_style_->sgr_reset();     break; // ESC[0m - reset
-        case 1: current_style_->sgr_bold(1);     break; // ESC[1m - bold
-        case 2: current_style_->sgr_dim(1);      break; // ESC[2m - dim
-        case 3: current_style_->sgr_italic(1);   break; // ESC[3m - italic
-        case 4: current_style_->sgr_underline(1);break; // ESC[4m - underline
-        case 5: current_style_->sgr_blink(1);    break; // ESC[5m - blink
+        case 0: current_style_.sgr_reset();     break; // ESC[0m - reset
+        case 1: current_style_.sgr_bold(1);     break; // ESC[1m - bold
+        case 2: current_style_.sgr_dim(1);      break; // ESC[2m - dim
+        case 3: current_style_.sgr_italic(1);   break; // ESC[3m - italic
+        case 4: current_style_.sgr_underline(1);break; // ESC[4m - underline
+        case 5: current_style_.sgr_blink(1);    break; // ESC[5m - blink
         case 6: handle_unknown_char();           break; // ESC[6m - (unused)
-        case 7: current_style_->sgr_inverse(1);  break; // ESC[7m - inverse
+        case 7: current_style_.sgr_inverse(1);  break; // ESC[7m - inverse
         case 8: handle_unknown_char();           break; // ESC[8m - (unused)
-        case 9: current_style_->sgr_strike(1);   break; // ESC[9m - strikeout
+        case 9: current_style_.sgr_strike(1);   break; // ESC[9m - strikeout
       }
     } else if (val >= 21 && val <= 29) {                // attribute extras
       switch (val) {
-        case 21: current_style_->sgr_dbl_under(1);break; // ESC[21m - doubly underline
-        case 22: current_style_->sgr_dim(0);             // ESC[22m - disable bold/dim
-                 current_style_->sgr_bold(0);     break; //
-        case 23: current_style_->sgr_italic(0);   break; // ESC[23m - disable italic
-        case 24: current_style_->sgr_underline(0);break; // ESC[24m - disable underline
-        case 25: current_style_->sgr_blink(0);    break; // ESC[25m - disable blink
+        case 21: current_style_.sgr_dbl_under(1);break; // ESC[21m - doubly underline
+        case 22: current_style_.sgr_dim(0);             // ESC[22m - disable bold/dim
+                 current_style_.sgr_bold(0);     break; //
+        case 23: current_style_.sgr_italic(0);   break; // ESC[23m - disable italic
+        case 24: current_style_.sgr_underline(0);break; // ESC[24m - disable underline
+        case 25: current_style_.sgr_blink(0);    break; // ESC[25m - disable blink
         case 26: handle_unknown_char();           break; // ESC[26m - (unused)
-        case 27: current_style_->sgr_inverse(0);  break; // ESC[27m - disable inverse
+        case 27: current_style_.sgr_inverse(0);  break; // ESC[27m - disable inverse
         case 28: handle_unknown_char();           break; // ESC[28m - disable hidden
-        case 29: current_style_->sgr_strike(0);   break; // ESC[29m - disable strikeout
+        case 29: current_style_.sgr_strike(0);   break; // ESC[29m - disable strikeout
       }
     } else if (val >= 30 && val <= 37) {                 // Set fg color?
       uchar uval = (val - 30);
-      current_style_->fgcolor_xterm(uval);
+      current_style_.fgcolor_xterm(uval);
     } else if (val == 39) {                              // ESC[39m -- "normal" fg color:
-      Fl_Color fg = current_style_->defaultfgcolor();    // ..get default color
-      current_style_->fgcolor_xterm(fg);                 // ..set current color
+      Fl_Color fg = current_style_.defaultfgcolor();    // ..get default color
+      current_style_.fgcolor_xterm(fg);                 // ..set current color
     } else if (val >= 40 && val <= 47) {                 // Set bg color?
       uchar uval = (val - 40);
-      current_style_->bgcolor_xterm(uval);
+      current_style_.bgcolor_xterm(uval);
     } else if (val == 49) {                              // ESC[49m -- "normal" bg color:
-      Fl_Color bg = current_style_->defaultbgcolor();    // ..get default bg color
-      current_style_->bgcolor_xterm(bg);                 // ..set current bg color
+      Fl_Color bg = current_style_.defaultbgcolor();    // ..get default bg color
+      current_style_.bgcolor_xterm(bg);                 // ..set current bg color
     } else {
       handle_unknown_char();  // does an escseq.reset()  // unimplemented SGR codes
     }
@@ -2991,7 +2966,7 @@ void Fl_Terminal::display_modified(void) {
 */
 void Fl_Terminal::clear_char_at_disp(int drow, int dcol) {
   Utf8Char *u8c = u8c_disp_row(drow) + dcol;
-  u8c->clear(*current_style_);
+  u8c->clear(current_style_);
 }
 
 /**
@@ -3045,7 +3020,7 @@ void Fl_Terminal::plot_char(const char *text, int len, int drow, int dcol) {
     handle_unknown_char(drow, dcol);
     return;
   }
-  u8c->text_utf8(text, len, *current_style_);
+  u8c->text_utf8(text, len, current_style_);
 }
 
 /**
@@ -3072,7 +3047,7 @@ void Fl_Terminal::plot_char(char c, int drow, int dcol) {
     return;
   }
   Utf8Char *u8c = u8c_disp_row(drow) + dcol;
-  u8c->text_ascii(c, *current_style_);
+  u8c->text_ascii(c, current_style_);
 }
 
 /**
@@ -3312,7 +3287,7 @@ int Fl_Terminal::handle_unknown_char(int drow, int dcol) {
   if (!show_unknown_) return 0;
   int len = (int)strlen(error_char_);
   Utf8Char *u8c = u8c_disp_row(drow) + dcol;
-  u8c->text_utf8(error_char_, len, *current_style_);
+  u8c->text_utf8(error_char_, len, current_style_);
   return 1;
 }
 
@@ -3429,15 +3404,14 @@ void Fl_Terminal::init_(int X,int Y,int W,int H,const char*L,int rows,int cols,i
   // currently unused params
   (void)X; (void)Y; (void)W; (void)H; (void)L;
   fontsize_defer_ = fontsize_defer;     // defer font calls until draw() (issue 837)
-  current_style_  = new CharStyle(fontsize_defer);
+  current_style_  = CharStyle(fontsize_defer);
   oflags_         = LF_TO_CRLF;         // default: "\n" handled as "\r\n"
   // scrollbar_size must be set before scrn_
   scrollbar_size_ = 0;                  // 0 uses Fl::scrollbar_size()
   Fl_Group::box(FL_DOWN_FRAME);         // set before update_screen_xywh()
   update_screen_xywh();
   // Tabs
-  tabstops_       = 0;
-  tabstops_size_  = 0;
+  tabstops_.clear();
   // Init ringbuffer. Also creates default tabstops
   if (rows == -1 || cols == -1) {
     int newrows = h_to_row(scrn_.h());  // rows based on height
@@ -3447,7 +3421,7 @@ void Fl_Terminal::init_(int X,int Y,int W,int H,const char*L,int rows,int cols,i
     newcols = (newcols >= 1) ? newcols : 1;
     create_ring(newrows, newcols, hist);
   } else {
-    create_ring(rows, cols, 100);
+    create_ring(rows, cols, hist);
   }
   // Misc
   redraw_style_    = RATE_LIMITED;      // NO_REDRAW, RATE_LIMITED, PER_WRITE
@@ -3491,13 +3465,10 @@ void Fl_Terminal::init_(int X,int Y,int W,int H,const char*L,int rows,int cols,i
 */
 Fl_Terminal::~Fl_Terminal(void) {
   // Note: RingBuffer class handles destroying itself
-  if (tabstops_)
-    { free(tabstops_); tabstops_ = 0; }
   if (autoscroll_dir_)
     { Fl::remove_timeout(autoscroll_timer_cb, this); autoscroll_dir_ = 0; }
   if (redraw_timer_)
     { Fl::remove_timeout(redraw_timer_cb, this); redraw_timer_ = false; }
-  delete current_style_;
 }
 
 /**
@@ -3595,7 +3566,7 @@ void  Fl_Terminal::hscrollbar_style(ScrollbarStyle val) {
  \param[in] X, Y top left corner of the row in FLTK coordinates
 */
 void Fl_Terminal::draw_row_bg(int grow, int X, int Y) const {
-  int bg_h = current_style_->fontheight();
+  int bg_h = current_style_.fontheight();
   int bg_y = Y;
   Fl_Color bg_col;
   int pwidth    = 9;
@@ -3606,7 +3577,7 @@ void Fl_Terminal::draw_row_bg(int grow, int X, int Y) const {
   for (int gcol=start_col; gcol<end_col; gcol++,u8c++) {  // walk columns
     // Attribute changed since last char?
     if (gcol==0 || u8c->attrib() != lastattr) {
-      u8c->fl_font_set(*current_style_);                  // pwidth_int() needs fl_font set
+      u8c->fl_font_set(current_style_);                  // pwidth_int() needs fl_font set
       lastattr = u8c->attrib();
     }
     pwidth = u8c->pwidth_int();
@@ -3637,15 +3608,15 @@ void Fl_Terminal::draw_row(int grow, int Y) const {
   draw_row_bg(grow, X, Y);
 
   // Draw forground text
-  int  baseline = Y + current_style_->fontheight() - current_style_->fontdescent();
+  int  baseline = Y + current_style_.fontheight() - current_style_.fontdescent();
   int  scrollval = scrollbar->value();
   int  disp_top = (disp_srow() - scrollval);              // top row we need to view
   int  drow = grow - disp_top;                            // disp row
   bool inside_display = is_disp_ring_row(grow);           // row inside 'display'?
 // This looks better on macOS, but too low for X. Maybe we can get better results using fl_text_extents()?
-//  int  strikeout_y = baseline - (current_style_->fontheight() / 4);
-//  int  underline_y = baseline + (current_style_->fontheight() / 5);
-  int  strikeout_y = baseline - (current_style_->fontheight() / 3);
+//  int  strikeout_y = baseline - (current_style_.fontheight() / 4);
+//  int  underline_y = baseline + (current_style_.fontheight() / 5);
+  int  strikeout_y = baseline - (current_style_.fontheight() / 3);
   int  underline_y = baseline;
   uchar lastattr = -1;
   bool  is_cursor;
@@ -3659,14 +3630,14 @@ void Fl_Terminal::draw_row(int grow, int Y) const {
     is_cursor = inside_display ? cursor_.is_rowcol(drow-scrollval, dcol) : 0;
     // Attribute changed since last char?
     if (u8c->attrib() != lastattr) {
-      u8c->fl_font_set(*current_style_);                  // pwidth_int() needs fl_font set
+      u8c->fl_font_set(current_style_);                  // pwidth_int() needs fl_font set
       lastattr = u8c->attrib();
     }
     int pwidth = u8c->pwidth_int();
     // DRAW CURSOR BLOCK - TODO: support other cursor types?
     if (is_cursor) {
       int cx = X;
-      int cy = Y + current_style_->fontheight() - cursor_.h();
+      int cy = Y + current_style_.fontheight() - cursor_.h();
       int cw = pwidth;
       int ch = cursor_.h();
       fl_color(cursorbgcolor());
@@ -3711,7 +3682,7 @@ void Fl_Terminal::draw_row(int grow, int Y) const {
 void Fl_Terminal::draw_buff(int Y) const {
   int srow = disp_srow() - scrollbar->value();
   int erow = srow + disp_rows();
-  const int rowheight = current_style_->fontheight();
+  const int rowheight = current_style_.fontheight();
   for (int grow=srow; (grow<erow) && (Y<scrn_.b()); grow++) {
     draw_row(grow, Y);          // draw global row at Y
     Y += rowheight;             // advance Y to bottom left corner of row
@@ -3727,7 +3698,7 @@ void Fl_Terminal::draw(void) {
   // First time shown? Force deferred font size calculations here (issue 837)
   if (fontsize_defer_) {
     fontsize_defer_ = false;    // clear flag
-    current_style_->update();   // do deferred update here
+    current_style_.update();   // do deferred update here
     update_screen(true);        // update fonts
   }
   // Detect if Fl::scrollbar_size() was changed in size, recalc if so
@@ -3776,7 +3747,7 @@ void Fl_Terminal::draw(void) {
   This is used by the constructor to size the row/cols to fit the widget size.
 */
 int Fl_Terminal::w_to_col(int W) const {
-  return W / current_style_->charwidth();
+  return W / current_style_.charwidth();
 }
 
 /**
@@ -3784,7 +3755,7 @@ int Fl_Terminal::w_to_col(int W) const {
   This is used by the constructor to size the row/cols to fit the widget size.
 */
 int Fl_Terminal::h_to_row(int H) const {
-  return H / current_style_->fontheight();
+  return H / current_style_.fontheight();
 }
 
 /**

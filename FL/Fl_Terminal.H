@@ -29,6 +29,7 @@
 #include <FL/Fl_Rect.H>
 #include <FL/fl_utf8.h>         // fl_utf8_is_continuation()
 
+#include <vector>
 #include <stdarg.h>             // va_list (MinGW)
 
 /** \class Fl_Terminal
@@ -436,7 +437,7 @@ protected:
     uchar       attrib_;           // bold, underline..
     uchar       charflags_;        // CharFlags (xterm color management)
   public:
-    CharStyle(bool fontsize_defer);
+    CharStyle(bool fontsize_defer = true);
     uchar attrib(void) const            { return attrib_; }
     uchar charflags(void) const         { return charflags_; }
     // Colors - All access to colors are by Fl_Color only.
@@ -545,15 +546,16 @@ protected:
     uchar    len_;                  // length of bytes in text_[] buffer; 1 for ASCII, >1 for UTF-8
     uchar    attrib_;               // attribute bits for this char (bold, underline..)
     uchar    charflags_;            // CharFlags (xterm colors management)
+    uchar    pad_;                  // explicit padding for 16-byte alignment
     // Private methods
     void text_utf8_(const char *text, int len);
     Fl_Color attr_color_(Fl_Color col, const Fl_Widget *grp) const;
   public:
     // Public methods
     Utf8Char(void);                             // ctor
-    Utf8Char(const Utf8Char& o);                // copy ctor
-    ~Utf8Char(void);                            // dtor
-    Utf8Char& operator=(const Utf8Char& o);     // assignment
+    Utf8Char(const Utf8Char& o) = default;      // copy ctor
+    ~Utf8Char(void) = default;                  // dtor
+    Utf8Char& operator=(const Utf8Char& o) = default; // assignment
     static inline int max_utf8() { return max_utf8_; }
     void text_utf8(const char *text, int len, const CharStyle& style);
     void text_ascii(char c, const CharStyle& style);
@@ -841,9 +843,9 @@ public:
    */
   Fl_Scrollbar  *hscrollbar;        // horizontal scrollbar
 private:
-  CharStyle     *current_style_;    // current font, attrib, color..
-  char          *tabstops_;         // array of tab stops (0|1)   \__ TODO: This should probably
   const char    *error_char_;       // utf8 string shown for invalid utf8, bad ANSI, etc
+  mutable CharStyle current_style_; // current font, attrib, color..
+  std::vector<char> tabstops_;      // array of tab stops (0|1)
 
   // A ring buffer is used for the terminal's history (hist) and display (disp) buffer.
   //    See README-Fl_Terminal.txt, section "RING BUFFER DESCRIPTION" for diagrams/info.
@@ -863,7 +865,6 @@ private:
   RedrawStyle    redraw_style_;     // NO_REDRAW, RATE_LIMITED, PER_WRITE
 
   int            scrollbar_size_;   // local preference for scrollbar size
-  int            tabstops_size_;    // size of tabstops[] array   /         be a class "TabStops".
   int            autoscroll_dir_;   // 0=autoscroll timer off, 3=scrolling up, 4=scrolling down
   int            autoscroll_amt_;   // #pixels above or below edge, used for autoscroll speed
   float          redraw_rate_;      // maximum redraw rate in seconds, default=0.10
@@ -1129,21 +1130,21 @@ public:
   void  textfgcolor_default(Fl_Color val) const;
   void  textbgcolor_default(Fl_Color val) const;
   /// Return text font used to draw all text in the terminal.
-  Fl_Font     textfont(void)      const { return current_style_->fontface(); }
+  Fl_Font     textfont(void)      const { return current_style_.fontface(); }
   /// Return text font size used to draw all text in the terminal.
-  Fl_Fontsize textsize(void)      const { return current_style_->fontsize(); }
+  Fl_Fontsize textsize(void)      const { return current_style_.fontsize(); }
   /// Return base widget Fl_Group's box() color()
   Fl_Color    color(void)         const { return Fl_Group::color(); }
   /// Return textcolor(). This is a convenience method that returns textfgcolor_default()
   Fl_Color    textcolor(void)     const { return textfgcolor_default(); }
   /// Return text's current foreground color.
-  Fl_Color    textfgcolor(void)   const { return current_style_->fgcolor(); }
+  Fl_Color    textfgcolor(void)   const { return current_style_.fgcolor(); }
   /// Return text's current background color.
-  Fl_Color    textbgcolor(void)   const { return current_style_->bgcolor(); }
+  Fl_Color    textbgcolor(void)   const { return current_style_.bgcolor(); }
   /// Return text's default foreground color. \see textfgcolor()
-  Fl_Color    textfgcolor_default(void)   const { return current_style_->defaultfgcolor(); }
+  Fl_Color    textfgcolor_default(void)   const { return current_style_.defaultfgcolor(); }
   /// Return text's default background color. \see textbgcolor()
-  Fl_Color    textbgcolor_default(void)   const { return current_style_->defaultbgcolor(); }
+  Fl_Color    textbgcolor_default(void)   const { return current_style_.defaultbgcolor(); }
   void        textfgcolor_xterm(uchar val) const;
   void        textbgcolor_xterm(uchar val) const;
   /// Set mouse selection foreground color.
