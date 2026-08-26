@@ -303,6 +303,29 @@ SET (UNITTEST_SRCS
 )
 fl_create_example(unittests "${UNITTEST_SRCS}" "${GLDEMO_LIBS}")
 
+# Benchmarks for FLTK classes
+set(BENCHMARK_SRCS
+  benchmarks/fltk_benchmarks.h
+  benchmarks/fltk_benchmarks.cxx
+  benchmarks/bench_buttons.cxx
+  benchmarks/bench_valuators.cxx
+  benchmarks/bench_text.cxx
+  benchmarks/bench_menus.cxx
+  benchmarks/bench_containers.cxx
+  benchmarks/bench_windows.cxx
+  benchmarks/bench_collections.cxx
+  benchmarks/bench_widgets.cxx
+  benchmarks/bench_images.cxx
+  benchmarks/bench_protocols.cxx
+)
+fl_create_example(fltk-benchmarks "${BENCHMARK_SRCS}" "fltk::images;${GLDEMO_LIBS};${FORMS_LIBS};${AUDIOLIBS}")
+
+add_custom_target(run-benchmarks
+  COMMAND ${EXECUTABLE_OUTPUT_PATH}/fltk-benchmarks --html=${CMAKE_CURRENT_BINARY_DIR}/fltk_benchmark_report.html --json=${CMAKE_CURRENT_BINARY_DIR}/fltk_benchmark_report.json
+  DEPENDS fltk-benchmarks
+  COMMENT "Running FLTK class benchmarks and generating HTML report..."
+)
+
 # Additional test programs used by developers for testing (see above)
 
 if(extra_tests)
