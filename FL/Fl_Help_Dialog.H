@@ -33,12 +33,17 @@
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Help_View.H>
+#include <vector>
+#include <string>
 
 class FL_EXPORT Fl_Help_Dialog {
+  struct PageHistory {
+    std::string file;
+    int line;
+  };
+  std::vector<PageHistory> history_;
   int index_;
   int max_;
-  int line_[100]; // FIXME: we must remove those static numbers
-  char file_[100][FL_PATH_MAX]; // FIXME: we must remove those static numbers
   int find_pos_;
 public:
   Fl_Help_Dialog();

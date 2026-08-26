@@ -37,12 +37,13 @@ void Fl_Help_Dialog::cb_back__i(Fl_Button*, void*) {
 
   forward_->activate();
 
-  int l = line_[index_];
+  if (index_ >= 0 && index_ < (int)history_.size()) {
+    int l = history_[index_].line;
+    if (view_->filename() == nullptr || history_[index_].file != view_->filename())
+      view_->load(history_[index_].file.c_str());
 
-  if (strcmp(view_->filename(), file_[index_]) != 0)
-    view_->load(file_[index_]);
-
-  view_->topline(l);
+    view_->topline(l);
+  }
 }
 void Fl_Help_Dialog::cb_back_(Fl_Button* o, void* v) {
   ((Fl_Help_Dialog*)(o->parent()->parent()->user_data()))->cb_back__i(o,v);
@@ -57,12 +58,13 @@ void Fl_Help_Dialog::cb_forward__i(Fl_Button*, void*) {
 
   back_->activate();
 
-  int l = view_->topline();
+  if (index_ >= 0 && index_ < (int)history_.size()) {
+    int l = history_[index_].line;
+    if (view_->filename() == nullptr || history_[index_].file != view_->filename())
+      view_->load(history_[index_].file.c_str());
 
-  if (strcmp(view_->filename(), file_[index_]) != 0)
-    view_->load(file_[index_]);
-
-  view_->topline(l);
+    view_->topline(l);
+  }
 }
 void Fl_Help_Dialog::cb_forward_(Fl_Button* o, void* v) {
   ((Fl_Help_Dialog*)(o->parent()->parent()->user_data()))->cb_forward__i(o,v);
@@ -108,15 +110,18 @@ void Fl_Help_Dialog::cb_view__i(Fl_Help_View*, void*) {
 
       if (index_ >= 100)
       {
-        memmove(line_, line_ + 10, sizeof(line_[0]) * 90);
-        memmove(file_, file_ + 10, sizeof(file_[0]) * 90);
+        history_.erase(history_.begin(), history_.begin() + 10);
         index_ -= 10;
       }
 
       max_ = index_;
 
-      strlcpy(file_[index_], view_->filename(),sizeof(file_[0]));
-      line_[index_] = view_->topline();
+      if ((int)history_.size() <= index_) {
+        history_.resize(index_ + 1);
+      }
+
+      history_[index_].file = view_->filename();
+      history_[index_].line = view_->topline();
 
       if (index_ > 0)
         back_->activate();
@@ -128,13 +133,16 @@ void Fl_Help_Dialog::cb_view__i(Fl_Help_View*, void*) {
     }
     else // if ! view_->changed()
     {
-      strlcpy(file_[index_], view_->filename(), sizeof(file_[0]));
-      line_[index_] = view_->topline();
+      if (index_ >= 0 && index_ < (int)history_.size()) {
+        history_[index_].file = view_->filename();
+        history_[index_].line = view_->topline();
+      }
     }
   } else { // if ! view_->filename()
     index_ = 0; // hitting an internal page will disable the back/fwd buffer
-    file_[index_][0] = 0; // unnamed internal page
-    line_[index_] = view_->topline();
+    history_.resize(1);
+    history_[0].file.clear();
+    history_[0].line = view_->topline();
     back_->deactivate();
     forward_->deactivate();
   }
@@ -203,6 +211,7 @@ Fl_Help_Dialog::Fl_Help_Dialog() {
   index_    = -1;
   max_      = 0;
   find_pos_ = 0;
+  history_.clear();
 
   fl_register_images();
 }
