@@ -79,8 +79,7 @@ class FL_EXPORT Fl_Text_Editor : public Fl_Text_Display {
     void add_default_key_bindings(Key_Binding** list);
     static Key_Func bound_key_function(int key, int state, Key_Binding* list);
     /**  Returns the function associated with a key binding. */
-    Key_Func bound_key_function(int key, int state) const
-      { return bound_key_function(key, state, key_bindings); }
+    Key_Func bound_key_function(int key, int state) const;
     /**  Sets the default key function for unassigned keys. */
     void default_key_function(Key_Func f) { default_key_function_ = f; }
 

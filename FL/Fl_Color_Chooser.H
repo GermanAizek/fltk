@@ -113,13 +113,13 @@ public:
  */
 /** @} */
 class FL_EXPORT Fl_Color_Chooser : public Fl_Group {
-  Flcc_HueBox huebox;
-  Flcc_ValueBox valuebox;
-  Fl_Choice choice;
-  Flcc_Value_Input rvalue;
-  Flcc_Value_Input gvalue;
-  Flcc_Value_Input bvalue;
-  Fl_Box resize_box;
+  Flcc_HueBox *huebox;
+  Flcc_ValueBox *valuebox;
+  Fl_Choice *choice;
+  Flcc_Value_Input *rvalue;
+  Flcc_Value_Input *gvalue;
+  Flcc_Value_Input *bvalue;
+  Fl_Box *resize_box;
   double hue_, saturation_, value_;
   double r_, g_, b_;
   void set_valuators();
@@ -133,7 +133,7 @@ public:
    Returns which Fl_Color_Chooser variant is currently active
    \return color modes are rgb(0), byte(1), hex(2), or hsv(3)
    */
-  int mode() const { return choice.value(); }
+  int mode() const { return choice ? choice->value() : 0; }
 
   /**
    Set which Fl_Color_Chooser variant is currently active

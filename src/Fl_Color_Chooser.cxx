@@ -268,22 +268,23 @@ std::string Flcc_Value_Input::format_str() {
 #endif // !FL_DOXYGEN
 
 void Fl_Color_Chooser::set_valuators() {
+  if (!rvalue || !gvalue || !bvalue) return;
   switch (mode()) {
     case M_RGB:
-      rvalue.range(0, 1); rvalue.step(1, 1000); rvalue.value(r_);
-      gvalue.range(0, 1); gvalue.step(1, 1000); gvalue.value(g_);
-      bvalue.range(0, 1); bvalue.step(1, 1000); bvalue.value(b_);
+      rvalue->range(0, 1); rvalue->step(1, 1000); rvalue->value(r_);
+      gvalue->range(0, 1); gvalue->step(1, 1000); gvalue->value(g_);
+      bvalue->range(0, 1); bvalue->step(1, 1000); bvalue->value(b_);
       break;
     case M_BYTE: /* FALLTHROUGH */
     case M_HEX:
-      rvalue.range(0, 255); rvalue.step(1); rvalue.value(static_cast<double>(std::lround(255.0 * r_)));
-      gvalue.range(0, 255); gvalue.step(1); gvalue.value(static_cast<double>(std::lround(255.0 * g_)));
-      bvalue.range(0, 255); bvalue.step(1); bvalue.value(static_cast<double>(std::lround(255.0 * b_)));
+      rvalue->range(0, 255); rvalue->step(1); rvalue->value(static_cast<double>(std::lround(255.0 * r_)));
+      gvalue->range(0, 255); gvalue->step(1); gvalue->value(static_cast<double>(std::lround(255.0 * g_)));
+      bvalue->range(0, 255); bvalue->step(1); bvalue->value(static_cast<double>(std::lround(255.0 * b_)));
       break;
     case M_HSV:
-      rvalue.range(0, 6); rvalue.step(1, 1000); rvalue.value(hue_);
-      gvalue.range(0, 1); gvalue.step(1, 1000); gvalue.value(saturation_);
-      bvalue.range(0, 1); bvalue.step(1, 1000); bvalue.value(value_);
+      rvalue->range(0, 6); rvalue->step(1, 1000); rvalue->value(hue_);
+      gvalue->range(0, 1); gvalue->step(1, 1000); gvalue->value(saturation_);
+      bvalue->range(0, 1); bvalue->step(1, 1000); bvalue->value(value_);
       break;
     default:
       break;
@@ -310,13 +311,13 @@ int Fl_Color_Chooser::rgb(double R, double G, double B) {
   set_changed();
   if (value_ != pv) {
 #ifdef UPDATE_HUE_BOX
-    huebox.damage(FL_DAMAGE_SCROLL);
+    if (huebox) huebox->damage(FL_DAMAGE_SCROLL);
 #endif
-    valuebox.damage(FL_DAMAGE_EXPOSE);
+    if (valuebox) valuebox->damage(FL_DAMAGE_EXPOSE);
   }
   if (hue_ != ph || saturation_ != ps) {
-    huebox.damage(FL_DAMAGE_EXPOSE);
-    valuebox.damage(FL_DAMAGE_SCROLL);
+    if (huebox) huebox->damage(FL_DAMAGE_EXPOSE);
+    if (valuebox) valuebox->damage(FL_DAMAGE_SCROLL);
   }
   return 1;
 }
@@ -352,13 +353,13 @@ int Fl_Color_Chooser::hsv(double H, double S, double V) {
   hue_ = H; saturation_ = S; value_ = V;
   if (value_ != pv) {
 #ifdef UPDATE_HUE_BOX
-    huebox.damage(FL_DAMAGE_SCROLL);
+    if (huebox) huebox->damage(FL_DAMAGE_SCROLL);
 #endif
-    valuebox.damage(FL_DAMAGE_EXPOSE);
+    if (valuebox) valuebox->damage(FL_DAMAGE_EXPOSE);
   }
   if (hue_ != ph || saturation_ != ps) {
-    huebox.damage(FL_DAMAGE_EXPOSE);
-    valuebox.damage(FL_DAMAGE_SCROLL);
+    if (huebox) huebox->damage(FL_DAMAGE_EXPOSE);
+    if (valuebox) valuebox->damage(FL_DAMAGE_SCROLL);
   }
   hsv2rgb(H, S, V, r_, g_, b_);
   set_valuators();
@@ -612,14 +613,15 @@ int Flcc_ValueBox::handle_key(int key) const {
 
 void Fl_Color_Chooser::rgb_cb(Fl_Widget* o, void* /*unused*/) {
   auto* c = static_cast<Fl_Color_Chooser*>(o->parent());
+  if (!c->rvalue || !c->gvalue || !c->bvalue) return;
   // clamp input values to valid ranges (issue #749, part 1)
-  double R = c->rvalue.clamp(c->rvalue.value());
-  double G = c->gvalue.clamp(c->gvalue.value());
-  double B = c->bvalue.clamp(c->bvalue.value());
+  double R = c->rvalue->clamp(c->rvalue->value());
+  double G = c->gvalue->clamp(c->gvalue->value());
+  double B = c->bvalue->clamp(c->bvalue->value());
   // update input values if they were clamped (#749, part 2)
-  c->rvalue.value(R);
-  c->gvalue.value(G);
-  c->bvalue.value(B);
+  c->rvalue->value(R);
+  c->gvalue->value(G);
+  c->bvalue->value(B);
   if (c->mode() == M_HSV) {
     if (c->hsv(R, G, B)) {
       c->do_callback(FL_REASON_CHANGED);
@@ -639,16 +641,18 @@ void Fl_Color_Chooser::rgb_cb(Fl_Widget* o, void* /*unused*/) {
 void Fl_Color_Chooser::mode_cb(Fl_Widget* o, void* /*unused*/) {
   auto* c = static_cast<Fl_Color_Chooser*>(o->parent());
   // force them to redraw even if value is the same:
-  c->rvalue.value(-1);
-  c->gvalue.value(-1);
-  c->bvalue.value(-1);
+  if (c->rvalue) c->rvalue->value(-1);
+  if (c->gvalue) c->gvalue->value(-1);
+  if (c->bvalue) c->bvalue->value(-1);
   c->set_valuators();
 }
 
 void Fl_Color_Chooser::mode(int newMode)
 {
-  choice.value(newMode);
-  choice.do_callback(FL_REASON_RESELECTED);
+  if (choice) {
+    choice->value(newMode);
+    choice->do_callback(FL_REASON_RESELECTED);
+  }
 }
 
 /**
@@ -727,15 +731,15 @@ int Fl_Color_Chooser::handle(int e) {
   \param[in] L widget label, default is no label
  */
 Fl_Color_Chooser::Fl_Color_Chooser(int X, int Y, int W, int H, const char* L)
-  : Fl_Group(0, 0, 195, 115, L),
-    huebox(0, 0, 115, 115),
-    valuebox(115, 0, 20, 115),
-    choice(140, 0, 55, 25),
-    rvalue(140, 30, 55, 25),
-    gvalue(140, 60, 55, 25),
-    bvalue(140, 90, 55, 25),
-    resize_box(0, 0, 115, 115)
+  : Fl_Group(0, 0, 195, 115, L)
 {
+  huebox = new Flcc_HueBox(0, 0, 115, 115);
+  valuebox = new Flcc_ValueBox(115, 0, 20, 115);
+  choice = new Fl_Choice(140, 0, 55, 25);
+  rvalue = new Flcc_Value_Input(140, 30, 55, 25);
+  gvalue = new Flcc_Value_Input(140, 60, 55, 25);
+  bvalue = new Flcc_Value_Input(140, 90, 55, 25);
+  resize_box = new Fl_Box(0, 0, 115, 115);
   end();
   resizable(resize_box);
   resize(X, Y, W, H);
@@ -745,20 +749,19 @@ Fl_Color_Chooser::Fl_Color_Chooser(int X, int Y, int W, int H, const char* L)
   hue_ = 0.0;
   saturation_ = 0.0;
   value_ = 0.0;
-  huebox.box(FL_DOWN_FRAME);
-  valuebox.box(FL_DOWN_FRAME);
-  choice.menu(mode_menu.data());
+  huebox->box(FL_DOWN_FRAME);
+  valuebox->box(FL_DOWN_FRAME);
+  choice->menu(mode_menu.data());
   set_valuators();
-  rvalue.callback(rgb_cb);
-  gvalue.callback(rgb_cb);
-  bvalue.callback(rgb_cb);
-  choice.callback(mode_cb);
-  choice.box(FL_THIN_UP_BOX);
-  choice.textfont(FL_HELVETICA_BOLD_ITALIC);
+  rvalue->callback(rgb_cb);
+  gvalue->callback(rgb_cb);
+  bvalue->callback(rgb_cb);
+  choice->callback(mode_cb);
+  choice->box(FL_THIN_UP_BOX);
+  choice->textfont(FL_HELVETICA_BOLD_ITALIC);
 }
 
 Fl_Color_Chooser::~Fl_Color_Chooser() {
-  while (children() > 0) remove(0);
 }
 
 ////////////////////////////////////////////////////////////////

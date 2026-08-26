@@ -31,6 +31,9 @@ comment {//
 decl {\#include <FL/fl_draw.H>} {private local
 }
 
+decl {\#include <string>} {public global
+}
+
 class FL_EXPORT Fl_File_Chooser {open
 } {
   decl {enum Type {
@@ -51,11 +54,11 @@ Determines the type of file chooser presented to the user.
   }
   decl {void *data_;} {private local
   }
-  decl {char directory_[FL_PATH_MAX];} {private local
+  decl {std::string directory_;} {private local
   }
-  decl {char pattern_[FL_PATH_MAX];} {private local
+  decl {std::string pattern_;} {private local
   }
-  decl {char preview_text_[2048];} {private local
+  decl {std::string preview_text_;} {private local
   }
   decl {int type_;} {private local
   }
@@ -242,7 +245,7 @@ hide();}
     }
     code {callback_ = 0;
 data_ = 0;
-directory_[0] = 0;
+directory_.clear();
 window->size_range(window->w(), window->h());
 type(type_val);
 filter(pattern);
@@ -280,7 +283,7 @@ data_     = d;} {}
   }
   Function {directory()} {return_type {char *}
   } {
-    code {return directory_;} {}
+    code {return (char *)directory_.c_str();} {}
   }
   decl {void filter(const char *p);} {public local
   }

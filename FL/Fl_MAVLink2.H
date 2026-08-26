@@ -15,6 +15,7 @@
 #include <FL/Fl_Serial_Port.H>
 #include <stdint.h>
 #include <stddef.h>
+#include <vector>
 
 class Fl_MAVLink2;
 typedef void (*Fl_MAVLink2_Callback)(Fl_MAVLink2*, void*);
@@ -44,15 +45,14 @@ public:
     uint8_t  sys_id;          // System ID (e.g. 1)
     uint8_t  comp_id;         // Component ID (e.g. 1 Autopilot)
     bool     crc_valid;
-    uint8_t  payload[255];
+    std::vector<uint8_t> payload;
   };
 
 private:
   Message last_msg_;
   Fl_MAVLink2_Callback mav_cb_;
   void* user_data_;
-  size_t buf_idx_;
-  uint8_t buffer_[280];
+  std::vector<uint8_t> buffer_;
 
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);

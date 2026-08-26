@@ -853,7 +853,7 @@ private:
   // Ring buffer
   RingBuffer     ring_;             // terminal history/display ring buffer
   Selection      select_;           // mouse selection
-  EscapeSeq      escseq;            // Escape sequence parsing (ESC[ xterm/vt100)
+  EscapeSeq     *escseq;            // Escape sequence parsing (ESC[ xterm/vt100)
 
   Cursor         cursor_;           // terminal cursor (position, color, etc)
   Margin         margin_;           // terminal margins (top,left,bottom,right)

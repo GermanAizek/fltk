@@ -46,7 +46,7 @@
 */
 Fl_File_Input::Fl_File_Input(int X, int Y, int W, int H, const char *L)
   : Fl_Input(X, Y, W, H, L) {
-  buttons_[0] = 0;
+  buttons_.clear();
   ok_entry_   = 1;
   pressed_    = -1;
 
@@ -65,7 +65,7 @@ void Fl_File_Input::draw_buttons() {
     update_buttons();
   }
 
-  for (X = 0, i = 0; buttons_[i]; i ++)
+  for (X = 0, i = 0; i < (int)buttons_.size(); i ++)
   {
     if ((X + buttons_[i]) > xscroll()) {
       if (X < xscroll()) {
@@ -94,33 +94,23 @@ void Fl_File_Input::draw_buttons() {
   Update the sizes of the directory buttons.
 */
 void Fl_File_Input::update_buttons() {
-  int           i;                              // Looping var
-  const char    *start,                         // Start of path component
-                *end;                           // End of path component
-
-
-//  puts("update_buttons()");
+  buttons_.clear();
 
   // Set the current font & size...
   fl_font(textfont(), textsize());
 
   // Loop through the value string, setting widths...
-  for (i = 0, start = value();
-       start && i < (int)(sizeof(buttons_) / sizeof(buttons_[0]) - 1);
-       start = end, i ++) {
-//    printf("    start = \"%s\"\n", start);
-    if ((end = Fl::system_driver()->next_dir_sep(start)) == NULL)
-      break;
-
+  for (const char *start = value(); start; ) {
+    const char *end = Fl::system_driver()->next_dir_sep(start);
+    if (end == NULL) break;
     end ++;
 
-    buttons_[i] = (short)fl_width(start, (int) (end - start));
-    if (!i) buttons_[i] += Fl::box_dx(box()) + 6;
+    short btn = (short)fl_width(start, (int) (end - start));
+    if (buttons_.empty()) btn += Fl::box_dx(box()) + 6;
+    buttons_.push_back(btn);
+
+    start = end;
   }
-
-//  printf("    found %d components/buttons...\n", i);
-
-  buttons_[i] = 0;
 }
 
 
@@ -230,14 +220,12 @@ Fl_File_Input::handle_button(int event)         // I - Event
 
 
   // Figure out which button is being pressed...
-  for (X = 0, i = 0; buttons_[i]; i ++)
+  for (X = 0, i = 0; i < (int)buttons_.size(); i ++)
   {
     X += buttons_[i];
 
     if (X > xscroll() && Fl::event_x() < (x() + X - xscroll())) break;
   }
-
-//  printf("handle_button(event = %d), button = %d\n", event, i);
 
   // Redraw the directory bar...
   if (event == FL_RELEASE) pressed_ = -1;
@@ -248,7 +236,7 @@ Fl_File_Input::handle_button(int event)         // I - Event
 
   // Return immediately if the user is clicking on the last button or
   // has not released the mouse button...
-  if (!buttons_[i] || event != FL_RELEASE) return 1;
+  if (i >= (int)buttons_.size() || event != FL_RELEASE) return 1;
 
   // Figure out where to truncate the path...
   strlcpy(newvalue, value(), sizeof(newvalue));

@@ -104,12 +104,7 @@ const char *Fl_Check_Browser::item_text(void *item) const {
 }
 
 void *Fl_Check_Browser::item_at(int index) const { // note: index is 1-based
-  if (index < 1 || index > nitems())
-    return 0L;
-  cb_item *item = (cb_item *)item_first();
-  for (int i = 1; i < index; i++)
-    item = (cb_item *)(item_next(item));
-  return (void *)item;
+  return (void *)find_item(index);
 }
 
 void Fl_Check_Browser::item_swap(int ia, int ib) {
@@ -235,12 +230,18 @@ int Fl_Check_Browser::add(char *s) {
  a blank line.  It can set the item checked if \p b is not 0.
  */
 int Fl_Check_Browser::add(char *s, int b) {
-  cb_item *p = (cb_item *)malloc(sizeof(cb_item));
+  size_t len = s ? strlen(s) : 0;
+  cb_item *p = (cb_item *)malloc(sizeof(cb_item) + len + 1);
   p->next = 0;
   p->prev = 0;
   p->checked = b;
   p->selected = 0;
-  p->text = fl_strdup(s ? s : "");
+  p->text = (char *)(p + 1);
+  if (s && len > 0) {
+    memcpy(p->text, s, len + 1);
+  } else {
+    p->text[0] = '\0';
+  }
 
   if (b) {
     nchecked_++;
@@ -284,11 +285,13 @@ int Fl_Check_Browser::remove(int item) {
     else
       last = p->prev;
 
-    free(p->text);
+    if (p->text != (char *)(p + 1))
+      free(p->text);
     free(p);
 
     --nitems_;
     cached_item = -1;
+    cache = 0;
   }
 
   return (nitems_);
@@ -304,12 +307,14 @@ void Fl_Check_Browser::clear() {
   new_list();
   do {
     next = p->next;
-    free(p->text);
+    if (p->text != (char *)(p + 1))
+      free(p->text);
     free(p);
     p = next;
   } while (p);
 
   first = last = 0;
+  cache = 0;
   nitems_ = nchecked_ = 0;
   cached_item = -1;
 }

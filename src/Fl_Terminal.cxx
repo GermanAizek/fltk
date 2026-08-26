@@ -2531,13 +2531,13 @@ void Fl_Terminal::cursor_tab_left(int count) {
 
 /// Save current cursor position. Used by ESC [ s
 void Fl_Terminal::save_cursor(void) {
-  escseq.save_cursor(cursor_.row(), cursor_.col());
+  if (escseq) escseq->save_cursor(cursor_.row(), cursor_.col());
 }
 
 /// Restore previously saved cursor position, if any. Used by ESC [ u
 void Fl_Terminal::restore_cursor(void) {
   int row,col;
-  escseq.restore_cursor(row, col);
+  if (escseq) escseq->restore_cursor(row, col);
   if (row != -1 && col != 1)         // restore only if previously saved
     { cursor_.row(row); cursor_.col(col); }
 }
@@ -2563,11 +2563,11 @@ void Fl_Terminal::handle_lf(void) {
 
 // Handle '\e' escape character.
 void Fl_Terminal::handle_esc(void) {
-  if (!ansi_)                                  // not in ansi mode?
+  if (!ansi_ || !escseq)                       // not in ansi mode?
     { handle_unknown_char(); return; }         //   ..show unknown char, early exit
-  if (escseq.esc_mode() == 0x1b)               // already in esc mode?
+  if (escseq->esc_mode() == 0x1b)              // already in esc mode?
     { handle_unknown_char(); }                 //   ..show 1st esc as unknown char, parse 2nd
-  if (escseq.parse(0x1b) == EscapeSeq::fail)   // parse esc
+  if (escseq->parse(0x1b) == EscapeSeq::fail)  // parse esc
     { handle_unknown_char(); return; }         //   ..error? show unknown char
 }
 
@@ -2633,8 +2633,9 @@ bool Fl_Terminal::is_ctrl(char c) {
 //    settings at once, e.g. fg and bg colors, multiple attributes, etc.
 //
 void Fl_Terminal::handle_SGR(void) {     // ESC[...m?
+  if (!escseq) return;
   // Shortcut varnames..
-  EscapeSeq &esc = escseq;
+  EscapeSeq &esc = *escseq;
   int tot = esc.total_vals();
   // Handle ESC[m or ESC[;m
   if (tot == 0)
@@ -2739,12 +2740,13 @@ void Fl_Terminal::handle_DECRARA(void) {
   then does an escseq.reset() to finish parsing.
 */
 void Fl_Terminal::handle_escseq(char c) {
+  if (!escseq) return;
   // NOTE: Use xterm to test. gnome-terminal has bugs, even in 2022.
   const bool do_scroll = true;
   const bool no_scroll = false;
-  switch (escseq.parse(c)) {                           // parse char, advance s..
+  switch (escseq->parse(c)) {                          // parse char, advance s..
     case EscapeSeq::fail:                              // failed?
-      escseq.reset();                                  //   ..reset to let error_char be visible
+      escseq->reset();                                 //   ..reset to let error_char be visible
       handle_unknown_char();                           //   ..show error char (if enabled)
       print_char(c);                                   //   ..show char we couldn't handle
       return;                                          //   ..done.
@@ -2754,7 +2756,7 @@ void Fl_Terminal::handle_escseq(char c) {
       break;                                           //   ..fall through to handle operation
   }
   // Shortcut varnames for escseq parsing..
-  EscapeSeq &esc = escseq;
+  EscapeSeq &esc = *escseq;
   char mode     = esc.esc_mode();
   int  tot      = esc.total_vals();
   int  val0     = (tot==0) ? 0 : esc.val(0);
@@ -3076,7 +3078,7 @@ void Fl_Terminal::print_char(const char *text, int len/*=-1*/) {
   const bool do_scroll = true;
   if (is_ctrl(text[0])) {                      // Handle ctrl character
     handle_ctrl(*text);
-  } else if (escseq.parse_in_progress()) {     // ESC sequence in progress?
+  } else if (escseq && escseq->parse_in_progress()) { // ESC sequence in progress?
     handle_escseq(*text);
   } else {                                     // Handle printable char..
     plot_char(text, len, cursor_row(), cursor_col());
@@ -3097,7 +3099,7 @@ void Fl_Terminal::print_char(char c) {
   const bool do_scroll = true;
   if (is_ctrl(c)) {                            // Handle ctrl character
     handle_ctrl(c);
-  } else if (escseq.parse_in_progress()) {     // ESC sequence in progress?
+  } else if (escseq && escseq->parse_in_progress()) { // ESC sequence in progress?
     handle_escseq(c);
   } else {                                     // Handle printable char..
     plot_char(c, cursor_row(), cursor_col());
@@ -3268,7 +3270,7 @@ void Fl_Terminal::append(const char *s, int len/*=-1*/) {
 */
 int Fl_Terminal::handle_unknown_char(void) {
   if (!show_unknown_) return 0;
-  escseq.reset();               // disable any pending esc seq to prevent eating unknown char
+  if (escseq) escseq->reset();          // disable any pending esc seq to prevent eating unknown char
   print_char(error_char_);
   return 1;
 }
@@ -3455,6 +3457,7 @@ void Fl_Terminal::init_(int X,int Y,int W,int H,const char*L,int rows,int cols,i
   clear_history();            // clear history buffer
   show_unknown_ = false;      // default "off"
   ansi_ = true;               // default "on"
+  escseq = new EscapeSeq();
   // End group
   end();
 }
@@ -3464,6 +3467,8 @@ void Fl_Terminal::init_(int X,int Y,int W,int H,const char*L,int rows,int cols,i
   Destroys the terminal display, scroll history, and associated widgets.
 */
 Fl_Terminal::~Fl_Terminal(void) {
+  delete escseq;
+  escseq = nullptr;
   // Note: RingBuffer class handles destroying itself
   if (autoscroll_dir_)
     { Fl::remove_timeout(autoscroll_timer_cb, this); autoscroll_dir_ = 0; }
@@ -4097,7 +4102,7 @@ bool Fl_Terminal::ansi(void) const {
 void Fl_Terminal::ansi(bool val) {
   ansi_ = val;
   // If disabled, reset the class to clear old state information
-  if (!ansi_) escseq.reset();
+  if (!ansi_ && escseq) escseq->reset();
 }
 
 /**

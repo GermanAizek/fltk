@@ -33,9 +33,9 @@
 void Fl_Spinner::sb_cb(Fl_Widget *w, Fl_Spinner *sb) {
   double v;                             // New value
 
-  if (w == &(sb->input_)) {
+  if (w == sb->input_) {
     // Something changed in the input field...
-    v = atof(sb->input_.value());
+    v = atof(sb->input_->value());
 
     if (v < sb->minimum_) {
       sb->value_ = sb->minimum_;
@@ -44,7 +44,7 @@ void Fl_Spinner::sb_cb(Fl_Widget *w, Fl_Spinner *sb) {
       sb->value_ = sb->maximum_;
       sb->update();
     } else sb->value_ = v;
-  } else if (w == &(sb->up_button_)) {
+  } else if (w == sb->up_button_) {
     // Up button pressed...
     v = sb->value_ + sb->step_;
     if (v > sb->maximum_) {
@@ -55,7 +55,7 @@ void Fl_Spinner::sb_cb(Fl_Widget *w, Fl_Spinner *sb) {
     }
     sb->value_ = v;
     sb->update();
-  } else if (w == &(sb->down_button_)) {
+  } else if (w == sb->down_button_) {
     // Down button pressed...
     v = sb->value_ - sb->step_;
     if (v < sb->minimum_) {
@@ -89,7 +89,7 @@ void Fl_Spinner::update() {
   } else {
     snprintf(s, sizeof(s), format_, value_);
   }
-  input_.value(s);
+  if (input_) input_->value(s);
 }
 
 /**
@@ -100,11 +100,11 @@ void Fl_Spinner::update() {
 */
 
 Fl_Spinner::Fl_Spinner(int X, int Y, int W, int H, const char *L)
-: Fl_Group(X, Y, W, H, L),
-  input_(X, Y, W - H / 2 - 2, H),
-  up_button_(X + W - H / 2 - 2, Y, H / 2 + 2, H / 2),
-  down_button_(X + W - H / 2 - 2, Y + H - H / 2, H / 2 + 2, H / 2)
+: Fl_Group(X, Y, W, H, L)
 {
+  input_ = new Fl_Spinner_Input(X, Y, W - H / 2 - 2, H);
+  up_button_ = new Fl_Repeat_Button(X + W - H / 2 - 2, Y, H / 2 + 2, H / 2);
+  down_button_ = new Fl_Repeat_Button(X + W - H / 2 - 2, Y + H - H / 2, H / 2 + 2, H / 2);
   end();
 
   value_   = 1.0;
@@ -116,14 +116,14 @@ Fl_Spinner::Fl_Spinner(int X, int Y, int W, int H, const char *L)
 
   align(FL_ALIGN_LEFT);
 
-  input_.value("1");
-  input_.type(FL_INT_INPUT);
-  input_.when(FL_WHEN_ENTER_KEY | FL_WHEN_RELEASE);
-  input_.callback((Fl_Callback *)sb_cb, this);
+  input_->value("1");
+  input_->type(FL_INT_INPUT);
+  input_->when(FL_WHEN_ENTER_KEY | FL_WHEN_RELEASE);
+  input_->callback((Fl_Callback *)sb_cb, this);
 
-  up_button_.callback((Fl_Callback *)sb_cb, this);
+  up_button_->callback((Fl_Callback *)sb_cb, this);
 
-  down_button_.callback((Fl_Callback *)sb_cb, this);
+  down_button_->callback((Fl_Callback *)sb_cb, this);
 }
 
 void Fl_Spinner::draw() {
@@ -132,13 +132,17 @@ void Fl_Spinner::draw() {
 
   // draw up/down arrows over the button's empty labels
   Fl_Color arrow_color = active_r() ? labelcolor() : fl_inactive(labelcolor());
-  Fl_Rect up(up_button_);
-  up.inset(up_button_.box());
-  fl_draw_arrow(up, FL_ARROW_SINGLE, FL_ORIENT_UP, arrow_color);
+  if (up_button_) {
+    Fl_Rect up(*up_button_);
+    up.inset(up_button_->box());
+    fl_draw_arrow(up, FL_ARROW_SINGLE, FL_ORIENT_UP, arrow_color);
+  }
 
-  Fl_Rect down(down_button_);
-  down.inset(down_button_.box());
-  fl_draw_arrow(down, FL_ARROW_SINGLE, FL_ORIENT_DOWN, arrow_color);
+  if (down_button_) {
+    Fl_Rect down(*down_button_);
+    down.inset(down_button_->box());
+    fl_draw_arrow(down, FL_ARROW_SINGLE, FL_ORIENT_DOWN, arrow_color);
+  }
 }
 
 int Fl_Spinner::handle(int event) {
@@ -148,16 +152,16 @@ int Fl_Spinner::handle(int event) {
     case FL_KEYDOWN:
     case FL_SHORTCUT:
       if (Fl::event_key() == FL_Up) {
-        up_button_.do_callback(FL_REASON_DRAGGED);
+        if (up_button_) up_button_->do_callback(FL_REASON_DRAGGED);
         return 1;
       } else if (Fl::event_key() == FL_Down) {
-        down_button_.do_callback(FL_REASON_DRAGGED);
+        if (down_button_) down_button_->do_callback(FL_REASON_DRAGGED);
         return 1;
       }
       return 0;
 
     case FL_FOCUS:
-      if (input_.take_focus()) return 1;
+      if (input_ && input_->take_focus()) return 1;
       return 0;
   }
 
@@ -167,10 +171,10 @@ int Fl_Spinner::handle(int event) {
 void Fl_Spinner::resize(int X, int Y, int W, int H) {
   Fl_Group::resize(X,Y,W,H);
 
-  input_.resize(X, Y, W - H / 2 - 2, H);
-  up_button_.resize(X + W - H / 2 - 2, Y, H / 2 + 2, H / 2);
-  down_button_.resize(X + W - H / 2 - 2, Y + H - H / 2,
-                      H / 2 + 2, H / 2);
+  if (input_) input_->resize(X, Y, W - H / 2 - 2, H);
+  if (up_button_) up_button_->resize(X + W - H / 2 - 2, Y, H / 2 + 2, H / 2);
+  if (down_button_) down_button_->resize(X + W - H / 2 - 2, Y + H - H / 2,
+                                         H / 2 + 2, H / 2);
 }
 
 /**
@@ -183,8 +187,10 @@ void Fl_Spinner::resize(int X, int Y, int W, int H) {
 
 void Fl_Spinner::step(double s) {
   step_ = s;
-  if (step_ != (int)step_) input_.type(FL_FLOAT_INPUT);
-  else input_.type(FL_INT_INPUT);
+  if (input_) {
+    if (step_ != (int)step_) input_->type(FL_FLOAT_INPUT);
+    else input_->type(FL_INT_INPUT);
+  }
   update();
 }
 
@@ -202,7 +208,7 @@ void Fl_Spinner::type(uchar v) {
   } else {
     format("%.0f");
   }
-  input_.type(v);
+  if (input_) input_->type(v);
 }
 
 

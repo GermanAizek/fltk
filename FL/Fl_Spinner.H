@@ -61,10 +61,10 @@ protected:
     int handle(int event) override; // implemented in src/Fl_Spinner.cxx
   };
 
-  Fl_Spinner_Input input_;              // Input field for the value
+  Fl_Spinner_Input *input_;             // Input field for the value
   Fl_Repeat_Button
-                up_button_,             // Up button
-                down_button_;           // Down button
+                *up_button_,            // Up button
+                *down_button_;          // Down button
 
   void draw() override;
 
@@ -139,22 +139,22 @@ public:
   int wrap() const { return wrap_; }
 
   /** Gets the color of the text in the input field. */
-  Fl_Color textcolor() const { return (input_.textcolor()); }
+  Fl_Color textcolor() const { return (input_->textcolor()); }
 
   /** Sets the color of the text in the input field. */
-  void textcolor(Fl_Color c) { input_.textcolor(c); }
+  void textcolor(Fl_Color c) { input_->textcolor(c); }
 
   /** Gets the font of the text in the input field. */
-  Fl_Font textfont() const { return (input_.textfont()); }
+  Fl_Font textfont() const { return (input_->textfont()); }
 
   /** Sets the font of the text in the input field. */
-  void textfont(Fl_Font f) { input_.textfont(f); }
+  void textfont(Fl_Font f) { input_->textfont(f); }
 
   /** Gets the size of the text in the input field. */
-  Fl_Fontsize textsize() const { return (input_.textsize()); }
+  Fl_Fontsize textsize() const { return (input_->textsize()); }
 
   /** Sets the size of the text in the input field. */
-  void textsize(Fl_Fontsize s) { input_.textsize(s); }
+  void textsize(Fl_Fontsize s) { input_->textsize(s); }
 
   // Sets the numeric representation in the input field.
   // Docs see src/Fl_Spinner.cxx
@@ -163,7 +163,7 @@ public:
   /** Gets the numeric representation in the input field.
     \see Fl_Spinner::type(uchar)
   */
-  uchar type() const { return (input_.type()); }
+  uchar type() const { return (input_->type()); }
 
   /** Gets the current value of the widget. */
   double value() const { return (value_); }
@@ -178,32 +178,32 @@ public:
   /**
     Sets the background color of the spinner widget's input field.
   */
-  void color(Fl_Color v) { input_.color(v); }
+  void color(Fl_Color v) { input_->color(v); }
 
   /**
     Returns the background color of the spinner widget's input field.
   */
-  Fl_Color color() const { return(input_.color()); }
+  Fl_Color color() const { return(input_->color()); }
 
   /**
     Sets the selection color of the spinner widget's input field.
   */
-  void selection_color(Fl_Color val) { input_.selection_color(val); }
+  void selection_color(Fl_Color val) { input_->selection_color(val); }
 
   /**
     Returns the selection color of the spinner widget's input field.
   */
-  Fl_Color selection_color() const { return input_.selection_color(); }
+  Fl_Color selection_color() const { return input_->selection_color(); }
 
   /**
    Sets the maximum width of the input field.
    */
-  void maximum_size(int m) { if (m > 0) input_.maximum_size(m); }
+  void maximum_size(int m) { if (m > 0) input_->maximum_size(m); }
 
   /**
    Returns the maximum width of the input field.
    */
-  int maximum_size() const { return input_.maximum_size(); }
+  int maximum_size() const { return input_->maximum_size(); }
 };
 
 #endif // !Fl_Spinner_H

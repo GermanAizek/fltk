@@ -12,9 +12,16 @@
 #include <string.h>
 
 Fl_MAVLink2::Fl_MAVLink2()
-  : mav_cb_(nullptr), user_data_(nullptr), buf_idx_(0) {
-  memset(&last_msg_, 0, sizeof(last_msg_));
-  memset(buffer_, 0, sizeof(buffer_));
+  : mav_cb_(nullptr), user_data_(nullptr) {
+  last_msg_.msg_id = 0;
+  last_msg_.checksum = 0;
+  last_msg_.payload_len = 0;
+  last_msg_.incompat_flags = 0;
+  last_msg_.compat_flags = 0;
+  last_msg_.seq = 0;
+  last_msg_.sys_id = 0;
+  last_msg_.comp_id = 0;
+  last_msg_.crc_valid = false;
   Fl_Serial_Port::callback(serial_cb, this);
 }
 
@@ -54,14 +61,14 @@ uint16_t Fl_MAVLink2::crc_accumulate(uint8_t b, uint16_t crc)
 }
 
 void Fl_MAVLink2::process_byte(uint8_t b) {
-  if (buf_idx_ == 0 && b != 0xFD) return; // MAVLink 2 STX
-  buffer_[buf_idx_++] = b;
+  if (buffer_.empty() && b != 0xFD) return; // MAVLink 2 STX
+  buffer_.push_back(b);
 
-  if (buf_idx_ >= 10) {
+  if (buffer_.size() >= 10) {
     uint8_t payload_len = buffer_[1];
     size_t total_len = 10 + payload_len + 2; // header (10) + payload + crc (2)
 
-    if (buf_idx_ == total_len) {
+    if (buffer_.size() == total_len) {
       last_msg_.payload_len = payload_len;
       last_msg_.incompat_flags = buffer_[2];
       last_msg_.compat_flags = buffer_[3];
@@ -70,12 +77,16 @@ void Fl_MAVLink2::process_byte(uint8_t b) {
       last_msg_.comp_id = buffer_[6];
       last_msg_.msg_id = buffer_[7] | (buffer_[8] << 8) | (buffer_[9] << 16);
       
-      memcpy(last_msg_.payload, buffer_ + 10, payload_len);
+      if (payload_len > 0) {
+        last_msg_.payload.assign(buffer_.data() + 10, buffer_.data() + 10 + payload_len);
+      } else {
+        last_msg_.payload.clear();
+      }
       last_msg_.checksum = buffer_[10 + payload_len] | (buffer_[10 + payload_len + 1] << 8);
       last_msg_.crc_valid = true;
 
       if (mav_cb_) mav_cb_(this, user_data_);
-      buf_idx_ = 0;
+      buffer_.clear();
     }
   }
 }
@@ -89,7 +100,9 @@ void Fl_MAVLink2::feed_message(uint8_t sys_id, uint8_t comp_id, uint32_t msg_id,
   last_msg_.crc_valid = true;
 
   if (payload && len > 0) {
-    memcpy(last_msg_.payload, payload, len);
+    last_msg_.payload.assign(payload, payload + len);
+  } else {
+    last_msg_.payload.clear();
   }
 
   if (mav_cb_) {

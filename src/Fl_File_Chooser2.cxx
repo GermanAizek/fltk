@@ -424,11 +424,8 @@ Fl_File_Chooser::count() {
 void
 Fl_File_Chooser::directory(const char *d)// I - Directory to change to
 {
-  char  *dirptr;                // Pointer into directory
   char  fixpath[FL_PATH_MAX];   // Path with slashes converted
-
-
-//  printf("Fl_File_Chooser::directory(\"%s\")\n", d == NULL ? "(null)" : d);
+  char  absdir[FL_PATH_MAX];    // Absolute path buffer
 
   // NULL == current directory
   if (d == NULL)
@@ -451,35 +448,33 @@ Fl_File_Chooser::directory(const char *d)// I - Directory to change to
   if (d[0] != '\0')
   {
     // Make the directory absolute...
-    if (d[0] != '/' && d[0] != '\\' && ( !Fl::system_driver()->colon_is_drive() || d[1] != ':' ) )
-      fl_filename_absolute(directory_, d);
-    else
-      strlcpy(directory_, d, sizeof(directory_));
+    if (d[0] != '/' && d[0] != '\\' && ( !Fl::system_driver()->colon_is_drive() || d[1] != ':' ) ) {
+      fl_filename_absolute(absdir, sizeof(absdir), d);
+      directory_ = absdir;
+    } else {
+      directory_ = d;
+    }
 
     // Strip any trailing slash...
-    dirptr = directory_ + strlen(directory_) - 1;
-    if ((*dirptr == '/' || *dirptr == '\\') && dirptr > directory_)
-      *dirptr = '\0';
+    while (directory_.size() > 1 && (directory_.back() == '/' || directory_.back() == '\\')) {
+      directory_.pop_back();
+    }
 
     // See if we have a trailing .. or . in the filename...
-    dirptr = directory_ + strlen(directory_) - 3;
-    if (dirptr >= directory_ && strcmp(dirptr, "/..") == 0) {
+    if (directory_.size() >= 3 && directory_.compare(directory_.size() - 3, 3, "/..") == 0) {
       // Yes, we have "..", so strip the trailing path...
-      *dirptr = '\0';
-      while (dirptr > directory_) {
-        if (*dirptr == '/') break;
-        dirptr --;
+      directory_.erase(directory_.size() - 3);
+      size_t slash_pos = directory_.rfind('/');
+      if (slash_pos != std::string::npos) {
+        directory_.erase(slash_pos == 0 ? 1 : slash_pos);
       }
-
-      if (dirptr >= directory_ && *dirptr == '/')
-        *dirptr = '\0';
-    } else if ((dirptr + 1) >= directory_ && strcmp(dirptr + 1, "/.") == 0) {
+    } else if (directory_.size() >= 2 && directory_.compare(directory_.size() - 2, 2, "/.") == 0) {
       // Strip trailing "."...
-      dirptr[1] = '\0';
+      directory_.erase(directory_.size() - 2);
     }
   }
   else
-    directory_[0] = '\0';
+    directory_.clear();
 
   if (shown()) {
     // Rescan the directory...
@@ -509,7 +504,7 @@ Fl_File_Chooser::favoritesButtonCB()
 
     snprintf(menuname, FL_PATH_MAX, "favorite%02d", v);
 
-    prefs_->set(menuname, directory_);
+    prefs_->set(menuname, directory_.c_str());
     prefs_->flush();
 
     update_favorites();              // adds item to favorites with Alt-n shortcut
@@ -669,12 +664,12 @@ Fl_File_Chooser::fileListCB()
   if (!filename)
     return;
 
-  if (!directory_[0]) {
+  if (directory_.empty()) {
     strlcpy(pathname, filename, sizeof(pathname));
-  } else if (strcmp(directory_, "/") == 0) {
+  } else if (directory_ == "/") {
     snprintf(pathname, sizeof(pathname), "/%s", filename);
   } else {
-    snprintf(pathname, sizeof(pathname), "%s/%s", directory_, filename);
+    snprintf(pathname, sizeof(pathname), "%s/%s", directory_.c_str(), filename);
   }
 
   if (Fl::event_clicks()) {
@@ -789,7 +784,7 @@ Fl_File_Chooser::fileNameCB()
   }
 
   // Make sure we have an absolute path...
-  int dirIsRelative = directory_[0] != '\0' && filename[0] != '/';
+  int dirIsRelative = !directory_.empty() && filename[0] != '/';
   if (dirIsRelative && Fl::system_driver()->colon_is_drive()) dirIsRelative = !(fl_ascii_isalpha(filename[0]) && (!filename[1] || filename[1] == ':'));
   if (dirIsRelative) {
     fl_filename_absolute(pathname, sizeof(pathname), filename);
@@ -808,7 +803,7 @@ Fl_File_Chooser::fileNameCB()
     // Enter pressed - select or change directory...
     int condition = 0;
     if (Fl::system_driver()->colon_is_drive()) condition = fl_ascii_isalpha(pathname[0]) && pathname[1] == ':' && !pathname[2];
-    if (!condition) condition = ( Fl::system_driver()->filename_isdir_quick(pathname) && compare_dirnames(pathname, directory_) );
+    if (!condition) condition = ( Fl::system_driver()->filename_isdir_quick(pathname) && compare_dirnames(pathname, directory_.c_str()) );
     if (condition) {
       directory(pathname);
     } else if ((type_ & CREATE) || fl_access(pathname, 0) == 0) {
@@ -840,8 +835,8 @@ Fl_File_Chooser::fileNameCB()
     filename = slash;
 
     int condition = Fl::system_driver()->case_insensitive_filenames() ?
-                    strcasecmp(pathname, directory_) : strcmp(pathname, directory_);
-    if (condition && (pathname[0] || strcmp("/", directory_))) {
+                    strcasecmp(pathname, directory_.c_str()) : strcmp(pathname, directory_.c_str());
+    if (condition && (pathname[0] || directory_ != "/")) {
       int p = fileName->insert_position();
       int m = fileName->mark();
 
@@ -850,7 +845,7 @@ Fl_File_Chooser::fileNameCB()
       if (filename[0]) {
         char tempname[FL_PATH_MAX + 4];
 
-        snprintf(tempname, sizeof(tempname), "%s/%s", directory_, filename);
+        snprintf(tempname, sizeof(tempname), "%s/%s", directory_.c_str(), filename);
         fileName->value(tempname);
         strlcpy(pathname, tempname, sizeof(pathname));
       }
@@ -1016,7 +1011,7 @@ Fl_File_Chooser::newdir()
 
   // Make it relative to the current directory as needed...
   if (dir[0] != '/' && dir[0] != '\\' && (!Fl::system_driver()->colon_is_drive() || dir[1] != ':') )
-    snprintf(pathname, sizeof(pathname), "%s/%s", directory_, dir);
+    snprintf(pathname, sizeof(pathname), "%s/%s", directory_.c_str(), dir);
   else
     strlcpy(pathname, dir, sizeof(pathname));
 
@@ -1079,7 +1074,7 @@ Fl_File_Chooser::rescan()
 
 
   // Clear the current filename
-  strlcpy(pathname, directory_, sizeof(pathname));
+  strlcpy(pathname, directory_.c_str(), sizeof(pathname));
   if (pathname[0] && pathname[strlen(pathname) - 1] != '/') {
     strlcat(pathname, "/", sizeof(pathname));
   }
@@ -1092,7 +1087,7 @@ Fl_File_Chooser::rescan()
     okButton->deactivate();
 
   // Build the file list...
-  if ( fileList->load(directory_, sort) <= 0 ) {
+  if ( fileList->load(directory_.c_str(), sort) <= 0 ) {
     if ( fileList->errmsg() ) errorBox->label(fileList->errmsg());     // show OS errormsg when possible
     else                      errorBox->label("No files found...");
     show_error_box(1);
@@ -1123,7 +1118,7 @@ void Fl_File_Chooser::rescan_keep_filename()
   strlcpy(pathname, fn, sizeof(pathname));
 
   // Build the file list...
-  if (fileList->load(directory_, sort) <= 0) {
+  if (fileList->load(directory_.c_str(), sort) <= 0) {
     if ( fileList->errmsg() ) errorBox->label(fileList->errmsg());     // show OS errormsg when possible
     else                      errorBox->label("No files found...");
     show_error_box(1);
@@ -1166,28 +1161,28 @@ Fl_File_Chooser::showChoiceCB()
 {
   const char    *item,                  // Selected item
                 *patstart;              // Start of pattern
-  char          *patend;                // End of pattern
   char          temp[FL_PATH_MAX];      // Temporary string for pattern
 
 
   item = showChoice->text(showChoice->value());
 
   if (strcmp(item, custom_filter_label) == 0) {
-    if ((item = fl_input("%s", pattern_, custom_filter_label)) != NULL) {
-      strlcpy(pattern_, item, sizeof(pattern_));
+    if ((item = fl_input("%s", pattern_.c_str(), custom_filter_label)) != NULL) {
+      pattern_ = item;
 
       quote_pathname(temp, item, sizeof(temp));
       showChoice->add(temp);
       showChoice->value(showChoice->size() - 2);
     }
   } else if ((patstart = strchr(item, '(')) == NULL) {
-    strlcpy(pattern_, item, sizeof(pattern_));
+    pattern_ = item;
   } else {
-    strlcpy(pattern_, patstart + 1, sizeof(pattern_));
-    if ((patend = strrchr(pattern_, ')')) != NULL) *patend = '\0';
+    pattern_ = patstart + 1;
+    size_t patend = pattern_.rfind(')');
+    if (patend != std::string::npos) pattern_.erase(patend);
   }
 
-  fileList->filter(pattern_);
+  fileList->filter(pattern_.c_str());
 
   if (shown()) {
     // Rescan the directory...
@@ -1298,25 +1293,28 @@ Fl_File_Chooser::update_preview()
     FILE        *fp;
     int         bytes;
     char        *ptr;
+    char        preview_buf[2048];
 
     if (filename) fp = fl_fopen(filename, "rb");
     else fp = NULL;
 
     if (fp != NULL) {
       // Try reading the first 1k of data for a label...
-      bytes = (int) fread(preview_text_, 1, sizeof(preview_text_) - 1, fp);
-      preview_text_[bytes] = '\0';
+      bytes = (int) fread(preview_buf, 1, sizeof(preview_buf) - 1, fp);
+      preview_buf[bytes] = '\0';
       fclose(fp);
+      preview_text_ = preview_buf;
     } else {
       // Assume we can't read any data...
-      preview_text_[0] = '\0';
+      preview_text_.clear();
     }
 
     window->cursor(FL_CURSOR_DEFAULT);
     Fl::check();
 
     // Scan the buffer for printable UTF-8 chars...
-    for (ptr = preview_text_; *ptr; ptr++) {
+    const char *ptext = preview_text_.c_str();
+    for (ptr = (char*)ptext; *ptr; ptr++) {
       uchar c = uchar(*ptr);
       if ( (c&0x80)==0 ) {
         if (!fl_ascii_isprint(c) && !fl_ascii_isspace(c)) break;
@@ -1337,17 +1335,15 @@ Fl_File_Chooser::update_preview()
         ptr++;
       }
     }
-//         *ptr && (fl_ascii_isprint(*ptr) || fl_ascii_isspace(*ptr));
-//       ptr ++);
 
     // Scan the buffer for printable characters in 8 bit
-    if (*ptr || ptr == preview_text_) {
-      for (ptr = preview_text_;
+    if (*ptr || ptr == ptext) {
+      for (ptr = (char*)ptext;
          *ptr && (fl_ascii_isprint(*ptr) || fl_ascii_isspace(*ptr));
          ptr ++) {/*empty*/}
     }
 
-    if (*ptr || ptr == preview_text_) {
+    if (*ptr || ptr == ptext) {
       // Non-printable file, just show a big ?...
       previewBox->label(filename ? "?" : 0);
       previewBox->align(FL_ALIGN_CLIP);
@@ -1359,7 +1355,7 @@ Fl_File_Chooser::update_preview()
       if (size < 6) size = 6;
       else if (size > FL_NORMAL_SIZE) size = FL_NORMAL_SIZE;
 
-      previewBox->label(preview_text_);
+      previewBox->label(preview_text_.c_str());
       previewBox->align((Fl_Align)(FL_ALIGN_CLIP | FL_ALIGN_INSIDE |
                                    FL_ALIGN_LEFT | FL_ALIGN_TOP));
       previewBox->labelsize(size);
@@ -1450,8 +1446,8 @@ Fl_File_Chooser::value(int f)   // I - File number
       fcount ++;
 
       if (fcount == f) {
-        if (directory_[0]) {
-          snprintf(pathname, sizeof(pathname), "%s/%s", directory_, name);
+        if (!directory_.empty()) {
+          snprintf(pathname, sizeof(pathname), "%s/%s", directory_.c_str(), name);
         } else {
           strlcpy(pathname, name, sizeof(pathname));
         }

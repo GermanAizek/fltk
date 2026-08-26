@@ -126,6 +126,7 @@ public:
 
   void clear() override {
     rows(0);            // implies clearing selection
+    std::vector<uint8_t>().swap(_rowselect);
     cols(0);
     Fl_Table::clear();  // clear the table
   }

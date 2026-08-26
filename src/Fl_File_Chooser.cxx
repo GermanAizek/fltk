@@ -310,7 +310,7 @@ Fl_File_Chooser::Fl_File_Chooser(const char *pathname, const char *pattern, int 
   } // Fl_Double_Window* favWindow
   callback_ = 0;
   data_ = 0;
-  directory_[0] = 0;
+  directory_.clear();
   window->size_range(window->w(), window->h());
   type(type_val);
   filter(pattern);
@@ -345,7 +345,7 @@ Fl_Color Fl_File_Chooser::color() const {
 }
 
 char * Fl_File_Chooser::directory() {
-  return directory_;
+  return (char *)directory_.c_str();
 }
 
 const char * Fl_File_Chooser::filter() const {

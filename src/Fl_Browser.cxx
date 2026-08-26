@@ -735,6 +735,8 @@ void Fl_Browser::clear() {
   first = 0;
   last = 0;
   lines = 0;
+  cache = 0;
+  cacheline = 0;
   new_list();
 }
 

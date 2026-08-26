@@ -39,6 +39,7 @@
 #include <FL/Fl_File_Input.H>
 #include <FL/Fl_Return_Button.H>
 #include <FL/fl_ask.H>
+#include <string>
 
 class FL_EXPORT Fl_File_Chooser {
 public:
@@ -58,9 +59,9 @@ private:
   static Fl_Preferences *prefs_;
   void (*callback_)(Fl_File_Chooser*, void *);
   void *data_;
-  char directory_[FL_PATH_MAX];
-  char pattern_[FL_PATH_MAX];
-  char preview_text_[2048];
+  std::string directory_;
+  std::string pattern_;
+  std::string preview_text_;
   void favoritesButtonCB();
   void favoritesCB(Fl_Widget *w);
   void fileListCB();

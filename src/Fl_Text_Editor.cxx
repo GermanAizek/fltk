@@ -63,26 +63,6 @@ key\modifier   plain  Ctrl   Alt  Meta
  24: move cursor to the beginning of the bottom of the window
 */
 
-/**  The constructor creates a new text editor widget.*/
-Fl_Text_Editor::Fl_Text_Editor(int X, int Y, int W, int H,  const char* l)
-    : Fl_Text_Display(X, Y, W, H, l) {
-  mCursorOn = 1;
-  insert_mode_ = 1;
-  key_bindings = 0;
-  set_flag(MAC_USE_ACCENTS_MENU);
-  set_flag(NEEDS_KEYBOARD);
-
-  // handle the default key bindings
-  add_default_key_bindings(&key_bindings);
-
-  // handle everything else
-  default_key_function(kf_default);
-}
-
-#ifndef FL_DOXYGEN
-Fl_Text_Editor::Key_Binding* Fl_Text_Editor::global_key_bindings = 0;
-#endif
-
 // These are the default key bindings every widget should start with
 static struct {
   int key;
@@ -142,22 +122,52 @@ static struct {
   { 0,            0,                        0                             }
 };
 
-/**  Adds all of the default editor key bindings to the specified key binding list.*/
-void Fl_Text_Editor::add_default_key_bindings(Key_Binding** list) {
+static Fl_Text_Editor::Key_Binding* default_bindings_list = 0;
+
+static void init_default_bindings() {
+  if (default_bindings_list) return;
   for (int i = 0; default_key_bindings[i].key; i++) {
-    add_key_binding(default_key_bindings[i].key,
-                    default_key_bindings[i].state,
-                    default_key_bindings[i].func,
-                    list);
+    Fl_Text_Editor::add_key_binding(default_key_bindings[i].key,
+                                    default_key_bindings[i].state,
+                                    default_key_bindings[i].func,
+                                    &default_bindings_list);
   }
-  Key_Binding *extra_key_bindings = Fl::screen_driver()->text_editor_extra_key_bindings;
+  Fl_Text_Editor::Key_Binding *extra_key_bindings = Fl::screen_driver()->text_editor_extra_key_bindings;
   if (extra_key_bindings) { // add platform-specific key bindings, if any
     for (int i = 0; extra_key_bindings[i].key; i++) {
-      add_key_binding(extra_key_bindings[i].key,
-                      extra_key_bindings[i].state,
-                      extra_key_bindings[i].function,
-                      list);
+      Fl_Text_Editor::add_key_binding(extra_key_bindings[i].key,
+                                      extra_key_bindings[i].state,
+                                      extra_key_bindings[i].function,
+                                      &default_bindings_list);
     }
+  }
+}
+
+/**  The constructor creates a new text editor widget.*/
+Fl_Text_Editor::Fl_Text_Editor(int X, int Y, int W, int H,  const char* l)
+    : Fl_Text_Display(X, Y, W, H, l) {
+  mCursorOn = 1;
+  insert_mode_ = 1;
+  key_bindings = 0;
+  set_flag(MAC_USE_ACCENTS_MENU);
+  set_flag(NEEDS_KEYBOARD);
+
+  // default key bindings are lazily shared from default_bindings_list
+  init_default_bindings();
+
+  // handle everything else
+  default_key_function(kf_default);
+}
+
+#ifndef FL_DOXYGEN
+Fl_Text_Editor::Key_Binding* Fl_Text_Editor::global_key_bindings = 0;
+#endif
+
+/**  Adds all of the default editor key bindings to the specified key binding list.*/
+void Fl_Text_Editor::add_default_key_bindings(Key_Binding** list) {
+  init_default_bindings();
+  for (Key_Binding* cur = default_bindings_list; cur; cur = cur->next) {
+    add_key_binding(cur->key, cur->state, cur->function, list);
   }
 }
 
@@ -171,6 +181,15 @@ Fl_Text_Editor::Key_Func Fl_Text_Editor::bound_key_function(int key, int state, 
         break;
   if (!cur) return 0;
   return cur->function;
+}
+
+Fl_Text_Editor::Key_Func Fl_Text_Editor::bound_key_function(int key, int state) const {
+  Key_Func f = bound_key_function(key, state, key_bindings);
+  if (!f) {
+    init_default_bindings();
+    f = bound_key_function(key, state, default_bindings_list);
+  }
+  return f;
 }
 
 /**  Removes all of the key bindings associated with the text editor or list.*/
@@ -661,6 +680,10 @@ int Fl_Text_Editor::handle_key() {
   Key_Func f;
   f = bound_key_function(key, state, global_key_bindings);
   if (!f) f = bound_key_function(key, state, key_bindings);
+  if (!f) {
+    init_default_bindings();
+    f = bound_key_function(key, state, default_bindings_list);
+  }
   if (f == kf_undo || f == kf_redo) {
     // never propagate undo and redo up to another widget
     if (!f(key, this)) fl_beep();

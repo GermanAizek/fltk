@@ -22,6 +22,7 @@
 #  define Fl_File_Input_H
 
 #  include <FL/Fl_Input.H>
+#  include <vector>
 
 /**
   \class Fl_File_Input
@@ -47,7 +48,7 @@ class FL_EXPORT Fl_File_Input : public Fl_Input {
   short         pressed_;
   char          ok_entry_;
   uchar         down_box_;
-  short         buttons_[200];
+  std::vector<short> buttons_;
 
   void          draw_buttons();
   int           handle_button(int event);

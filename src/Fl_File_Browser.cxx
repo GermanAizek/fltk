@@ -125,23 +125,20 @@ Fl_File_Browser::item_width(void *p) const      // I - List item data
     // More than 1 line or have columns; find the maximum width...
     int tempwidth = 0;
     int column = 0;
-    char fragment[10240];
-    char *ptr = fragment;
+    const char *start = line_txt;
 
     for (const char *t = line_txt; *t != '\0'; t++) {
       if (*t == '\n')
       {
-        // Newline - nul terminate this fragment and get the width...
-        *ptr = '\0';
-
-        tempwidth += static_cast<int>(fl_width(fragment));
+        int frag_len = static_cast<int>(t - start);
+        tempwidth += static_cast<int>(fl_width(start, frag_len));
 
         // Update the max width as needed...
         if (tempwidth > width)
           width = tempwidth;
 
         // Point back to the start of the fragment...
-        ptr       = fragment;
+        start     = t + 1;
         tempwidth = 0;
         column    = 0;
       }
@@ -163,20 +160,13 @@ Fl_File_Browser::item_width(void *p) const      // I - List item data
         if (tempwidth > width)
           width = tempwidth;
 
-        ptr = fragment;
-      }
-      else
-      {
-        *ptr++ = *t;
+        start = t + 1;
       }
     }
 
-    if (ptr > fragment)
+    if (*start != '\0')
     {
-      // Nul terminate this fragment and get the width...
-      *ptr = '\0';
-
-      tempwidth += static_cast<int>(fl_width(fragment));
+      tempwidth += static_cast<int>(fl_width(start));
 
       // Update the max width as needed...
       if (tempwidth > width)
@@ -256,8 +246,7 @@ Fl_File_Browser::item_draw(void *p,     // I - List item data
   const int *const columns = column_widths();
   int width = 0;
   int column = 0;
-  char fragment[10240];
-  char *ptr = fragment;
+  const char *start = line_txt;
 
   if (active_r() != 0)
     fl_color(c);
@@ -266,21 +255,17 @@ Fl_File_Browser::item_draw(void *p,     // I - List item data
 
   for (const char *t = line_txt; *t != '\0'; t++) {
     if (*t == '\n') {
-      // Newline - nul terminate this fragment and draw it...
-      *ptr = '\0';
-
-      fl_draw(fragment, X + width, Y, W - width, fl_height(),
-              static_cast<Fl_Align>(FL_ALIGN_LEFT | FL_ALIGN_CLIP), nullptr, 0);
+      std::string fragment(start, t - start);
+      fl_draw(fragment.c_str(), X + width, Y, W - width, fl_height(),
+              static_cast<Fl_Align>(FL_ALIGN_LEFT | FL_ALIGN_CLIP));
 
       // Point back to the start of the fragment...
-      ptr    = fragment;
+      start  = t + 1;
       width  = 0;
       Y      += fl_height();
       column = 0;
     } else if (*t == column_char()) {
-      // Tab - nul terminate this fragment and draw it...
-      *ptr = '\0';
-
+      std::string fragment(start, t - start);
       int cW = W - width; // Clip width...
 
       if (columns != nullptr) {
@@ -292,8 +277,8 @@ Fl_File_Browser::item_draw(void *p,     // I - List item data
           cW = columns[i];
       }
 
-      fl_draw(fragment, X + width, Y, cW, fl_height(),
-              static_cast<Fl_Align>(FL_ALIGN_LEFT | FL_ALIGN_CLIP), nullptr, 0);
+      fl_draw(fragment.c_str(), X + width, Y, cW, fl_height(),
+              static_cast<Fl_Align>(FL_ALIGN_LEFT | FL_ALIGN_CLIP));
 
       // Advance to the next column...
       column++;
@@ -305,18 +290,12 @@ Fl_File_Browser::item_draw(void *p,     // I - List item data
       else {
         width = column * static_cast<int>(fl_height() * 0.6 * 8.0);
       }
-      ptr = fragment;
-    }
-    else {
-      *ptr++ = *t;
+      start = t + 1;
     }
   }
-  if (ptr > fragment) {
-    // Nul terminate this fragment and draw it...
-    *ptr = '\0';
-
-    fl_draw(fragment, X + width, Y, W - width, fl_height(),
-            static_cast<Fl_Align>(FL_ALIGN_LEFT | FL_ALIGN_CLIP), nullptr, 0);
+  if (*start != '\0') {
+    fl_draw(start, X + width, Y, W - width, fl_height(),
+            static_cast<Fl_Align>(FL_ALIGN_LEFT | FL_ALIGN_CLIP));
   }
 }
 
