@@ -3198,6 +3198,7 @@ Fl_Help_View::Fl_Help_View(int xx, int yy, int ww, int hh, const char *l)
 */
 Fl_Help_View::~Fl_Help_View()
 {
+  while (children() > 0) remove(0);
 }
 
 

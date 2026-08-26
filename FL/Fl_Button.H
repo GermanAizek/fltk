@@ -75,31 +75,31 @@ class Fl_Widget_Tracker;
 class FL_EXPORT Fl_Button : public Fl_Widget {
 
   int shortcut_;
-  char value_;
-  char oldval;
+  signed char value_;
+  signed char oldval;
   uchar down_box_;
   uchar compact_;
 
 protected:
 
   static Fl_Widget_Tracker *key_release_tracker;
-  static void key_release_timeout(void*);
+  static void key_release_timeout(void *d);
   void simulate_key_action();
 
   void draw() override;
 
 public:
 
-  int handle(int) override;
+  int handle(int event) override;
 
-  Fl_Button(int X, int Y, int W, int H, const char *L = 0);
+  Fl_Button(int X, int Y, int W, int H, const char *L = nullptr);
 
   int value(int v);
 
   /**
     Returns the current value of the button (0 or 1).
    */
-  char value() const {return value_;}
+  char value() const {return static_cast<char>(value_);}
 
   /**
     Same as \c value(1).
@@ -146,7 +146,7 @@ public:
     Returns the current down box type, which is drawn when value() is non-zero.
     \retval Fl_Boxtype
    */
-  Fl_Boxtype down_box() const {return (Fl_Boxtype)down_box_;}
+  Fl_Boxtype down_box() const {return static_cast<Fl_Boxtype>(down_box_);}
 
   /**
     Sets the down box type. The default value of 0 causes FLTK to figure out
@@ -157,7 +157,7 @@ public:
 
     \param[in] b down box type
    */
-  void down_box(Fl_Boxtype b) {down_box_ = (uchar)b;}
+  void down_box(Fl_Boxtype b) {down_box_ = static_cast<uchar>(b);}
 
   void shortcut(const char *s);
 

@@ -188,6 +188,7 @@ public:
   static void rgb2hsv(double R, double G, double B, double& H, double& S, double& V);
 
   Fl_Color_Chooser(int X, int Y, int W, int H, const char *L = 0);
+  ~Fl_Color_Chooser() override;
 };
 
 FL_EXPORT int fl_color_chooser(const char* name, double& r, double& g, double& b, int m=-1);

@@ -757,6 +757,10 @@ Fl_Color_Chooser::Fl_Color_Chooser(int X, int Y, int W, int H, const char* L)
   choice.textfont(FL_HELVETICA_BOLD_ITALIC);
 }
 
+Fl_Color_Chooser::~Fl_Color_Chooser() {
+  while (children() > 0) remove(0);
+}
+
 ////////////////////////////////////////////////////////////////
 // fl_color_chooser():
 

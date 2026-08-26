@@ -41,8 +41,8 @@ class FL_EXPORT Fl_Gpio {
   void (*cb_)(Fl_Gpio*, void*);
   void* data_;
 
-  int export_pin();
-  int unexport_pin();
+  int export_pin() const;
+  int unexport_pin() const;
   int set_edge_sysfs(int edge_mode);
   int set_dir_sysfs(int dir_mode);
   
@@ -65,7 +65,7 @@ public:
     Initializes a GPIO instance for the specified pin number.
     The pin is exported if available on the system.
   */
-  Fl_Gpio(int pin);
+  explicit Fl_Gpio(int pin);
   
   /**
     Cleans up the GPIO instance, unexporting the pin.
@@ -83,7 +83,7 @@ public:
   int direction(Direction d);
   
   /** Returns the current configured direction of the pin. */
-  Direction direction() const { return (Direction)dir_; }
+  Direction direction() const { return static_cast<Direction>(dir_); }
 
   /**
     Sets the logic value of an OUT pin.
@@ -106,7 +106,7 @@ public:
   int edge(Edge e);
   
   /** Returns the current edge detection mode. */
-  Edge edge() const { return (Edge)edge_; }
+  Edge edge() const { return static_cast<Edge>(edge_); }
 
   /**
     Registers a callback function to be called when the configured edge is detected.
@@ -114,7 +114,7 @@ public:
     \param cb Callback function
     \param data Optional user data passed to the callback
   */
-  void callback(void (*cb)(Fl_Gpio*, void*), void* data = 0);
+  void callback(void (*cb)(Fl_Gpio*, void*), void* data = nullptr);
   
   /** Invokes the registered callback. */
   void do_callback();

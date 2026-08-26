@@ -64,17 +64,17 @@
  */
 class FL_EXPORT Fl_Clock_Output : public Fl_Widget {
   int hour_, minute_, second_;
-  ulong value_;
+  unsigned long value_;
   int shadow_; // draw shadows of hands
-  void drawhands(Fl_Color,Fl_Color); // part of draw
+  void drawhands(Fl_Color fill_col, Fl_Color line_col) const; // part of draw
 protected:
   void draw() override;
-  void draw(int X, int Y, int W, int H);
+  void draw(int X, int Y, int W, int H) const;
 public:
 
-  Fl_Clock_Output(int X, int Y, int W, int H, const char *L = 0);
+  Fl_Clock_Output(int X, int Y, int W, int H, const char *L = nullptr);
 
-  void value(ulong v);  // set to this Unix time
+  void value(unsigned long v);  // set to this Unix time
 
   void value(int H, int m, int s);
 
@@ -83,7 +83,7 @@ public:
     Returns the time in seconds since the UNIX epoch (January 1, 1970).
     \see value(ulong)
    */
-  ulong value() const {return value_;}
+  unsigned long value() const {return value_;}
 
   /**
     Returns the displayed hour (0 to 23).
@@ -124,7 +124,7 @@ public:
 
     \param[in]  mode    1 = shadows (default), 0 = no shadows
   */
-  void shadow(int mode) { shadow_ = mode ? 1 : 0; }
+  void shadow(int mode) { shadow_ = (mode != 0) ? 1 : 0; }
 };
 
 // a Fl_Clock displays the current time always by using a timeout:
@@ -151,11 +151,11 @@ public:
  */
 class FL_EXPORT Fl_Clock : public Fl_Clock_Output {
 public:
-  int handle(int) override;
+  int handle(int event) override;
 
-  Fl_Clock(int X, int Y, int W, int H,  const char *L = 0);
+  Fl_Clock(int X, int Y, int W, int H,  const char *L = nullptr);
 
-  Fl_Clock(uchar t, int X, int Y, int W, int H, const char *L);
+  Fl_Clock(unsigned char t, int X, int Y, int W, int H, const char *L);
 
   ~Fl_Clock();
 };

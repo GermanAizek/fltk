@@ -26,66 +26,78 @@
 // Modifications by Mark Overmars for Forms
 // Further changes by Bill Spitzak for fltk
 
-const float hourhand[4][2] = {{-0.5f, 0}, {0, 1.5f}, {0.5f, 0}, {0, -7.0f}};
-const float  minhand[4][2] = {{-0.5f, 0}, {0, 1.5f}, {0.5f, 0}, {0, -11.5f}};
-const float  sechand[4][2] = {{-0.1f, 0}, {0, 2.0f}, {0.1f, 0}, {0, -11.5f}};
+namespace {
+  constexpr float hourhand[4][2] = {{-0.5F, 0.0F}, {0.0F, 1.5F}, {0.5F, 0.0F}, {0.0F, -7.0F}};
+  constexpr float  minhand[4][2] = {{-0.5F, 0.0F}, {0.0F, 1.5F}, {0.5F, 0.0F}, {0.0F, -11.5F}};
+  constexpr float  sechand[4][2] = {{-0.1F, 0.0F}, {0.0F, 2.0F}, {0.1F, 0.0F}, {0.0F, -11.5F}};
 
-static void drawhand(double ang,const float v[][2],Fl_Color fill,Fl_Color line)
-{
-  fl_push_matrix();
-  fl_rotate(ang);
-  fl_color(fill);
-  fl_begin_polygon();
-  int i; for (i=0; i<4; i++) fl_vertex(v[i][0],v[i][1]);
-  fl_end_polygon();
-  fl_color(line);
-  fl_begin_loop();
-  for (i=0; i<4; i++) fl_vertex(v[i][0],v[i][1]);
-  fl_end_loop();
-  fl_pop_matrix();
-}
-
-void Fl_Clock_Output::drawhands(Fl_Color fill, Fl_Color line) {
-  if (!active_r()) {
-    fill = fl_inactive(fill);
-    line = fl_inactive(line);
+  static void drawhand(double ang, const float v[4][2], Fl_Color fill, Fl_Color line)
+  {
+    fl_push_matrix();
+    fl_rotate(ang);
+    fl_color(fill);
+    fl_begin_polygon();
+    for (int i = 0; i < 4; ++i) {
+      fl_vertex(v[i][0], v[i][1]);
+    }
+    fl_end_polygon();
+    fl_color(line);
+    fl_begin_loop();
+    for (int i = 0; i < 4; ++i) {
+      fl_vertex(v[i][0], v[i][1]);
+    }
+    fl_end_loop();
+    fl_pop_matrix();
   }
-  drawhand(-360*(hour()+minute()/60.0)/12, hourhand, fill, line);
-  drawhand(-360*(minute()+second()/60.0)/60, minhand, fill, line);
-  drawhand(-360*(second()/60.0), sechand, fill, line);
-}
 
-static void rect(double x, double y, double w, double h) {
-  double r = x+w;
-  double t = y+h;
-  fl_begin_polygon();
-  fl_vertex(x, y);
-  fl_vertex(r, y);
-  fl_vertex(r, t);
-  fl_vertex(x, t);
-  fl_end_polygon();
+  static void rect(double x_coord, double y_coord, double w_size, double h_size) {
+    const double r = x_coord + w_size;
+    const double t = y_coord + h_size;
+    fl_begin_polygon();
+    fl_vertex(x_coord, y_coord);
+    fl_vertex(r, y_coord);
+    fl_vertex(r, t);
+    fl_vertex(x_coord, t);
+    fl_end_polygon();
+  }
+} // namespace
+
+void Fl_Clock_Output::drawhands(Fl_Color fill_col, Fl_Color line_col) const {
+  Fl_Color f = fill_col;
+  Fl_Color l = line_col;
+  if (active_r() == 0) {
+    f = fl_inactive(f);
+    l = fl_inactive(l);
+  }
+  drawhand(-360.0 * (static_cast<double>(hour()) + (static_cast<double>(minute()) / 60.0)) / 12.0, &hourhand[0], f, l);
+  drawhand(-360.0 * (static_cast<double>(minute()) + (static_cast<double>(second()) / 60.0)) / 60.0, &minhand[0], f, l);
+  drawhand(-360.0 * (static_cast<double>(second()) / 60.0), &sechand[0], f, l);
 }
 
 /**
   Draw clock with the given position and size.
   \param[in] X, Y, W, H position and size
 */
-void Fl_Clock_Output::draw(int X, int Y, int W, int H) {
-  Fl_Color box_color = type()==FL_ROUND_CLOCK ? FL_GRAY : color();
+void Fl_Clock_Output::draw(int X, int Y, int W, int H) const {
+  const Fl_Color box_color = (static_cast<int>(type()) == FL_ROUND_CLOCK) ? FL_GRAY : color();
   draw_box(box(), X, Y, W, H, box_color);
   fl_push_matrix();
-  fl_translate(X+W/2.0-.5, Y+H/2.0-.5);
-  fl_scale((W-1)/28.0, (H-1)/28.0);
-  if (type() == FL_ROUND_CLOCK) {
-    fl_color(active_r() ? color() : fl_inactive(color()));
-    fl_begin_polygon(); fl_circle(0,0,14); fl_end_polygon();
-    fl_color(active_r() ? FL_FOREGROUND_COLOR : fl_inactive(FL_FOREGROUND_COLOR));
-    fl_begin_loop(); fl_circle(0,0,14); fl_end_loop();
+  fl_translate(static_cast<double>(X) + (static_cast<double>(W) / 2.0) - 0.5, static_cast<double>(Y) + (static_cast<double>(H) / 2.0) - 0.5);
+  fl_scale(static_cast<double>(W - 1) / 28.0, static_cast<double>(H - 1) / 28.0);
+  if (static_cast<int>(type()) == FL_ROUND_CLOCK) {
+    fl_color((active_r() != 0) ? color() : fl_inactive(color()));
+    fl_begin_polygon();
+    fl_circle(0.0, 0.0, 14.0);
+    fl_end_polygon();
+    fl_color((active_r() != 0) ? FL_FOREGROUND_COLOR : fl_inactive(FL_FOREGROUND_COLOR));
+    fl_begin_loop();
+    fl_circle(0.0, 0.0, 14.0);
+    fl_end_loop();
   }
 
   // draw the shadows:
-  if (shadow_) {
-    Fl_Color shadow_color = fl_color_average(box_color, FL_BLACK, 0.5);
+  if (shadow_ != 0) {
+    const Fl_Color shadow_color = fl_color_average(box_color, FL_BLACK, 0.5F);
     fl_push_matrix();
     fl_translate(0.60, 0.60);
     drawhands(shadow_color, shadow_color);
@@ -94,12 +106,16 @@ void Fl_Clock_Output::draw(int X, int Y, int W, int H) {
 
   // draw the tick marks:
   fl_push_matrix();
-  fl_color(active_r() ? FL_FOREGROUND_COLOR : fl_inactive(FL_FOREGROUND_COLOR));
-  for (int i=0; i<12; i++) {
-    if (i==6) rect(-0.5, 9, 1, 2);
-    else if (i==3 || i==0 || i== 9) rect(-0.5, 9.5, 1, 1);
-    else rect(-0.25, 9.5, .5, 1);
-    fl_rotate(-30);
+  fl_color((active_r() != 0) ? FL_FOREGROUND_COLOR : fl_inactive(FL_FOREGROUND_COLOR));
+  for (int i = 0; i < 12; ++i) {
+    if (i == 6) {
+      rect(-0.5, 9.0, 1.0, 2.0);
+    } else if ((i == 3) || (i == 0) || (i == 9)) {
+      rect(-0.5, 9.5, 1.0, 1.0);
+    } else {
+      rect(-0.25, 9.5, 0.5, 1.0);
+    }
+    fl_rotate(-30.0);
   }
   fl_pop_matrix();
 
@@ -123,9 +139,11 @@ void Fl_Clock_Output::draw() {
   \see hour(), minute(), second()
  */
 void Fl_Clock_Output::value(int H, int m, int s) {
-  if (H!=hour_ || m!=minute_ || s!=second_) {
-    hour_ = H; minute_ = m; second_ = s;
-    value_ = (H * 60 + m) * 60 + s;
+  if ((H != hour_) || (m != minute_) || (s != second_)) {
+    hour_ = H;
+    minute_ = m;
+    second_ = s;
+    value_ = static_cast<unsigned long>((static_cast<unsigned int>(H) * 3600U) + (static_cast<unsigned int>(m) * 60U) + static_cast<unsigned int>(s));
     damage(FL_DAMAGE_CHILD);
   }
 }
@@ -136,13 +154,13 @@ void Fl_Clock_Output::value(int H, int m, int s) {
   \param[in] v seconds since epoch
   \see value()
  */
-void Fl_Clock_Output::value(ulong v) {
+void Fl_Clock_Output::value(unsigned long v) {
   value_ = v;
-  struct tm *timeofday;
-  // Some platforms, notably Windows, now use a 64-bit time_t value...
-  time_t vv = (time_t)v;
-  timeofday = localtime(&vv);
-  value(timeofday->tm_hour, timeofday->tm_min, timeofday->tm_sec);
+  time_t vv = static_cast<time_t>(v);
+  const struct tm * const timeofday = localtime(&vv);
+  if (timeofday != nullptr) {
+    value(timeofday->tm_hour, timeofday->tm_min, timeofday->tm_sec);
+  }
 }
 
 /**
@@ -155,15 +173,15 @@ void Fl_Clock_Output::value(ulong v) {
   \param[in] L widget label, default is no label
  */
 Fl_Clock_Output::Fl_Clock_Output(int X, int Y, int W, int H, const char *L)
-: Fl_Widget(X, Y, W, H, L) {
+: Fl_Widget(X, Y, W, H, L),
+  hour_(0),
+  minute_(0),
+  second_(0),
+  value_(0UL),
+  shadow_(1) {
   box(FL_UP_BOX);
   selection_color(fl_gray_ramp(5));
   align(FL_ALIGN_BOTTOM);
-  hour_ = 0;
-  minute_ = 0;
-  second_ = 0;
-  value_ = 0;
-  shadow_ = 1;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -200,36 +218,41 @@ Fl_Clock::Fl_Clock(int X, int Y, int W, int H, const char *L)
   \see class Fl_Clock_Output
 */
 
-Fl_Clock::Fl_Clock(uchar t, int X, int Y, int W, int H, const char *L)
+Fl_Clock::Fl_Clock(unsigned char t, int X, int Y, int W, int H, const char *L)
   : Fl_Clock_Output(X, Y, W, H, L) {
   type(t);
-  box(t==FL_ROUND_CLOCK ? FL_NO_BOX : FL_UP_BOX);
+  box((static_cast<int>(t) == FL_ROUND_CLOCK) ? FL_NO_BOX : FL_UP_BOX);
 }
 
 static void tick(void *v) {
-  time_t sec;
-  int usec;
-  Fl::system_driver()->gettime(&sec, &usec);
-  double delta = (1000000 - usec)/1000000.; // time till next second
-  // if current time is just before full second, show that full second
-  // and wait one more second (STR 3516)
-  if (delta < 0.1) {
-    delta += 1.0;
-    sec++;
-  }
-  ((Fl_Clock*)v)->value((ulong)sec);
+  if (v != nullptr) {
+    time_t sec = 0;
+    int usec = 0;
+    Fl::system_driver()->gettime(&sec, &usec);
+    double delta = static_cast<double>(1000000 - usec) / 1000000.0; // time till next second
+    // if current time is just before full second, show that full second
+    // and wait one more second (STR 3516)
+    if (delta < 0.1) {
+      delta += 1.0;
+      sec++;
+    }
+    Fl_Clock* const clk = static_cast<Fl_Clock*>(v);
+    clk->value(static_cast<unsigned long>(sec));
 
-  Fl::add_timeout(delta, tick, v);
+    Fl::add_timeout(delta, tick, v);
+  }
 }
 
 int Fl_Clock::handle(int event) {
   switch (event) {
-  case FL_SHOW:
-    tick(this);
-    break;
-  case FL_HIDE:
-    Fl::remove_timeout(tick, this);
-    break;
+    case FL_SHOW:
+      tick(this);
+      break;
+    case FL_HIDE:
+      Fl::remove_timeout(tick, this);
+      break;
+    default:
+      break;
   }
   return Fl_Clock_Output::handle(event);
 }
@@ -255,7 +278,7 @@ Fl_Clock::~Fl_Clock() {
   \param[in] L widget label, default is no label
 */
 
-Fl_Round_Clock::Fl_Round_Clock(int X,int Y,int W,int H, const char *L)
+Fl_Round_Clock::Fl_Round_Clock(int X, int Y, int W, int H, const char *L)
 : Fl_Clock(X, Y, W, H, L)
 {
   type(FL_ROUND_CLOCK);

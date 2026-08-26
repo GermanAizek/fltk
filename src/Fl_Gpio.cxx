@@ -25,121 +25,173 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-Fl_Gpio::Fl_Gpio(int pin) : pin_(pin), fd_(-1), dir_(IN), edge_(NONE), cb_(0), data_(0) {
-  export_pin();
+Fl_Gpio::Fl_Gpio(int pin) : pin_(pin), fd_(-1), dir_(IN), edge_(NONE), cb_(nullptr), data_(nullptr) {
+  (void)export_pin();
 }
 
 Fl_Gpio::~Fl_Gpio() {
   if (fd_ >= 0) {
     Fl::remove_fd(fd_);
-    close(fd_);
+    (void)::close(fd_);
     fd_ = -1;
   }
-  unexport_pin();
+  (void)unexport_pin();
 }
 
-int Fl_Gpio::export_pin() {
-  int export_fd = ::open("/sys/class/gpio/export", O_WRONLY);
-  if (export_fd < 0) return -1;
-  char buf[32];
-  snprintf(buf, sizeof(buf), "%d", pin_);
-  ssize_t res = ::write(export_fd, buf, strlen(buf));
-  ::close(export_fd);
-  return (res > 0) ? 0 : -1;
+int Fl_Gpio::export_pin() const {
+  int ret = -1;
+  const int export_fd = ::open("/sys/class/gpio/export", O_WRONLY);
+  if (export_fd >= 0) {
+    char buf[32] = {0};
+    const int len = snprintf(&buf[0], sizeof(buf), "%d", pin_);
+    if ((len > 0) && (static_cast<size_t>(len) < sizeof(buf))) {
+      const ssize_t res = ::write(export_fd, &buf[0], static_cast<size_t>(len));
+      if (res > 0) {
+        ret = 0;
+      }
+    }
+    (void)::close(export_fd);
+  }
+  return ret;
 }
 
-int Fl_Gpio::unexport_pin() {
-  int unexport_fd = ::open("/sys/class/gpio/unexport", O_WRONLY);
-  if (unexport_fd < 0) return -1;
-  char buf[32];
-  snprintf(buf, sizeof(buf), "%d", pin_);
-  ssize_t res = ::write(unexport_fd, buf, strlen(buf));
-  ::close(unexport_fd);
-  return (res > 0) ? 0 : -1;
+int Fl_Gpio::unexport_pin() const {
+  int ret = -1;
+  const int unexport_fd = ::open("/sys/class/gpio/unexport", O_WRONLY);
+  if (unexport_fd >= 0) {
+    char buf[32] = {0};
+    const int len = snprintf(&buf[0], sizeof(buf), "%d", pin_);
+    if ((len > 0) && (static_cast<size_t>(len) < sizeof(buf))) {
+      const ssize_t res = ::write(unexport_fd, &buf[0], static_cast<size_t>(len));
+      if (res > 0) {
+        ret = 0;
+      }
+    }
+    (void)::close(unexport_fd);
+  }
+  return ret;
 }
 
 int Fl_Gpio::direction(Direction d) {
-  char path[64];
-  snprintf(path, sizeof(path), "/sys/class/gpio/gpio%d/direction", pin_);
-  int dir_fd = ::open(path, O_WRONLY);
-  if (dir_fd < 0) return -1;
-  const char* val = (d == OUT) ? "out" : "in";
-  ssize_t res = ::write(dir_fd, val, strlen(val));
-  ::close(dir_fd);
-  if (res > 0) {
-    dir_ = d;
-    return 0;
+  int ret = -1;
+  char path[64] = {0};
+  const int len = snprintf(&path[0], sizeof(path), "/sys/class/gpio/gpio%d/direction", pin_);
+  if ((len > 0) && (static_cast<size_t>(len) < sizeof(path))) {
+    const int dir_fd = ::open(&path[0], O_WRONLY);
+    if (dir_fd >= 0) {
+      const char* const val = (d == OUT) ? "out" : "in";
+      const size_t val_len = (d == OUT) ? 3U : 2U;
+      const ssize_t res = ::write(dir_fd, val, val_len);
+      (void)::close(dir_fd);
+      if (res > 0) {
+        dir_ = d;
+        ret = 0;
+      }
+    }
   }
-  return -1;
+  return ret;
 }
 
 int Fl_Gpio::value(int v) {
-  if (dir_ != OUT) return -1;
-  char path[64];
-  snprintf(path, sizeof(path), "/sys/class/gpio/gpio%d/value", pin_);
-  int val_fd = ::open(path, O_WRONLY);
-  if (val_fd < 0) return -1;
-  const char* str = (v) ? "1" : "0";
-  ssize_t res = ::write(val_fd, str, 1);
-  ::close(val_fd);
-  return (res > 0) ? 0 : -1;
+  int ret = -1;
+  if (dir_ == OUT) {
+    char path[64] = {0};
+    const int len = snprintf(&path[0], sizeof(path), "/sys/class/gpio/gpio%d/value", pin_);
+    if ((len > 0) && (static_cast<size_t>(len) < sizeof(path))) {
+      const int val_fd = ::open(&path[0], O_WRONLY);
+      if (val_fd >= 0) {
+        const char* const str = (v != 0) ? "1" : "0";
+        const ssize_t res = ::write(val_fd, str, 1U);
+        (void)::close(val_fd);
+        if (res > 0) {
+          ret = 0;
+        }
+      }
+    }
+  }
+  return ret;
 }
 
 int Fl_Gpio::value() const {
-  char path[64];
-  snprintf(path, sizeof(path), "/sys/class/gpio/gpio%d/value", pin_);
-  int val_fd = ::open(path, O_RDONLY);
-  if (val_fd < 0) return -1;
-  char ch;
-  ssize_t res = ::read(val_fd, &ch, 1);
-  ::close(val_fd);
-  if (res > 0) {
-    return (ch == '1') ? 1 : 0;
+  int ret = -1;
+  char path[64] = {0};
+  const int len = snprintf(&path[0], sizeof(path), "/sys/class/gpio/gpio%d/value", pin_);
+  if ((len > 0) && (static_cast<size_t>(len) < sizeof(path))) {
+    const int val_fd = ::open(&path[0], O_RDONLY);
+    if (val_fd >= 0) {
+      char ch = '\0';
+      const ssize_t res = ::read(val_fd, &ch, 1U);
+      (void)::close(val_fd);
+      if (res > 0) {
+        ret = (ch == '1') ? 1 : 0;
+      }
+    }
   }
-  return -1;
+  return ret;
 }
 
 int Fl_Gpio::edge(Edge e) {
-  char path[64];
-  snprintf(path, sizeof(path), "/sys/class/gpio/gpio%d/edge", pin_);
-  int edge_fd = ::open(path, O_WRONLY);
-  if (edge_fd < 0) return -1;
-  const char* val = "none";
-  switch (e) {
-    case RISING: val = "rising"; break;
-    case FALLING: val = "falling"; break;
-    case BOTH: val = "both"; break;
-    default: val = "none"; break;
-  }
-  ssize_t res = ::write(edge_fd, val, strlen(val));
-  ::close(edge_fd);
-  if (res > 0) {
-    edge_ = e;
-    if (e != NONE && fd_ < 0) {
-      snprintf(path, sizeof(path), "/sys/class/gpio/gpio%d/value", pin_);
-      fd_ = ::open(path, O_RDONLY | O_NONBLOCK);
-      if (fd_ >= 0) {
-        char tmp[4];
-        ::read(fd_, tmp, sizeof(tmp)); // clear initial state
-        Fl::add_fd(fd_, FL_EXCEPT, fd_callback, this);
+  int ret = -1;
+  char path[64] = {0};
+  const int len = snprintf(&path[0], sizeof(path), "/sys/class/gpio/gpio%d/edge", pin_);
+  if ((len > 0) && (static_cast<size_t>(len) < sizeof(path))) {
+    const int edge_fd = ::open(&path[0], O_WRONLY);
+    if (edge_fd >= 0) {
+      const char* val = "none";
+      size_t val_len = 4U;
+      switch (e) {
+        case RISING:
+          val = "rising";
+          val_len = 6U;
+          break;
+        case FALLING:
+          val = "falling";
+          val_len = 7U;
+          break;
+        case BOTH:
+          val = "both";
+          val_len = 4U;
+          break;
+        default:
+          break;
       }
-    } else if (e == NONE && fd_ >= 0) {
-      Fl::remove_fd(fd_);
-      ::close(fd_);
-      fd_ = -1;
+      const ssize_t res = ::write(edge_fd, val, val_len);
+      (void)::close(edge_fd);
+      if (res > 0) {
+        edge_ = e;
+        if ((e != NONE) && (fd_ < 0)) {
+          const int len2 = snprintf(&path[0], sizeof(path), "/sys/class/gpio/gpio%d/value", pin_);
+          if ((len2 > 0) && (static_cast<size_t>(len2) < sizeof(path))) {
+            fd_ = ::open(&path[0], O_RDONLY | O_NONBLOCK);
+            if (fd_ >= 0) {
+              char tmp[4] = {0};
+              (void)::read(fd_, &tmp[0], sizeof(tmp)); // clear initial state
+              Fl::add_fd(fd_, FL_EXCEPT, fd_callback, this);
+            }
+          }
+        } else if ((e == NONE) && (fd_ >= 0)) {
+          Fl::remove_fd(fd_);
+          (void)::close(fd_);
+          fd_ = -1;
+        } else {
+          // MISRA compliance: final else clause
+        }
+        ret = 0;
+      }
     }
-    return 0;
   }
-  return -1;
+  return ret;
 }
 
 void Fl_Gpio::fd_callback(int fd, void* data) {
-  Fl_Gpio* gpio = (Fl_Gpio*)data;
-  if (gpio->fd_ == fd) {
-    char tmp[4];
-    ::lseek(fd, 0, SEEK_SET);
-    ::read(fd, tmp, sizeof(tmp)); // consume the event
-    gpio->do_callback();
+  if (data != nullptr) {
+    Fl_Gpio* const gpio = static_cast<Fl_Gpio*>(data);
+    if (gpio->fd_ == fd) {
+      char tmp[4] = {0};
+      (void)::lseek(fd, 0, SEEK_SET);
+      (void)::read(fd, &tmp[0], sizeof(tmp)); // consume the event
+      gpio->do_callback();
+    }
   }
 }
 
@@ -149,7 +201,7 @@ void Fl_Gpio::callback(void (*cb)(Fl_Gpio*, void*), void* data) {
 }
 
 void Fl_Gpio::do_callback() {
-  if (cb_) {
+  if (cb_ != nullptr) {
     cb_(this, data_);
   }
 }
@@ -157,7 +209,7 @@ void Fl_Gpio::do_callback() {
 #else
 // Fallback for non-Linux platforms
 
-Fl_Gpio::Fl_Gpio(int pin) : pin_(pin), fd_(-1), dir_(IN), edge_(NONE), cb_(0), data_(0) {
+Fl_Gpio::Fl_Gpio(int pin) : pin_(pin), fd_(-1), dir_(IN), edge_(NONE), cb_(nullptr), data_(nullptr) {
 }
 
 Fl_Gpio::~Fl_Gpio() {
@@ -187,7 +239,9 @@ void Fl_Gpio::callback(void (*cb)(Fl_Gpio*, void*), void* data) {
 }
 
 void Fl_Gpio::do_callback() {
-  if (cb_) cb_(this, data_);
+  if (cb_ != nullptr) {
+    cb_(this, data_);
+  }
 }
 
 #endif

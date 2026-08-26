@@ -18,20 +18,22 @@
 #include <FL/Fl_Counter.H>
 #include <FL/Fl_Simple_Counter.H>
 #include <FL/fl_draw.H>
+#include <string>
+#include <cmath>
 
-// This struct describes the four arrow boxes
-struct arrow_box {
-  int width;
-  Fl_Arrow_Type arrow_type;
-  Fl_Boxtype boxtype;
-  Fl_Orientation orientation;
-  arrow_box() { // constructor
-    width = 0;
-    boxtype = FL_NO_BOX;
-    orientation = FL_ORIENT_RIGHT;
-    arrow_type = FL_ARROW_SINGLE;
-  }
-};
+namespace {
+  // This struct describes the four arrow boxes
+  struct arrow_box {
+    int width;
+    Fl_Arrow_Type arrow_type;
+    Fl_Boxtype boxtype;
+    Fl_Orientation orientation;
+    arrow_box() : width(0), arrow_type(FL_ARROW_SINGLE), boxtype(FL_NO_BOX), orientation(FL_ORIENT_RIGHT) {}
+  };
+
+  constexpr double INITIALREPEAT = 0.5;
+  constexpr double REPEAT = 0.1;
+} // namespace
 
 /**
   Compute sizes (widths) of arrow boxes.
@@ -54,178 +56,242 @@ struct arrow_box {
   \param[out]   w2  width of double arrow box
 */
 void Fl_Counter::arrow_widths(int &w1, int &w2) const {
-  if (type() == FL_SIMPLE_COUNTER) {
-    w1 = w() * 20/100;
+  if (static_cast<int>(type()) == FL_SIMPLE_COUNTER) {
+    w1 = (w() * 20) / 100;
     w2 = 0;
   } else {
-    w1 = w() * 13/100;
-    w2 = w() * 17/100;
+    w1 = (w() * 13) / 100;
+    w2 = (w() * 17) / 100;
   }
   // limit arrow box sizes to reserve more space for the text box
-  if (w1 > 13) w1 = 13;
-  if (w2 > 24) w2 = 24;
+  if (w1 > 13) {
+    w1 = 13;
+  }
+  if (w2 > 24) {
+    w2 = 24;
+  }
 }
 
 void Fl_Counter::draw() {
-  struct arrow_box ab[4];
+  arrow_box ab[4];
 
   // text box setup
   Fl_Boxtype tbt = box();
-  if (tbt == FL_UP_BOX) tbt = FL_DOWN_BOX;
-  if (tbt == FL_THIN_UP_BOX) tbt = FL_THIN_DOWN_BOX;
+  if (tbt == FL_UP_BOX) {
+    tbt = FL_DOWN_BOX;
+  }
+  if (tbt == FL_THIN_UP_BOX) {
+    tbt = FL_THIN_DOWN_BOX;
+  }
 
   // arrow boxes
   for (int i = 0; i < 4; i++) {
-    if (mouseobj_ == i + 1)
+    if (static_cast<int>(mouseobj_) == (i + 1)) {
       ab[i].boxtype = fl_down(box());
-    else
+    } else {
       ab[i].boxtype = box();
+    }
   }
 
-  ab[0].arrow_type = ab[3].arrow_type = FL_ARROW_DOUBLE;      // first and last arrow
-  ab[0].orientation = ab[1].orientation = FL_ORIENT_LEFT;     // left arrows
+  ab[0].arrow_type = FL_ARROW_DOUBLE;
+  ab[3].arrow_type = FL_ARROW_DOUBLE;      // first and last arrow
+  ab[0].orientation = FL_ORIENT_LEFT;
+  ab[1].orientation = FL_ORIENT_LEFT;     // left arrows
 
-  int w1 = 0, w2 = 0;
+  int w1 = 0;
+  int w2 = 0;
   arrow_widths(w1, w2);
-  if (type() == FL_SIMPLE_COUNTER)
+  if (static_cast<int>(type()) == FL_SIMPLE_COUNTER) {
     w2 = 0;
+  }
 
-  ab[0].width = ab[3].width = w2;          // double arrows
-  ab[1].width = ab[2].width = w1;          // single arrows
+  ab[0].width = w2;
+  ab[3].width = w2;          // double arrows
+  ab[1].width = w1;
+  ab[2].width = w1;          // single arrows
 
-  int tw = w() - 2 * (w1 + w2); // text box width
-  int tx = x() + w1 + w2;       // text box position
-
-  // printf("w() = %3d, w1 = %3d, w2 = %3d, tw = %3d\n", w(), w1, w2, tw);
+  const int tw = w() - (2 * (w1 + w2)); // text box width
+  const int tx = x() + w1 + w2;         // text box position
 
   // always draw text box and text
   draw_box(tbt, tx, y(), tw, h(), FL_BACKGROUND2_COLOR);
   fl_font(textfont(), textsize());
   fl_color(active_r() ? textcolor() : fl_inactive(textcolor()));
-  std::string str = format_str();
+  const std::string str = format_str();
   fl_draw(str.c_str(), tx, y(), tw, h(), FL_ALIGN_CENTER);
-  if (Fl::focus() == this) draw_focus(tbt, tx, y(), tw, h());
-  if (!(damage()&FL_DAMAGE_ALL)) return; // only need to redraw text
-
-  Fl_Color arrow_color;
-  if (active_r())
-    arrow_color = labelcolor();
-  else
-    arrow_color = fl_inactive(labelcolor());
-
-  // draw arrow boxes
-  int xo = x();
-  for (int i = 0; i < 4; i++) {
-    if (ab[i].width > 0) {
-      draw_box(ab[i].boxtype, xo, y(), ab[i].width, h(), color());
-      Fl_Rect bb(xo, y(), ab[i].width, h(), ab[i].boxtype);
-      fl_draw_arrow(bb, ab[i].arrow_type, ab[i].orientation, arrow_color);
-      xo += ab[i].width;
-    }
-    if (i == 1) xo += tw;
+  if (Fl::focus() == this) {
+    draw_focus(tbt, tx, y(), tw, h());
   }
+  if ((static_cast<unsigned int>(damage()) & static_cast<unsigned int>(FL_DAMAGE_ALL)) != 0U) {
+    Fl_Color arrow_color;
+    if (active_r() != 0) {
+      arrow_color = labelcolor();
+    } else {
+      arrow_color = fl_inactive(labelcolor());
+    }
 
+    // draw arrow boxes
+    int xo = x();
+    for (int i = 0; i < 4; i++) {
+      if (ab[i].width > 0) {
+        draw_box(ab[i].boxtype, xo, y(), ab[i].width, h(), color());
+        const Fl_Rect bb(xo, y(), ab[i].width, h(), ab[i].boxtype);
+        fl_draw_arrow(bb, ab[i].arrow_type, ab[i].orientation, arrow_color);
+        xo += ab[i].width;
+      }
+      if (i == 1) {
+        xo += tw;
+      }
+    }
+  }
 } // draw()
 
 void Fl_Counter::increment_cb() {
-  if (!mouseobj_) return;
-  double v = value();
-  switch (mouseobj_) {
-  case 1: v -= lstep_; break;
-  case 2: v = increment(v, -1); break;
-  case 3: v = increment(v, 1); break;
-  case 4: v += lstep_; break;
+  if (mouseobj_ != 0U) {
+    double v = value();
+    switch (static_cast<int>(mouseobj_)) {
+      case 1:
+        v -= lstep_;
+        break;
+      case 2:
+        v = increment(v, -1);
+        break;
+      case 3:
+        v = increment(v, 1);
+        break;
+      case 4:
+        v += lstep_;
+        break;
+      default:
+        break;
+    }
+    handle_drag(clamp(std::round(v)));
   }
-  handle_drag(clamp(round(v)));
 }
 
-#define INITIALREPEAT .5
-#define REPEAT .1
-
-void Fl_Counter::repeat_callback(void* v) {
-  Fl_Counter* b = (Fl_Counter*)v;
-  int buttons = Fl::event_state() & FL_BUTTONS; // any mouse button pressed
-  int focus = (Fl::focus() == b);               // the widget has focus
-  if (b->mouseobj_ && buttons && focus) {
-    Fl::add_timeout(REPEAT, repeat_callback, b);
-    b->increment_cb();
+void Fl_Counter::repeat_callback(void* data) {
+  if (data != nullptr) {
+    Fl_Counter* const b = static_cast<Fl_Counter*>(data);
+    const int buttons = static_cast<int>(Fl::event_state()) & static_cast<int>(FL_BUTTONS); // any mouse button pressed
+    const bool focus = (Fl::focus() == b);               // the widget has focus
+    if ((b->mouseobj_ != 0U) && (buttons != 0) && focus) {
+      Fl::add_timeout(REPEAT, repeat_callback, b);
+      b->increment_cb();
+    }
   }
 }
 
 int Fl_Counter::calc_mouseobj() const {
-  if (type() == FL_NORMAL_COUNTER) {
-    int W = w()*15/100;
-    if (Fl::event_inside(x(), y(), W, h())) return 1;
-    if (Fl::event_inside(x()+W, y(), W, h())) return 2;
-    if (Fl::event_inside(x()+w()-2*W, y(), W, h())) return 3;
-    if (Fl::event_inside(x()+w()-W, y(), W, h())) return 4;
+  int ret = -1;
+  if (static_cast<int>(type()) == FL_NORMAL_COUNTER) {
+    const int W = (w() * 15) / 100;
+    if (Fl::event_inside(x(), y(), W, h()) != 0) {
+      ret = 1;
+    } else if (Fl::event_inside(x() + W, y(), W, h()) != 0) {
+      ret = 2;
+    } else if (Fl::event_inside(x() + w() - (2 * W), y(), W, h()) != 0) {
+      ret = 3;
+    } else if (Fl::event_inside(x() + w() - W, y(), W, h()) != 0) {
+      ret = 4;
+    } else {
+      // nothing
+    }
   } else {
-    int W = w()*20/100;
-    if (Fl::event_inside(x(), y(), W, h())) return 2;
-    if (Fl::event_inside(x()+w()-W, y(), W, h())) return 3;
+    const int W = (w() * 20) / 100;
+    if (Fl::event_inside(x(), y(), W, h()) != 0) {
+      ret = 2;
+    } else if (Fl::event_inside(x() + w() - W, y(), W, h()) != 0) {
+      ret = 3;
+    } else {
+      // nothing
+    }
   }
-  return -1;
+  return ret;
 }
 
 int Fl_Counter::handle(int event) {
-  int i;
+  int ret = 0;
   switch (event) {
-  case FL_RELEASE:
-    if (mouseobj_) {
-      Fl::remove_timeout(repeat_callback, this);
+    case FL_RELEASE:
+      if (mouseobj_ != 0U) {
+        Fl::remove_timeout(repeat_callback, this);
+        mouseobj_ = 0;
+        redraw();
+      }
+      handle_release();
+      ret = 1;
+      break;
+    case FL_PUSH:
+      if (Fl::visible_focus() != 0) {
+        Fl::focus(this);
+      }
+      {
+        Fl_Widget_Tracker wp(this);
+        handle_push();
+        if (wp.deleted() != 0) {
+          ret = 1;
+          break;
+        }
+      }
+      /* FALLTHROUGH */
+    case FL_DRAG: {
+      const int i = calc_mouseobj();
+      if (static_cast<int>(mouseobj_) != i) {
+        Fl::remove_timeout(repeat_callback, this);
+        mouseobj_ = static_cast<unsigned char>(i);
+        if (i > 0) {
+          Fl::add_timeout(INITIALREPEAT, repeat_callback, this);
+        }
+        Fl_Widget_Tracker wp(this);
+        increment_cb();
+        if (wp.deleted() != 0) {
+          ret = 1;
+          break;
+        }
+        redraw();
+      }
+      ret = 1;
+      break;
+    }
+    case FL_MOUSEWHEEL:
+      handle_drag(clamp(increment(value(), (Fl::event_dy() - Fl::event_dx()) / 2)));
+      ret = 1;
+      break;
+    case FL_KEYBOARD :
+      switch (Fl::event_key()) {
+        case FL_Left:
+          handle_drag(clamp(increment(value(), -1)));
+          ret = 1;
+          break;
+        case FL_Right:
+          handle_drag(clamp(increment(value(), 1)));
+          ret = 1;
+          break;
+        default:
+          ret = 0;
+          break;
+      }
+      break;
+    case FL_UNFOCUS :
       mouseobj_ = 0;
-      redraw();
-    }
-    handle_release();
-    return 1;
-  case FL_PUSH:
-    if (Fl::visible_focus()) Fl::focus(this);
-    { Fl_Widget_Tracker wp(this);
-      handle_push();
-      if (wp.deleted()) return 1;
-    }
-  case FL_DRAG:
-    i = calc_mouseobj();
-    if (i != mouseobj_) {
-      Fl::remove_timeout(repeat_callback, this);
-      mouseobj_ = (uchar)i;
-      if (i > 0)
-        Fl::add_timeout(INITIALREPEAT, repeat_callback, this);
-      Fl_Widget_Tracker wp(this);
-      increment_cb();
-      if (wp.deleted()) return 1;
-      redraw();
-    }
-    return 1;
-  case FL_MOUSEWHEEL:
-    handle_drag(clamp(increment(value(),(Fl::event_dy() - Fl::event_dx()) / 2 )));
-    return 1;
-  case FL_KEYBOARD :
-    switch (Fl::event_key()) {
-      case FL_Left:
-        handle_drag(clamp(increment(value(),-1)));
-        return 1;
-      case FL_Right:
-        handle_drag(clamp(increment(value(),1)));
-        return 1;
-      default:
-        return 0;
-    }
-    // break not required because of switch...
-  case FL_UNFOCUS :
-    mouseobj_ = 0;
-    /* FALLTHROUGH */
-  case FL_FOCUS :
-    if (Fl::visible_focus()) {
-      redraw();
-      return 1;
-    } else return 0;
-  case FL_ENTER : /* FALLTHROUGH */
-  case FL_LEAVE :
-    return 1;
-  default:
-    return 0;
+      /* FALLTHROUGH */
+    case FL_FOCUS :
+      if (Fl::visible_focus() != 0) {
+        redraw();
+        ret = 1;
+      } else {
+        ret = 0;
+      }
+      break;
+    case FL_ENTER : /* FALLTHROUGH */
+    case FL_LEAVE :
+      ret = 1;
+      break;
+    default:
+      ret = 0;
+      break;
   }
+  return ret;
 }
 
 /**
@@ -242,17 +308,17 @@ Fl_Counter::~Fl_Counter() {
   \param[in] L widget label, default is no label
  */
 Fl_Counter::Fl_Counter(int X, int Y, int W, int H, const char* L)
-  : Fl_Valuator(X, Y, W, H, L) {
+  : Fl_Valuator(X, Y, W, H, L),
+    lstep_(1.0),
+    textfont_(FL_HELVETICA),
+    textsize_(FL_NORMAL_SIZE),
+    textcolor_(FL_FOREGROUND_COLOR),
+    mouseobj_(0) {
   box(FL_UP_BOX);
   selection_color(FL_INACTIVE_COLOR); // was FL_BLUE
   align(FL_ALIGN_BOTTOM);
   bounds(-1000000.0, 1000000.0);
   Fl_Valuator::step(1, 10);
-  lstep_ = 1.0;
-  mouseobj_ = 0;
-  textfont_ = FL_HELVETICA;
-  textsize_ = FL_NORMAL_SIZE;
-  textcolor_ = FL_FOREGROUND_COLOR;
 }
 
 

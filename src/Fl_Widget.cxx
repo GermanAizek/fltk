@@ -116,7 +116,7 @@ static void fl_release_pooled_string(const char* s) {
 
   Fl_Pooled_String* prev = nullptr;
   for (Fl_Pooled_String* curr = fl_pool_buckets[b]; curr; prev = curr, curr = curr->next) {
-    if (curr->data == s || (curr->hash == hash && curr->len == len && memcmp(curr->data, s, len) == 0)) {
+    if (curr->data == s) {
       curr->refcount--;
       if (curr->refcount == 0) {
         if (prev) prev->next = curr->next;
@@ -127,7 +127,6 @@ static void fl_release_pooled_string(const char* s) {
       return;
     }
   }
-  free((void*)s);
 }
 
 /*

@@ -47,8 +47,8 @@ class FL_EXPORT Fl_Counter : public Fl_Valuator {
   Fl_Font textfont_;
   Fl_Fontsize textsize_;
   Fl_Color textcolor_;
-  uchar mouseobj_;
-  static void repeat_callback(void *);
+  unsigned char mouseobj_;
+  static void repeat_callback(void *data);
   int calc_mouseobj() const;
   void increment_cb();
 
@@ -60,9 +60,9 @@ protected:
 
 public:
 
-  int handle(int) override;
+  int handle(int event) override;
 
-  Fl_Counter(int X, int Y, int W, int H, const char* L = 0);
+  Fl_Counter(int X, int Y, int W, int H, const char* L = nullptr);
   ~Fl_Counter();
 
   /**
@@ -76,7 +76,7 @@ public:
     Sets the increments for the normal and large step buttons.
     \param[in] a, b normal and large step increments.
   */
-  void step(double a,double b) {Fl_Valuator::step(a); lstep_ = b;}
+  void step(double a, double b) {Fl_Valuator::step(a); lstep_ = b;}
 
   /**
     Sets the increment for the normal step buttons.

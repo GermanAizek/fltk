@@ -42,7 +42,7 @@
 /** For internal use only. */
 struct FL_CHART_ENTRY {
   float val;                        ///< For internal use only.
-  unsigned col;                     ///< For internal use only.
+  unsigned int col;                 ///< For internal use only.
   char str[FL_CHART_LABEL_MAX + 1]; ///< For internal use only.
 };
 
@@ -73,7 +73,8 @@ class FL_EXPORT Fl_Chart : public Fl_Widget {
   int maxnumb;
   int sizenumb;
   FL_CHART_ENTRY *entries;
-  double min, max;
+  double min_val;
+  double max_val;
   uchar autosize_;
   Fl_Font textfont_;
   Fl_Fontsize textsize_;
@@ -86,39 +87,43 @@ protected:
   // these methods are documented in src/Fl_Chart.cxx
 
   static void draw_barchart(int x, int y, int w, int h, int numb, FL_CHART_ENTRY entries[],
-                            double min, double max, int autosize, int maxnumb, Fl_Color textcolor);
+                            double min_v, double max_v, int auto_sz, int max_n, Fl_Color text_col);
 
   static void draw_horbarchart(int x, int y, int w, int h, int numb, FL_CHART_ENTRY entries[],
-                               double min, double max, int autosize, int maxnumb,
-                               Fl_Color textcolor);
+                               double min_v, double max_v, int auto_sz, int max_n,
+                               Fl_Color text_col);
 
-  static void draw_linechart(int type, int x, int y, int w, int h, int numb,
-                             FL_CHART_ENTRY entries[], double min, double max, int autosize,
-                             int maxnumb, Fl_Color textcolor);
+  static void draw_linechart(int t, int x, int y, int w, int h, int numb,
+                             FL_CHART_ENTRY entries[], double min_v, double max_v, int auto_sz,
+                             int max_n, Fl_Color text_col);
 
   static void draw_piechart(int x, int y, int w, int h, int numb, FL_CHART_ENTRY entries[],
-                            int special, Fl_Color textcolor);
+                            int special, Fl_Color text_col);
 
 public:
-  Fl_Chart(int X, int Y, int W, int H, const char *L = 0);
+  Fl_Chart(int X, int Y, int W, int H, const char *L = nullptr);
 
   ~Fl_Chart();
 
   void clear();
 
-  void add(double val, const char *str = 0, unsigned col = 0);
+  void add(double val, const char *str = nullptr, unsigned int col = 0);
 
-  void insert(int ind, double val, const char *str = 0, unsigned col = 0);
+  void insert(int ind, double val, const char *str = nullptr, unsigned int col = 0);
 
-  void replace(int ind, double val, const char *str = 0, unsigned col = 0);
+  void replace(int ind, double val, const char *str = nullptr, unsigned int col = 0);
 
   /**
     Gets the lower and upper bounds of the chart values.
-    \param[out] a, b are set to lower, upper
+    \param[out] a_out, b_out are set to lower, upper
    */
-  void bounds(double *a, double *b) const {
-    *a = min;
-    *b = max;
+  void bounds(double *a_out, double *b_out) const {
+    if (a_out != nullptr) {
+      *a_out = min_val;
+    }
+    if (b_out != nullptr) {
+      *b_out = max_val;
+    }
   }
 
   void bounds(double a, double b);

@@ -28,6 +28,7 @@ extern int fl_gl_load_plugin;
 #include <FL/fl_utf8.h>
 #include "drivers/OpenGL/Fl_OpenGL_Display_Device.H"
 #include "drivers/OpenGL/Fl_OpenGL_Graphics_Driver.H"
+#include <cstring>
 
 #  if (HAVE_DLSYM && HAVE_DLFCN_H)
 #    include <dlfcn.h>
@@ -40,26 +41,17 @@ extern int fl_gl_load_plugin;
 
 ////////////////////////////////////////////////////////////////
 
-// The symbol SWAP_TYPE defines what is in the back buffer after doing
-// a glXSwapBuffers().
+namespace {
+  // contents of back buffer after glXSwapBuffers():
+  enum SwapType {
+    UNDEFINED = 1,
+    SWAP = 2,
+    COPY = 3,
+    NODAMAGE = 4
+  };
 
-// The OpenGl documentation says that the contents of the backbuffer
-// are "undefined" after glXSwapBuffers().  However, if we know what
-// is in the backbuffers then we can save a good deal of time.  For
-// this reason you can define some symbols to describe what is left in
-// the back buffer.
-
-// Having not found any way to determine this from glx (or wgl) I have
-// resorted to letting the user specify it with an environment variable,
-// GL_SWAP_TYPE, it should be equal to one of these symbols:
-
-// contents of back buffer after glXSwapBuffers():
-#define UNDEFINED 1     // anything
-#define SWAP 2          // former front buffer (same as unknown)
-#define COPY 3          // unchanged
-#define NODAMAGE 4      // unchanged even by X expose() events
-
-static char SWAP_TYPE = 0 ; // 0 = determine it from environment variable
+  static char SWAP_TYPE = 0 ; // 0 = determine it from environment variable
+} // namespace
 
 
 /**  Returns non-zero if the hardware supports the given or current OpenGL  mode. */
@@ -71,14 +63,16 @@ void Fl_Gl_Window::show() {
   int need_after = 0;
   if (!shown()) {
     Fl_Window::default_size_range();
-    if (!g) {
-      g = pGlWindowDriver->find(mode_,alist);
-      if (!g && (mode_ & FL_DOUBLE) == FL_SINGLE) {
-        g = pGlWindowDriver->find(mode_ | FL_DOUBLE,alist);
-        if (g) mode_ |= FL_FAKE_SINGLE;
+    if (g == nullptr) {
+      g = pGlWindowDriver->find(mode_, alist);
+      if ((g == nullptr) && ((mode_ & FL_DOUBLE) == FL_SINGLE)) {
+        g = pGlWindowDriver->find(mode_ | FL_DOUBLE, alist);
+        if (g != nullptr) {
+          mode_ |= FL_FAKE_SINGLE;
+        }
       }
 
-      if (!g) {
+      if (g == nullptr) {
         Fl::error("Insufficient GL support");
         return;
       }
@@ -86,7 +80,9 @@ void Fl_Gl_Window::show() {
     pGlWindowDriver->before_show(need_after);
   }
   Fl_Window::show();
-  if (need_after) pGlWindowDriver->after_show();
+  if (need_after != 0) {
+    pGlWindowDriver->after_show();
+  }
 }
 
 
@@ -95,17 +91,19 @@ void Fl_Gl_Window::show() {
   equivalent to calling value(0).
 */
 void Fl_Gl_Window::invalidate() {
-  valid(0);
-  context_valid(0);
+  valid(0U);
+  context_valid(0U);
   pGlWindowDriver->invalidate();
 }
 
 int Fl_Gl_Window::mode(int m, const int *a) const {
-  if (m == mode_ && a == alist) return 0;
+  if ((m == mode_) && (a == alist)) {
+    return 0;
+  }
   return pGlWindowDriver->mode_(m, a);
 }
 
-#define NON_LOCAL_CONTEXT 0x80000000
+static constexpr unsigned int NON_LOCAL_CONTEXT = 0x80000000U;
 
 /**
   The make_current() method selects the OpenGL context for the
@@ -115,22 +113,19 @@ int Fl_Gl_Window::mode(int m, const int *a) const {
 */
 
 void Fl_Gl_Window::make_current() {
-//  puts("Fl_Gl_Window::make_current()");
-//  printf("make_current: context_=%p\n", context_);
-  // The following line prevents potential crashes when make_current() is
-  // called before show(). Applications should call show() before
-  // make_current() for proper initialization.
-  if (!shown()) return;
+  if (!shown()) {
+    return;
+  }
   pGlWindowDriver->make_current_before();
-  if (!context_) {
-    mode_ &= ~NON_LOCAL_CONTEXT;
+  if (context_ == nullptr) {
+    mode_ &= static_cast<int>(~NON_LOCAL_CONTEXT);
     context_ = pGlWindowDriver->create_gl_context(this, g);
-    valid(0);
-    context_valid(0);
+    valid(0U);
+    context_valid(0U);
   }
   pGlWindowDriver->set_gl_context(this, context_);
   pGlWindowDriver->make_current_after();
-  if (mode_ & FL_FAKE_SINGLE) {
+  if ((static_cast<unsigned int>(mode_) & FL_FAKE_SINGLE) != 0U) {
     glDrawBuffer(GL_FRONT);
     glReadBuffer(GL_FRONT);
   }
@@ -143,17 +138,17 @@ void Fl_Gl_Window::make_current() {
   draw() method may want to call this if valid() is false.
 */
 void Fl_Gl_Window::ortho() {
-// Alpha NT seems to have a broken OpenGL that does not like negative coords:
 #ifdef _M_ALPHA
   glLoadIdentity();
   glViewport(0, 0, w(), h());
-  glOrtho(0, w(), 0, h(), -1, 1);
+  glOrtho(0.0, static_cast<double>(w()), 0.0, static_cast<double>(h()), -1.0, 1.0);
 #else
-  GLint v[2];
+  GLint v[2] = {0, 0};
   glGetIntegerv(GL_MAX_VIEWPORT_DIMS, v);
   glLoadIdentity();
-  glViewport(pixel_w()-v[0], pixel_h()-v[1], v[0], v[1]);
-  glOrtho(pixel_w()-v[0], pixel_w(), pixel_h()-v[1], pixel_h(), -1, 1);
+  glViewport(pixel_w() - v[0], pixel_h() - v[1], v[0], v[1]);
+  glOrtho(static_cast<double>(pixel_w() - v[0]), static_cast<double>(pixel_w()),
+          static_cast<double>(pixel_h() - v[1]), static_cast<double>(pixel_h()), -1.0, 1.0);
 #endif
 }
 
@@ -203,80 +198,101 @@ int Fl_Gl_Window::swap_interval() const {
 
 
 void Fl_Gl_Window::flush() {
-  if (!shown()) return;
-  uchar save_valid = valid_f_ & 1;
-  if (pGlWindowDriver->flush_begin(valid_f_) ) return;
+  if (!shown()) {
+    return;
+  }
+  const unsigned char save_valid = valid_f_ & 1U;
+  char temp_valid = static_cast<char>(valid_f_);
+  if (pGlWindowDriver->flush_begin(temp_valid) != 0) {
+    return;
+  }
+  valid_f_ = static_cast<unsigned char>(temp_valid);
   make_current();
 
-  if (mode_ & FL_DOUBLE) {
+  if ((static_cast<unsigned int>(mode_) & static_cast<unsigned int>(FL_DOUBLE)) != 0U) {
 
     glDrawBuffer(GL_BACK);
 
-    if (!SWAP_TYPE) {
+    if (SWAP_TYPE == 0) {
       SWAP_TYPE = pGlWindowDriver->swap_type();
-      const char* c = fl_getenv("GL_SWAP_TYPE");
-      if (c) {
-        if (!strcmp(c,"COPY")) SWAP_TYPE = COPY;
-        else if (!strcmp(c, "NODAMAGE")) SWAP_TYPE = NODAMAGE;
-        else if (!strcmp(c, "SWAP")) SWAP_TYPE = SWAP;
-        else SWAP_TYPE = UNDEFINED;
+      const char* const c = fl_getenv("GL_SWAP_TYPE");
+      if (c != nullptr) {
+        if (strcmp(c, "COPY") == 0) {
+          SWAP_TYPE = static_cast<char>(COPY);
+        } else if (strcmp(c, "NODAMAGE") == 0) {
+          SWAP_TYPE = static_cast<char>(NODAMAGE);
+        } else if (strcmp(c, "SWAP") == 0) {
+          SWAP_TYPE = static_cast<char>(SWAP);
+        } else {
+          SWAP_TYPE = static_cast<char>(UNDEFINED);
+        }
       }
     }
 
-    if (SWAP_TYPE == NODAMAGE) {
+    if (SWAP_TYPE == static_cast<char>(NODAMAGE)) {
 
       // don't draw if only overlay damage or expose events:
-      if ((damage()&~(FL_DAMAGE_OVERLAY|FL_DAMAGE_EXPOSE)) || !save_valid)
+      if (((static_cast<unsigned int>(damage()) & ~(static_cast<unsigned int>(FL_DAMAGE_OVERLAY) | static_cast<unsigned int>(FL_DAMAGE_EXPOSE))) != 0U) || (save_valid == 0U)) {
         draw();
+      }
       swap_buffers();
 
-    } else if (SWAP_TYPE == COPY) {
+    } else if (SWAP_TYPE == static_cast<char>(COPY)) {
 
       // don't draw if only the overlay is damaged:
-      if (damage() != FL_DAMAGE_OVERLAY || !save_valid) draw();
-          swap_buffers();
+      if ((damage() != FL_DAMAGE_OVERLAY) || (save_valid == 0U)) {
+        draw();
+      }
+      swap_buffers();
 
-    } else if (SWAP_TYPE == SWAP){
+    } else if (SWAP_TYPE == static_cast<char>(SWAP)){
       damage(FL_DAMAGE_ALL);
       draw();
-      if (overlay == this) draw_overlay();
+      if (overlay == this) {
+        draw_overlay();
+      }
       swap_buffers();
-    } else if (SWAP_TYPE == UNDEFINED){ // SWAP_TYPE == UNDEFINED
+    } else { // SWAP_TYPE == UNDEFINED
 
       // If we are faking the overlay, use CopyPixels to act like
       // SWAP_TYPE == COPY.  Otherwise overlay redraw is way too slow.
       if (overlay == this) {
         // don't draw if only the overlay is damaged:
-        if (damage1_ || damage() != FL_DAMAGE_OVERLAY || !save_valid) draw();
+        if ((damage1_ != 0U) || (damage() != FL_DAMAGE_OVERLAY) || (save_valid == 0U)) {
+          draw();
+        }
         // we use a separate context for the copy because rasterpos must be 0
         // and depth test needs to be off:
-        static GLContext ortho_context = 0;
-        static Fl_Gl_Window* ortho_window = 0;
-        int orthoinit = !ortho_context;
-        if (orthoinit) ortho_context = pGlWindowDriver->create_gl_context(this, g);
+        static GLContext ortho_context = nullptr;
+        static Fl_Gl_Window* ortho_window = nullptr;
+        const bool orthoinit = (ortho_context == nullptr);
+        if (orthoinit) {
+          ortho_context = pGlWindowDriver->create_gl_context(this, g);
+        }
         pGlWindowDriver->set_gl_context(this, ortho_context);
-        if (orthoinit || !save_valid || ortho_window != this) {
+        if (orthoinit || (save_valid == 0U) || (ortho_window != this)) {
           glDisable(GL_DEPTH_TEST);
           glReadBuffer(GL_BACK);
           glDrawBuffer(GL_FRONT);
           glLoadIdentity();
           glViewport(0, 0, pixel_w(), pixel_h());
-          glOrtho(0, pixel_w(), 0, pixel_h(), -1, 1);
-          glRasterPos2i(0,0);
+          glOrtho(0.0, static_cast<double>(pixel_w()), 0.0, static_cast<double>(pixel_h()), -1.0, 1.0);
+          glRasterPos2i(0, 0);
           ortho_window = this;
         }
-        glCopyPixels(0,0,pixel_w(),pixel_h(),GL_COLOR);
+        glCopyPixels(0, 0, pixel_w(), pixel_h(), GL_COLOR);
         make_current(); // set current context back to draw overlay
-        damage1_ = 0;
+        damage1_ = 0U;
 
       } else {
-        damage1_ = damage();
-        clear_damage(0xff); draw();
+        damage1_ = static_cast<unsigned char>(damage());
+        clear_damage(0xff);
+        draw();
         swap_buffers();
       }
 
     }
-    if (overlay==this && SWAP_TYPE != SWAP) { // fake overlay in front buffer
+    if ((overlay == this) && (SWAP_TYPE != static_cast<char>(SWAP))) { // fake overlay in front buffer
       glDrawBuffer(GL_FRONT);
       draw_overlay();
       glDrawBuffer(GL_BACK);
@@ -286,23 +302,24 @@ void Fl_Gl_Window::flush() {
   } else {      // single-buffered context is simpler:
 
     draw();
-    if (overlay == this) draw_overlay();
+    if (overlay == this) {
+      draw_overlay();
+    }
     glFlush();
 
   }
 
-  valid(1);
-  context_valid(1);
+  valid(1U);
+  context_valid(1U);
 }
 
-void Fl_Gl_Window::resize(int X,int Y,int W,int H) {
-//  printf("Fl_Gl_Window::resize(X=%d, Y=%d, W=%d, H=%d)\n", X, Y, W, H);
-//  printf("current: x()=%d, y()=%d, w()=%d, h()=%d\n", x(), y(), w(), h());
-
-  int is_a_resize = (W != Fl_Widget::w() || H != Fl_Widget::h() || is_a_rescale());
-  if (is_a_resize) valid(0);
+void Fl_Gl_Window::resize(int X, int Y, int W, int H) {
+  const int is_a_resize = ((W != Fl_Widget::w()) || (H != Fl_Widget::h()) || (is_a_rescale() != 0)) ? 1 : 0;
+  if (is_a_resize != 0) {
+    valid(0U);
+  }
   pGlWindowDriver->resize(is_a_resize, W, H);
-  Fl_Window::resize(X,Y,W,H);
+  Fl_Window::resize(X, Y, W, H);
 }
 
 /**
@@ -317,17 +334,22 @@ void Fl_Gl_Window::resize(int X,int Y,int W,int H) {
   or the next time context(x) is called.
 */
 void Fl_Gl_Window::context(GLContext v, int destroy_flag) {
-  if (context_ && !(mode_&NON_LOCAL_CONTEXT)) pGlWindowDriver->delete_gl_context(context_);
+  if ((context_ != nullptr) && ((static_cast<unsigned int>(mode_) & NON_LOCAL_CONTEXT) == 0U)) {
+    pGlWindowDriver->delete_gl_context(context_);
+  }
   context_ = v;
-  if (destroy_flag) mode_ &= ~NON_LOCAL_CONTEXT;
-  else mode_ |= NON_LOCAL_CONTEXT;
+  if (destroy_flag != 0) {
+    mode_ &= static_cast<int>(~NON_LOCAL_CONTEXT);
+  } else {
+    mode_ |= static_cast<int>(NON_LOCAL_CONTEXT);
+  }
 }
 
 /**
   Hides the window and destroys the OpenGL context.
 */
 void Fl_Gl_Window::hide() {
-  context(0);
+  context(nullptr);
   pGlWindowDriver->gl_hide_before(overlay);
   Fl_Window::hide();
 }
@@ -338,7 +360,6 @@ void Fl_Gl_Window::hide() {
 */
 Fl_Gl_Window::~Fl_Gl_Window() {
   hide();
-//  delete overlay; this is done by ~Fl_Group
   delete pGlWindowDriver;
 }
 
@@ -348,18 +369,12 @@ void Fl_Gl_Window::init() {
   box(FL_NO_BOX);
 
   mode_    = FL_RGB | FL_DEPTH | FL_DOUBLE;
-  alist    = 0;
-  context_ = 0;
-  g        = 0;
-  overlay  = 0;
-  valid_f_ = 0;
-  damage1_ = 0;
-
-#if 0 // This breaks resizing on Linux/X11
-  int H = h();
-  h(1); // Make sure we actually do something in resize()...
-  resize(x(), y(), w(), H);
-#endif // 0
+  alist    = nullptr;
+  context_ = nullptr;
+  g        = nullptr;
+  overlay  = nullptr;
+  valid_f_ = 0U;
+  damage1_ = 0U;
 }
 
 /**
@@ -384,15 +399,17 @@ void Fl_Gl_Window::draw_overlay() {}
  \see \ref opengl_with_fltk_widgets
  */
 void Fl_Gl_Window::draw_begin() {
-  if (mode() & FL_OPENGL3) pGlWindowDriver->switch_to_GL1();
+  if ((static_cast<unsigned int>(mode()) & static_cast<unsigned int>(FL_OPENGL3)) != 0U) {
+    pGlWindowDriver->switch_to_GL1();
+  }
   damage(FL_DAMAGE_ALL); // always redraw all GL widgets above the GL scene
   Fl_Surface_Device::push_current( Fl_OpenGL_Display_Device::display_device() );
-  Fl_OpenGL_Graphics_Driver *drv = (Fl_OpenGL_Graphics_Driver*)Fl_Surface_Device::surface()->driver();
+  Fl_OpenGL_Graphics_Driver * const drv = static_cast<Fl_OpenGL_Graphics_Driver*>(Fl_Surface_Device::surface()->driver());
   drv->pixels_per_unit_ = pixels_per_unit();
 
   if (!valid()) {
     glViewport(0, 0, pixel_w(), pixel_h());
-    valid(1);
+    valid(1U);
   }
 
   glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -400,7 +417,7 @@ void Fl_Gl_Window::draw_begin() {
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
-  glOrtho(0.0, w(), h(), 0.0, -1.0, 1.0);
+  glOrtho(0.0, static_cast<double>(w()), static_cast<double>(h()), 0.0, -1.0, 1.0);
 
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
@@ -411,11 +428,13 @@ void Fl_Gl_Window::draw_begin() {
   glDisable(GL_TEXTURE_2D);
   glEnable(GL_POINT_SMOOTH);
 
-  glLineWidth((GLfloat)(drv->pixels_per_unit_*drv->line_width_));
-  glPointSize((GLfloat)(drv->pixels_per_unit_));
+  glLineWidth(static_cast<GLfloat>(drv->pixels_per_unit_ * drv->line_width_));
+  glPointSize(static_cast<GLfloat>(drv->pixels_per_unit_));
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable(GL_BLEND);
-  if (!pGlWindowDriver->need_scissor()) glDisable(GL_SCISSOR_TEST);
+  if (pGlWindowDriver->need_scissor() == 0) {
+    glDisable(GL_SCISSOR_TEST);
+  }
 }
 
 /**
@@ -432,7 +451,9 @@ void Fl_Gl_Window::draw_end() const {
   glPopAttrib(); // GL_ALL_ATTRIB_BITS
 
   Fl_Surface_Device::pop_current();
-  if (mode() & FL_OPENGL3) pGlWindowDriver->switch_back();
+  if ((static_cast<unsigned int>(mode()) & static_cast<unsigned int>(FL_OPENGL3)) != 0U) {
+    pGlWindowDriver->switch_back();
+  }
 }
 
 /** Draws the Fl_Gl_Window.
@@ -539,44 +560,44 @@ float Fl_Gl_Window::pixels_per_unit() const {
  \{
  */
 
-int Fl_Gl_Window_Driver::copy = COPY;
-Fl_Window* Fl_Gl_Window_Driver::cached_window = NULL;
-float Fl_Gl_Window_Driver::gl_scale = 1; // scaling factor between FLTK and GL drawing units: GL = FLTK * gl_scale
+int Fl_Gl_Window_Driver::copy = static_cast<int>(COPY);
+Fl_Window* Fl_Gl_Window_Driver::cached_window = nullptr;
+float Fl_Gl_Window_Driver::gl_scale = 1.0F; // scaling factor between FLTK and GL drawing units: GL = FLTK * gl_scale
 
 // creates a unique, dummy Fl_Gl_Window_Driver object used when no Fl_Gl_Window is around
 // necessary to support gl_start()/gl_finish()
 Fl_Gl_Window_Driver *Fl_Gl_Window_Driver::global() {
-  static Fl_Gl_Window_Driver *gwd = newGlWindowDriver(NULL);
+  static Fl_Gl_Window_Driver *gwd = newGlWindowDriver(nullptr);
   return gwd;
 }
 
 void Fl_Gl_Window_Driver::invalidate() {
-  if (pWindow->overlay) {
-    ((Fl_Gl_Window*)pWindow->overlay)->valid(0);
-    ((Fl_Gl_Window*)pWindow->overlay)->context_valid(0);
+  if (pWindow->overlay != nullptr) {
+    static_cast<Fl_Gl_Window*>(pWindow->overlay)->valid(0U);
+    static_cast<Fl_Gl_Window*>(pWindow->overlay)->context_valid(0U);
   }
 }
 
 
-char Fl_Gl_Window_Driver::swap_type() {return UNDEFINED;}
+char Fl_Gl_Window_Driver::swap_type() { return static_cast<char>(UNDEFINED); }
 
 
 void* Fl_Gl_Window_Driver::GetProcAddress(const char *procName) {
 #if defined(HAVE_GLXGETPROCADDRESSARB)
-  return (void*)glXGetProcAddressARB((const GLubyte *)procName);
+  return reinterpret_cast<void*>(glXGetProcAddressARB(reinterpret_cast<const GLubyte *>(procName)));
 
 #elif (HAVE_DLSYM && HAVE_DLFCN_H)
 #  ifdef RTLD_DEFAULT
       void *rtld_default = RTLD_DEFAULT;
 #  else
-      static void *rtld_default = dlopen(0, RTLD_LAZY);
+      static void *rtld_default = dlopen(nullptr, RTLD_LAZY);
 #  endif
-  char symbol[1024];
+  char symbol[1024] = {0};
   snprintf(symbol, sizeof(symbol), "_%s", procName);
   return dlsym(rtld_default, symbol);
 
 #endif // HAVE_DLSYM
-  return NULL;
+  return nullptr;
 }
 
 Fl_Font_Descriptor** Fl_Gl_Window_Driver::fontnum_to_fontdescriptor(int fnum) {
@@ -589,7 +610,7 @@ Fl_Font_Descriptor** Fl_Gl_Window_Driver::fontnum_to_fontdescriptor(int fnum) {
  */
 Fl_RGB_Image* Fl_Gl_Window_Driver::capture_gl_rectangle(int x, int y, int w, int h)
 {
-  Fl_Gl_Window *glw = pWindow;
+  Fl_Gl_Window * const glw = pWindow;
   glw->flush(); // forces a GL redraw, necessary for the glpuzzle demo
   // Read OpenGL context pixels directly.
   // For extra safety, save & restore OpenGL states that are changed
@@ -599,30 +620,37 @@ Fl_RGB_Image* Fl_Gl_Window_Driver::capture_gl_rectangle(int x, int y, int w, int
   glPixelStorei(GL_PACK_SKIP_ROWS, 0);
   glPixelStorei(GL_PACK_SKIP_PIXELS, 0);
   //
-  float s = glw->pixels_per_unit();
-  if (s != 1) {
-    x = int(x * s); y = int(y * s); w = int(w * s); h = int(h * s);
+  const float s = glw->pixels_per_unit();
+  int rx = x;
+  int ry = y;
+  int rw = w;
+  int rh = h;
+  if (s != 1.0F) {
+    rx = static_cast<int>(static_cast<float>(x) * s);
+    ry = static_cast<int>(static_cast<float>(y) * s);
+    rw = static_cast<int>(static_cast<float>(w) * s);
+    rh = static_cast<int>(static_cast<float>(h) * s);
   }
   // Read a block of pixels from the frame buffer
-  int mByteWidth = w * 3;
+  int mByteWidth = rw * 3;
   mByteWidth = (mByteWidth + 3) & ~3;    // Align to 4 bytes
-  uchar *baseAddress = new uchar[mByteWidth * h];
-  glReadPixels(x, glw->pixel_h() - (y+h), w, h,
+  unsigned char * const baseAddress = new unsigned char[static_cast<size_t>(mByteWidth) * static_cast<size_t>(rh)];
+  glReadPixels(rx, glw->pixel_h() - (ry + rh), rw, rh,
                GL_RGB, GL_UNSIGNED_BYTE,
                baseAddress);
   glPopClientAttrib();
   // GL gives a bottom-to-top image, convert it to top-to-bottom
-  uchar *tmp = new uchar[mByteWidth];
-  uchar *p = baseAddress ;
-  uchar *q = baseAddress + (h-1)*mByteWidth;
-  for (int i = 0; i < h/2; i++, p += mByteWidth, q -= mByteWidth) {
-    memcpy(tmp, p, mByteWidth);
-    memcpy(p, q, mByteWidth);
-    memcpy(q, tmp, mByteWidth);
+  unsigned char * const tmp = new unsigned char[static_cast<size_t>(mByteWidth)];
+  unsigned char *p = baseAddress;
+  unsigned char *q = baseAddress + (static_cast<size_t>(rh) - 1U) * static_cast<size_t>(mByteWidth);
+  for (int i = 0; i < (rh / 2); i++, p += mByteWidth, q -= mByteWidth) {
+    (void)memcpy(tmp, p, static_cast<size_t>(mByteWidth));
+    (void)memcpy(p, q, static_cast<size_t>(mByteWidth));
+    (void)memcpy(q, tmp, static_cast<size_t>(mByteWidth));
   }
   delete[] tmp;
 
-  Fl_RGB_Image *img = new Fl_RGB_Image(baseAddress, w, h, 3, mByteWidth);
+  Fl_RGB_Image * const img = new Fl_RGB_Image(baseAddress, rw, rh, 3, mByteWidth);
   img->alloc_array = 1;
   return img;
 }
