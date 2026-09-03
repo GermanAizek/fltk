@@ -121,8 +121,8 @@ private:
   class Impl;
   std::unique_ptr<Impl> impl_;          ///< Pointer to the implementation details
 
-  Fl_Scrollbar  scrollbar_;             ///< Vertical scrollbar for document
-  Fl_Scrollbar  hscrollbar_;            ///< Horizontal scrollbar
+  Fl_Scrollbar  *scrollbar_;            ///< Vertical scrollbar for document
+  Fl_Scrollbar  *hscrollbar_;           ///< Horizontal scrollbar
 
 protected:
 
@@ -182,9 +182,9 @@ public:
   int scrollbar_size() const;
   void scrollbar_size(int newSize) const;
   /// Return pointer to vertical scrollbar
-  Fl_Scrollbar  *scrollbar() { return &scrollbar_; }
+  Fl_Scrollbar  *scrollbar() { return scrollbar_; }
   /// Return pointer to horizontal scrollbar
-  Fl_Scrollbar  *hscrollbar() { return &hscrollbar_; }
+  Fl_Scrollbar  *hscrollbar() { return hscrollbar_; }
 
 };
 

@@ -47,10 +47,10 @@ void Fl_Bitmap::draw(int XP, int YP, int WP, int HP, int cx, int cy) {
 Fl_Bitmap::Fl_Bitmap(const uchar *bits, int bits_length, int W, int H) :
   Fl_Image(W,H,0),
   array((const uchar *)bits),
-  alloc_array(0),
   id_(0),
   cache_w_(0),
-  cache_h_(0)
+  cache_h_(0),
+  alloc_array(false)
 {
   int rowBytes = (W+7)>>3;
   int min_length = rowBytes * H;
@@ -78,10 +78,10 @@ Fl_Bitmap::Fl_Bitmap(const uchar *bits, int bits_length, int W, int H) :
 Fl_Bitmap::Fl_Bitmap(const char *bits, int bits_length, int W, int H) :
   Fl_Image(W,H,0),
   array((const uchar *)bits),
-  alloc_array(0),
   id_(0),
   cache_w_(0),
-  cache_h_(0)
+  cache_h_(0),
+  alloc_array(false)
 {
   int rowBytes = (W+7)>>3;
   int min_length = rowBytes * H;

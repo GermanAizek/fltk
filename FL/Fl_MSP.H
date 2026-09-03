@@ -58,7 +58,7 @@ private:
 
   Fl_MSP_Callback msp_cb_;
   void* msp_user_data_;
-  uint8_t payload_buffer_[256]; // Max MSP V1 payload size is 255
+  uint8_t* payload_buffer_;
   State state_;
   uint8_t payload_size_;
   uint8_t cmd_;

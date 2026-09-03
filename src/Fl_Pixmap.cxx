@@ -208,7 +208,7 @@ void Fl_Pixmap::copy_data() {
   }
 
   data(new_data, total_rows);
-  alloc_data = 1;
+  alloc_data = true;
 }
 
 Fl_Image *Fl_Pixmap::copy(const int W, const int H) const {
@@ -308,7 +308,7 @@ Fl_Image *Fl_Pixmap::copy(const int W, const int H) const {
   }
 
   auto* new_image = new Fl_Pixmap(new_data);
-  new_image->alloc_data = 1;
+  new_image->alloc_data = true;
 
   delete[] x_offset;
   return new_image;

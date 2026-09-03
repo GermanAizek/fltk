@@ -1655,41 +1655,41 @@ void Fl_Help_View::Impl::format() {
   int dh = Fl::box_dh(b);
 
   if (hsize_ > (view.w() - dw)) {
-    view.hscrollbar_.show();
+    view.hscrollbar_->show();
 
     dh += ss;
 
     if (size_ < (view.h() - dh)) {
-      view.scrollbar_.hide();
-      view.hscrollbar_.resize(view.x() + Fl::box_dx(b), view.y() + view.h() - ss - dy,
+      view.scrollbar_->hide();
+      view.hscrollbar_->resize(view.x() + Fl::box_dx(b), view.y() + view.h() - ss - dy,
                          view.w() - Fl::box_dw(b), ss);
     } else {
-      view.scrollbar_.show();
-      view.scrollbar_.resize(view.x() +view. w() - ss - dx, view.y() + Fl::box_dy(b),
+      view.scrollbar_->show();
+      view.scrollbar_->resize(view.x() +view. w() - ss - dx, view.y() + Fl::box_dy(b),
                         ss, view.h() - ss - Fl::box_dh(b));
-      view.hscrollbar_.resize(view.x() + Fl::box_dx(b), view.y() + view.h() - ss - dy,
+      view.hscrollbar_->resize(view.x() + Fl::box_dx(b), view.y() + view.h() - ss - dy,
                          view.w() - ss - Fl::box_dw(b), ss);
     }
   } else {
-    view.hscrollbar_.hide();
+    view.hscrollbar_->hide();
 
-    if (size_ < (view.h() - dh)) view.scrollbar_.hide();
+    if (size_ < (view.h() - dh)) view.scrollbar_->hide();
     else {
-      view.scrollbar_.resize(view.x() + view.w() - ss - dx, view.y() + Fl::box_dy(b),
+      view.scrollbar_->resize(view.x() + view.w() - ss - dx, view.y() + Fl::box_dy(b),
                         ss, view.h() - Fl::box_dh(b));
-      view.scrollbar_.show();
+      view.scrollbar_->show();
     }
   }
 
   // Reset scrolling if it needs to be...
-  if (view.scrollbar_.visible()) {
+  if (view.scrollbar_->visible()) {
     int temph = view.h() - Fl::box_dh(b);
-    if (view.hscrollbar_.visible()) temph -= ss;
+    if (view.hscrollbar_->visible()) temph -= ss;
     if ((topline_ + temph) > size_) topline(size_ - temph);
     else topline(topline_);
   } else topline(0);
 
-  if (view.hscrollbar_.visible()) {
+  if (view.hscrollbar_->visible()) {
     int tempw = view.w() - ss - Fl::box_dw(b);
     if ((leftline_ + tempw) > hsize_) leftline(hsize_ - tempw);
     else leftline(leftline_);
@@ -2629,27 +2629,27 @@ void Fl_Help_View::Impl::draw()
 
   view.draw_box(b, view.x(), view.y(), ww, hh, bgcolor_);
 
-  if ( view.hscrollbar_.visible() || view.scrollbar_.visible() ) {
+  if ( view.hscrollbar_->visible() || view.scrollbar_->visible() ) {
     int scrollsize = scrollbar_size_ ? scrollbar_size_ : Fl::scrollbar_size();
-    int hor_vis = view.hscrollbar_.visible();
-    int ver_vis = view.scrollbar_.visible();
+    int hor_vis = view.hscrollbar_->visible();
+    int ver_vis = view.scrollbar_->visible();
     // Scrollbar corner
     int scorn_x = view.x() + ww - (ver_vis?scrollsize:0) - Fl::box_dw(b) + Fl::box_dx(b);
     int scorn_y = view.y() + hh - (hor_vis?scrollsize:0) - Fl::box_dh(b) + Fl::box_dy(b);
     if ( hor_vis ) {
-      if ( view.hscrollbar_.h() != scrollsize ) {            // scrollsize changed?
-        view.hscrollbar_.resize(view.x(), scorn_y, scorn_x - view.x(), scrollsize);
+      if ( view.hscrollbar_->h() != scrollsize ) {            // scrollsize changed?
+        view.hscrollbar_->resize(view.x(), scorn_y, scorn_x - view.x(), scrollsize);
         view.init_sizes();
       }
-      view.draw_child(view.hscrollbar_);
+      view.draw_child(*view.hscrollbar_);
       hh -= scrollsize;
     }
     if ( ver_vis ) {
-      if ( view.scrollbar_.w() != scrollsize ) {             // scrollsize changed?
-        view.scrollbar_.resize(scorn_x, view.y(), scrollsize, scorn_y - view.y());
+      if ( view.scrollbar_->w() != scrollsize ) {             // scrollsize changed?
+        view.scrollbar_->resize(scorn_x, view.y(), scrollsize, scorn_y - view.y());
         view.init_sizes();
       }
-      view.draw_child(view.scrollbar_);
+      view.draw_child(*view.scrollbar_);
       ww -= scrollsize;
     }
     if ( hor_vis && ver_vis ) {
@@ -3163,24 +3163,25 @@ void Fl_Help_View::Impl::draw()
 */
 Fl_Help_View::Fl_Help_View(int xx, int yy, int ww, int hh, const char *l)
 : Fl_Group(xx, yy, ww, hh, l),
-  impl_(new Fl_Help_View::Impl(this)),
-  scrollbar_(xx + ww - Fl::scrollbar_size(), yy, Fl::scrollbar_size(), hh - Fl::scrollbar_size()),
-  hscrollbar_(xx, yy + hh - Fl::scrollbar_size(), ww - Fl::scrollbar_size(), Fl::scrollbar_size())
+  impl_(new Fl_Help_View::Impl(this))
 {
   color(FL_BACKGROUND2_COLOR, FL_SELECTION_COLOR);
 
-  scrollbar_.value(0, hh, 0, 1);
-  scrollbar_.step(8.0);
-  scrollbar_.show();
-  scrollbar_.callback( [](Fl_Widget *s, void *u) {
+  scrollbar_ = new Fl_Scrollbar(xx + ww - Fl::scrollbar_size(), yy, Fl::scrollbar_size(), hh - Fl::scrollbar_size());
+  hscrollbar_ = new Fl_Scrollbar(xx, yy + hh - Fl::scrollbar_size(), ww - Fl::scrollbar_size(), Fl::scrollbar_size());
+
+  scrollbar_->value(0, hh, 0, 1);
+  scrollbar_->step(8.0);
+  scrollbar_->show();
+  scrollbar_->callback( [](Fl_Widget *s, void *u) {
       ((Fl_Help_View*)u)->topline((int)(((Fl_Scrollbar*)s)->value()));
     }, this );
 
-  hscrollbar_.value(0, ww, 0, 1);
-  hscrollbar_.step(8.0);
-  hscrollbar_.show();
-  hscrollbar_.type(FL_HORIZONTAL);
-  hscrollbar_.callback( [](Fl_Widget *s, void *u) {
+  hscrollbar_->value(0, ww, 0, 1);
+  hscrollbar_->step(8.0);
+  hscrollbar_->show();
+  hscrollbar_->type(FL_HORIZONTAL);
+  hscrollbar_->callback( [](Fl_Widget *s, void *u) {
       ((Fl_Help_View*)u)->leftline(int(((Fl_Scrollbar*)s)->value()));
     }, this );
 
@@ -3357,9 +3358,9 @@ void Fl_Help_View::Impl::resize(int xx, int yy, int ww, int hh)
   view.Fl_Widget::resize(xx, yy, ww, hh);
 
   int scrollsize = scrollbar_size_ ? scrollbar_size_ : Fl::scrollbar_size();
-  view.scrollbar_.resize(view.x() + view.w() - scrollsize - Fl::box_dw(b) + Fl::box_dx(b),
+  view.scrollbar_->resize(view.x() + view.w() - scrollsize - Fl::box_dw(b) + Fl::box_dx(b),
                     view.y() + Fl::box_dy(b), scrollsize, view.h() - scrollsize - Fl::box_dh(b));
-  view.hscrollbar_.resize(view.x() + Fl::box_dx(b),
+  view.hscrollbar_->resize(view.x() + Fl::box_dx(b),
                      view.y() + view.h() - scrollsize - Fl::box_dh(b) + Fl::box_dy(b),
                      view.w() - scrollsize - Fl::box_dw(b), scrollsize);
   format();
@@ -3855,7 +3856,7 @@ void Fl_Help_View::Impl::topline(int top)
 
   topline_ = top;
 
-  view.scrollbar_.value(topline_, view.h() - scrollsize, 0, size_);
+  view.scrollbar_->value(topline_, view.h() - scrollsize, 0, size_);
 
   view.do_callback(FL_REASON_DRAGGED);
 
@@ -3892,7 +3893,7 @@ void Fl_Help_View::Impl::leftline(int left)
 
   leftline_ = left;
 
-  view.hscrollbar_.value(leftline_, view.w() - scrollsize, 0, hsize_);
+  view.hscrollbar_->value(leftline_, view.w() - scrollsize, 0, hsize_);
 
   view.redraw();
 }

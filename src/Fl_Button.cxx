@@ -393,7 +393,6 @@ void Fl_Button::key_release_timeout(void *d)
  */
 Fl_Button::Fl_Button(int X, int Y, int W, int H, const char *L)
 : Fl_Widget(X, Y, W, H, L),
-shortcut_(0),
 value_(0),
 oldval(0),
 down_box_(static_cast<uchar>(FL_NO_BOX)),
@@ -449,6 +448,11 @@ Fl_Toggle_Button::Fl_Toggle_Button(int X, int Y, int W, int H, const char *L)
  \param[in] v switch compact mode on (1) or off (0)
  */
 void Fl_Button::compact(uchar v) { compact_ = v; }
+
+void Fl_Button::shortcut(int s) {
+  if (s != 0 && !ext_) alloc_ext();
+  if (ext_) ext_->shortcut_ = s;
+}
 
 /// (for backwards compatibility)
 void Fl_Button::shortcut(const char *s) {shortcut(fl_old_shortcut(s));}

@@ -66,8 +66,11 @@ public:
   static const int ERR_MEMORY_ACCESS  = -4;
 
 private:
-  int w_, h_, d_, ld_, count_;
+  int w_, h_;
   int data_w_, data_h_;
+  int ld_;
+  short count_;
+  uchar d_;
   const char * const *data_;
   static Fl_RGB_Scaling RGB_scaling_; // method used when copying RGB images
   static Fl_RGB_Scaling scaling_algorithm_; // method used to rescale RGB source images before drawing
@@ -94,7 +97,7 @@ protected:
   /**
    Sets the current image depth.
    */
-  void d(int D) {d_ = D;}
+  void d(int D) {d_ = static_cast<uchar>(D);}
   /**
     Sets the current line data size in bytes.
 
@@ -114,7 +117,7 @@ protected:
 
    \see const char* const* data(), count(), w(), h(), data_w(), data_h(), d(), ld()
   */
-  void data(const char * const *p, int c) {data_ = p; count_ = c;}
+  void data(const char * const *p, int c) {data_ = p; count_ = static_cast<short>(c);}
   void draw_empty(int X, int Y) const;
 
   static void labeltype(const Fl_Label *lo, int lx, int ly, int lw, int lh, Fl_Align la);

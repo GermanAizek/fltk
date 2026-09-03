@@ -12,13 +12,13 @@
 #include <string.h>
 
 Fl_ARINC825::Fl_ARINC825()
-  : arinc825_cb_(nullptr), user_data_(nullptr), buf_idx_(0) {
+  : arinc825_cb_(nullptr), user_data_(nullptr), buf_idx_(0), buffer_(nullptr) {
   memset(&last_msg_, 0, sizeof(last_msg_));
-  memset(buffer_, 0, sizeof(buffer_));
   Fl_Serial_Port::callback(serial_cb, this);
 }
 
 Fl_ARINC825::~Fl_ARINC825() {
+  delete[] buffer_;
 }
 
 int Fl_ARINC825::open(const char* port_name) {
@@ -49,6 +49,7 @@ void Fl_ARINC825::serial_cb(Fl_Serial_Port* p, void* data) {
 void Fl_ARINC825::process_byte(uint8_t b) {
   // SLCAN / binary CAN framing (start byte 0xAA)
   if (buf_idx_ == 0 && b != 0xAA) return;
+  if (!buffer_) buffer_ = new uint8_t[128];
   buffer_[buf_idx_++] = b;
 
   if (buf_idx_ >= 6) {

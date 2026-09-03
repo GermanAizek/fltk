@@ -39,8 +39,6 @@
 */
 class FL_EXPORT Fl_Wizard : public Fl_Group {
 
-  Fl_Widget *value_;
-
 protected:
 
   void draw() override;

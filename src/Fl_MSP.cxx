@@ -19,15 +19,15 @@
 #include <string.h>
 
 Fl_MSP::Fl_MSP() : msp_cb_(nullptr), msp_user_data_(nullptr),
+                   payload_buffer_(nullptr),
                    state_(WAIT_HEADER_1), payload_size_(0), cmd_(0), 
                    current_checksum_(0), buf_idx_(0) {
-  memset(payload_buffer_, 0, sizeof(payload_buffer_));
-  
   // Register the internal serial callback
   Fl_Serial_Port::callback(serial_cb, this);
 }
 
 Fl_MSP::~Fl_MSP() {
+  delete[] payload_buffer_;
 }
 
 int Fl_MSP::open(const char* port_name) {
@@ -95,6 +95,9 @@ void Fl_MSP::process_byte(uint8_t b) {
       current_checksum_ ^= b;
       buf_idx_ = 0;
       if (payload_size_ > 0) {
+        if (!payload_buffer_) {
+          payload_buffer_ = new uint8_t[256];
+        }
         state_ = WAIT_PAYLOAD;
       } else {
         state_ = WAIT_CHECKSUM;
@@ -102,7 +105,9 @@ void Fl_MSP::process_byte(uint8_t b) {
       break;
       
     case WAIT_PAYLOAD:
-      payload_buffer_[buf_idx_++] = b;
+      if (payload_buffer_) {
+        payload_buffer_[buf_idx_++] = b;
+      }
       current_checksum_ ^= b;
       if (buf_idx_ >= payload_size_) {
         state_ = WAIT_CHECKSUM;

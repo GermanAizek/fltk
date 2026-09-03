@@ -42,10 +42,6 @@ class FL_EXPORT Fl_Pixmap : public Fl_Image {
 protected:
   void measure();
 
-public:
-
-  int alloc_data; // Non-zero if data was allocated
-
 private:
   // for internal use
   fl_uintptr_t id_;
@@ -54,14 +50,16 @@ private:
 
 public:
 
+  bool alloc_data; // Non-zero if data was allocated
+
   /**    The constructors create a new pixmap from the specified XPM data.  */
-  explicit Fl_Pixmap(char * const * D) : Fl_Image(-1,0,1), alloc_data(0), id_(0), mask_(0) {set_data((const char*const*)D); measure();}
+  explicit Fl_Pixmap(char * const * D) : Fl_Image(-1,0,1), id_(0), mask_(0), cache_w_(0), cache_h_(0), alloc_data(false) {set_data((const char*const*)D); measure();}
   /**    The constructors create a new pixmap from the specified XPM data.  */
-  explicit Fl_Pixmap(uchar* const * D) : Fl_Image(-1,0,1), alloc_data(0), id_(0), mask_(0) {set_data((const char*const*)D); measure();}
+  explicit Fl_Pixmap(uchar* const * D) : Fl_Image(-1,0,1), id_(0), mask_(0), cache_w_(0), cache_h_(0), alloc_data(false) {set_data((const char*const*)D); measure();}
   /**    The constructors create a new pixmap from the specified XPM data.  */
-  explicit Fl_Pixmap(const char * const * D) : Fl_Image(-1,0,1), alloc_data(0), id_(0), mask_(0) {set_data((const char*const*)D); measure();}
+  explicit Fl_Pixmap(const char * const * D) : Fl_Image(-1,0,1), id_(0), mask_(0), cache_w_(0), cache_h_(0), alloc_data(false) {set_data((const char*const*)D); measure();}
   /**    The constructors create a new pixmap from the specified XPM data.  */
-  explicit Fl_Pixmap(const uchar* const * D) : Fl_Image(-1,0,1), alloc_data(0), id_(0), mask_(0) {set_data((const char*const*)D); measure();}
+  explicit Fl_Pixmap(const uchar* const * D) : Fl_Image(-1,0,1), id_(0), mask_(0), cache_w_(0), cache_h_(0), alloc_data(false) {set_data((const char*const*)D); measure();}
   virtual ~Fl_Pixmap();
   Fl_Image *copy(int W, int H) const override;
   Fl_Image *copy() const { return Fl_Image::copy(); }

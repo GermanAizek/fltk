@@ -97,10 +97,10 @@ public:
   int fullscreen_screen_bottom() const;
   int fullscreen_screen_left() const;
   int fullscreen_screen_right() const;
-  int* no_fullscreen_x() const { return &pWindow->no_fullscreen_x; }
-  int* no_fullscreen_y() const { return &pWindow->no_fullscreen_y; }
-  int* no_fullscreen_w() const { return &pWindow->no_fullscreen_w; }
-  int* no_fullscreen_h() const { return &pWindow->no_fullscreen_h; }
+  int* no_fullscreen_x() const { return &pWindow->ensure_ext()->no_fullscreen_x; }
+  int* no_fullscreen_y() const { return &pWindow->ensure_ext()->no_fullscreen_y; }
+  int* no_fullscreen_w() const { return &pWindow->ensure_ext()->no_fullscreen_w; }
+  int* no_fullscreen_h() const { return &pWindow->ensure_ext()->no_fullscreen_h; }
   int force_position() const;
   void force_position(int c) const;
   void x(int X) const;
@@ -109,7 +109,7 @@ public:
   static char show_iconic() { return Fl_Window::show_next_window_iconic(); }
   static void show_iconic(char c) { Fl_Window::show_next_window_iconic(c); }
   void flx(Fl_X *x) const { pWindow->flx_ = x; }
-  Fl_Cursor cursor_default() const { return pWindow->cursor_default; }
+  Fl_Cursor cursor_default() const { return pWindow->cursor_default(); }
   void destroy_double_buffer();
   /** for an Fl_Overlay_Window, returns the value of its overlay_ member variable */
   Fl_Window *overlay() const {

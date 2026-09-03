@@ -51,8 +51,9 @@ void Fl_Value_Input::resize(int X, int Y, int W, int H) {
 }
 
 void Fl_Value_Input::value_damage() {
-  std::string buf = format_str();
-  input.value(buf.c_str());
+  char buf[128];
+  format(buf);
+  input.value(buf);
   input.mark(input.insert_position()); // turn off selection highlight
 }
 

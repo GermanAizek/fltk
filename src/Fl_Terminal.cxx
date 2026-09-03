@@ -37,6 +37,29 @@
 #include <FL/fl_draw.H>
 #include <FL/fl_string_functions.h>
 
+#define error_char_ (impl_->error_char_)
+#define current_style_ (impl_->current_style_)
+#define tabstops_ (impl_->tabstops_)
+#define ring_ (impl_->ring_)
+#define select_ (impl_->select_)
+#define escseq (impl_->escseq)
+#define cursor_ (impl_->cursor_)
+#define margin_ (impl_->margin_)
+#define scrn_ (impl_->scrn_)
+#define pub_ (impl_->pub_)
+#define hscrollbar_style_ (impl_->hscrollbar_style_)
+#define oflags_ (impl_->oflags_)
+#define redraw_style_ (impl_->redraw_style_)
+#define scrollbar_size_ (impl_->scrollbar_size_)
+#define autoscroll_dir_ (impl_->autoscroll_dir_)
+#define autoscroll_amt_ (impl_->autoscroll_amt_)
+#define redraw_rate_ (impl_->redraw_rate_)
+#define fontsize_defer_ (impl_->fontsize_defer_)
+#define show_unknown_ (impl_->show_unknown_)
+#define ansi_ (impl_->ansi_)
+#define redraw_modified_ (impl_->redraw_modified_)
+#define redraw_timer_ (impl_->redraw_timer_)
+
 /////////////////////////////////
 ////// Static Functions /////////
 /////////////////////////////////
@@ -534,21 +557,6 @@ void Fl_Terminal::Cursor::scroll(int nrows) {
 ///// Utf8Char Class Methods ////////
 /////////////////////////////////////
 
-// Ctor
-Fl_Terminal::Utf8Char::Utf8Char(void)
-  : fgcolor_(0xffffff00),
-    bgcolor_(0xffffffff),
-    len_(1),
-    attrib_(0),
-    charflags_(0),
-    pad_(0)
-{
-  text_[0] = ' ';
-  text_[1] = 0;
-  text_[2] = 0;
-  text_[3] = 0;
-}
-
 // Set 'text_' to valid UTF-8 string 'text'.
 //
 // text_ must not be NULL, and len must be in range: 1 <= len <= max_utf8().
@@ -705,6 +713,10 @@ void Fl_Terminal::RingBuffer::offset_adjust(int rows) {
 //
 void Fl_Terminal::RingBuffer::new_copy(int drows, int dcols, int hrows, const CharStyle& style) {
   (void)style;                                              // currently unused - need parameterized ctor (†)
+  if (!ring_chars_) {
+    create(drows, dcols, hrows);
+    return;
+  }
   // Create new buffer
   int addhist       = disp_rows() - drows;                  // adjust history use
   int new_ring_rows = (drows+hrows);
@@ -802,6 +814,7 @@ bool Fl_Terminal::RingBuffer::is_disp_ring_row(int grow) const {
 
 // Move display row from src_row to dst_row
 void Fl_Terminal::RingBuffer::move_disp_row(int src_row, int dst_row) {
+  if (!ring_chars_) return;
   Utf8Char *src = u8c_disp_row(src_row);
   Utf8Char *dst = u8c_disp_row(dst_row);
   memmove(dst, src, disp_cols() * sizeof(Utf8Char));
@@ -809,6 +822,7 @@ void Fl_Terminal::RingBuffer::move_disp_row(int src_row, int dst_row) {
 
 // Clear the display rows 'sdrow' thru 'edrow' inclusive using specified CharStyle 'style'
 void Fl_Terminal::RingBuffer::clear_disp_rows(int sdrow, int edrow, const CharStyle& style) {
+  if (!ring_chars_) return;
   for (int drow=sdrow; drow<=edrow; drow++) {
     int row = hist_rows_ + drow + offset_;
     Utf8Char *u8c = u8c_ring_row(row);
@@ -822,6 +836,8 @@ void Fl_Terminal::RingBuffer::clear_disp_rows(int sdrow, int edrow, const CharSt
 //   > Negative rows scroll "down", clears top line(s), history unaffected
 //
 void Fl_Terminal::RingBuffer::scroll(int rows, const CharStyle& style) {
+  if (!ring_chars_ && hist_use_ == 0) return;
+  ensure_ring();
   if (rows > 0) {
     // Scroll up into history
     //   Example: scroll(2):
@@ -893,7 +909,14 @@ void Fl_Terminal::RingBuffer::scroll(int rows, const CharStyle& style) {
 //     ..
 //   }
 //
+void Fl_Terminal::RingBuffer::ensure_ring(void) const {
+  if (!ring_chars_ && nchars_ > 0) {
+    const_cast<RingBuffer*>(this)->ring_chars_ = new Utf8Char[nchars_];
+  }
+}
+
 const Fl_Terminal::Utf8Char* Fl_Terminal::RingBuffer::u8c_ring_row(int row) const {
+  ensure_ring();
   row = normalize(row, ring_rows());
   assert(row >= 0 && row < ring_rows_);
   return &ring_chars_[row * ring_cols()];
@@ -908,6 +931,7 @@ const Fl_Terminal::Utf8Char* Fl_Terminal::RingBuffer::u8c_ring_row(int row) cons
 //     }
 //
 const Fl_Terminal::Utf8Char* Fl_Terminal::RingBuffer::u8c_hist_row(int hrow) const {
+  ensure_ring();
   int rowi = normalize(hrow, hist_rows());
   rowi = (rowi + offset_) % ring_rows_;
   assert(rowi >= 0 && rowi <= ring_rows_);
@@ -924,6 +948,7 @@ const Fl_Terminal::Utf8Char* Fl_Terminal::RingBuffer::u8c_hist_row(int hrow) con
 //
 const Fl_Terminal::Utf8Char* Fl_Terminal::RingBuffer::u8c_hist_use_row(int hurow) const {
   if (hist_use_ == 0) return 0;             // history is empty! (caller is dumb to ask)
+  ensure_ring();
   hurow = hurow % hist_use_;                // normalize indexing within history in use
   hurow = hist_rows_ - hist_use_ + hurow;   // index hist_use rows from end history
   hurow = (hurow + offset_) % ring_rows_;   // convert to absolute index in ring_chars_[]
@@ -940,6 +965,7 @@ const Fl_Terminal::Utf8Char* Fl_Terminal::RingBuffer::u8c_hist_use_row(int hurow
 //     }
 //
 const Fl_Terminal::Utf8Char* Fl_Terminal::RingBuffer::u8c_disp_row(int drow) const {
+  ensure_ring();
   int rowi = normalize(drow, disp_rows());
   rowi = (hist_rows_ + rowi + offset_) % ring_rows_; // display starts at end of history
   assert(rowi >= 0 && rowi <= ring_rows_);
@@ -993,7 +1019,7 @@ void Fl_Terminal::RingBuffer::create(int drows, int dcols, int hrows) {
   ring_rows_  = hist_rows_ + disp_rows_;
   ring_cols_  = dcols;
   nchars_     = ring_rows_ * ring_cols_;
-  ring_chars_ = new Utf8Char[nchars_];
+  ring_chars_ = 0;
 }
 
 // Resize the buffer, preserve previous contents as much as possible
@@ -2563,8 +2589,10 @@ void Fl_Terminal::handle_lf(void) {
 
 // Handle '\e' escape character.
 void Fl_Terminal::handle_esc(void) {
-  if (!ansi_ || !escseq)                       // not in ansi mode?
+  if (!ansi_)                                  // not in ansi mode?
     { handle_unknown_char(); return; }         //   ..show unknown char, early exit
+  if (!escseq)
+    { escseq = new EscapeSeq(); }
   if (escseq->esc_mode() == 0x1b)              // already in esc mode?
     { handle_unknown_char(); }                 //   ..show 1st esc as unknown char, parse 2nd
   if (escseq->parse(0x1b) == EscapeSeq::fail)  // parse esc
@@ -3374,7 +3402,7 @@ void Fl_Terminal::redraw_timer_cb(void *udata) {
 */
 Fl_Terminal::Fl_Terminal(int X,int Y,int W,int H,const char*L)
   : Fl_Group(X,Y,W,H,L),
-    select_(this)
+    impl_(new Impl(this))
 {
   bool fontsize_defer = false;
   init_(X,Y,W,H,L,-1,-1,100,fontsize_defer);
@@ -3393,7 +3421,7 @@ Fl_Terminal::Fl_Terminal(int X,int Y,int W,int H,const char*L)
 */
 Fl_Terminal::Fl_Terminal(int X,int Y,int W,int H,const char*L,int rows,int cols,int hist)
   : Fl_Group(X,Y,W,H,L),
-    select_(this)
+    impl_(new Impl(this))
 {
   bool fontsize_defer = true;
   init_(X,Y,W,H,L,rows,cols,hist,fontsize_defer);
@@ -3453,11 +3481,12 @@ void Fl_Terminal::init_(int X,int Y,int W,int H,const char*L,int rows,int cols,i
   clip_children(1);           // clips scrollbars within box()
   Fl_Group::color(FL_BLACK);  // black bg by default
   update_screen(true);        // update internal vars after setting screen size/font
-  clear_screen_home();        // clear screen, home cursor
-  clear_history();            // clear history buffer
+  cursor_home();
+  clear_mouse_selection();
+  clear_history();
   show_unknown_ = false;      // default "off"
   ansi_ = true;               // default "on"
-  escseq = new EscapeSeq();
+  escseq = nullptr;
   // End group
   end();
 }
@@ -3474,6 +3503,7 @@ Fl_Terminal::~Fl_Terminal(void) {
     { Fl::remove_timeout(autoscroll_timer_cb, this); autoscroll_dir_ = 0; }
   if (redraw_timer_)
     { Fl::remove_timeout(redraw_timer_cb, this); redraw_timer_ = false; }
+  delete impl_;
 }
 
 /**

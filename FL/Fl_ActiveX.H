@@ -28,8 +28,7 @@
 */
 class FL_EXPORT Fl_ActiveX : public Fl_Widget {
 protected:
-  void *control_ptr_; 
-  char *control_name_;
+  void *control_ptr_;
 
   void draw() FL_OVERRIDE;
 public:
@@ -47,7 +46,7 @@ public:
   /**
    * Get the current control name.
    */
-  const char *control() const { return control_name_; }
+  const char *control() const { return label(); }
 
   /**
    * Clear the control.

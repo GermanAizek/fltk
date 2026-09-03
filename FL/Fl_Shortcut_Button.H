@@ -21,9 +21,9 @@
 
 class FL_EXPORT Fl_Shortcut_Button : public Fl_Button {
 private:
-  bool hot_, pre_hot_, default_set_, handle_default_button_;
   Fl_Shortcut pre_esc_;
-  Fl_Shortcut default_shortcut_;
+  bool hot_;
+  bool pre_hot_;
 protected:
   Fl_Shortcut shortcut_value;
   void do_end_hot_callback();

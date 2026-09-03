@@ -246,18 +246,19 @@ Fl_File_Browser::item_draw(void *p,     // I - List item data
   const int *const columns = column_widths();
   int width = 0;
   int column = 0;
-  const char *start = line_txt;
+  char *start = const_cast<char*>(line_txt);
 
   if (active_r() != 0)
     fl_color(c);
   else
     fl_color(fl_inactive(c));
 
-  for (const char *t = line_txt; *t != '\0'; t++) {
+  for (char *t = start; *t != '\0'; t++) {
     if (*t == '\n') {
-      std::string fragment(start, t - start);
-      fl_draw(fragment.c_str(), X + width, Y, W - width, fl_height(),
+      *t = '\0';
+      fl_draw(start, X + width, Y, W - width, fl_height(),
               static_cast<Fl_Align>(FL_ALIGN_LEFT | FL_ALIGN_CLIP));
+      *t = '\n';
 
       // Point back to the start of the fragment...
       start  = t + 1;
@@ -265,7 +266,6 @@ Fl_File_Browser::item_draw(void *p,     // I - List item data
       Y      += fl_height();
       column = 0;
     } else if (*t == column_char()) {
-      std::string fragment(start, t - start);
       int cW = W - width; // Clip width...
 
       if (columns != nullptr) {
@@ -277,8 +277,10 @@ Fl_File_Browser::item_draw(void *p,     // I - List item data
           cW = columns[i];
       }
 
-      fl_draw(fragment.c_str(), X + width, Y, cW, fl_height(),
+      *t = '\0';
+      fl_draw(start, X + width, Y, cW, fl_height(),
               static_cast<Fl_Align>(FL_ALIGN_LEFT | FL_ALIGN_CLIP));
+      *t = column_char();
 
       // Advance to the next column...
       column++;

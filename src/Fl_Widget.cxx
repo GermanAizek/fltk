@@ -324,7 +324,8 @@ void Fl_Widget::alloc_ext() {
   ext_ = new Fl_Widget_Ext();
   ext_->callback_ = default_callback;
   ext_->user_data_ = 0;
-  ext_->selection_color_ = FL_GRAY;
+  ext_->shortcut_ = 0;
+  ext_->selection_color_ = default_selection_color();
   ext_->when_ = FL_WHEN_RELEASE;
 }
 

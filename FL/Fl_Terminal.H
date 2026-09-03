@@ -552,7 +552,15 @@ protected:
     Fl_Color attr_color_(Fl_Color col, const Fl_Widget *grp) const;
   public:
     // Public methods
-    Utf8Char(void);                             // ctor
+    Utf8Char(void)
+      : fgcolor_(0xffffff00),
+        bgcolor_(0xffffffff),
+        text_{' ', 0, 0, 0},
+        len_(1),
+        attrib_(0),
+        charflags_(0),
+        pad_(0)
+    {}
     Utf8Char(const Utf8Char& o) = default;      // copy ctor
     ~Utf8Char(void) = default;                  // dtor
     Utf8Char& operator=(const Utf8Char& o) = default; // assignment
@@ -657,8 +665,9 @@ private:
     inline int  hist_use(void) const        { return hist_use_; }
     inline void hist_use(int val)           { hist_use_ = val; }
     inline int  hist_use_srow(void) const   { return((offset_ + hist_rows_ - hist_use_) % ring_rows_); }
-    inline Utf8Char *ring_chars(void)       { return ring_chars_; }  // access ring buffer directly
-    inline Utf8Char *ring_chars(void) const { return ring_chars_; }  // access ring buffer directly
+    void ensure_ring(void) const;
+    inline Utf8Char *ring_chars(void)       { ensure_ring(); return ring_chars_; }  // access ring buffer directly
+    inline Utf8Char *ring_chars(void) const { ensure_ring(); return ring_chars_; }  // access ring buffer directly
 
     bool is_hist_ring_row(int grow) const;
     bool is_disp_ring_row(int grow) const;
@@ -843,38 +852,40 @@ public:
    */
   Fl_Scrollbar  *hscrollbar;        // horizontal scrollbar
 private:
-  const char    *error_char_;       // utf8 string shown for invalid utf8, bad ANSI, etc
-  mutable CharStyle current_style_; // current font, attrib, color..
-  std::vector<char> tabstops_;      // array of tab stops (0|1)
+  struct Impl {
+    const char    *error_char_ { nullptr };
+    mutable CharStyle current_style_;
+    std::vector<char> tabstops_;
+    RingBuffer     ring_;
+    Selection      select_;
+    EscapeSeq     *escseq { nullptr };
+    Cursor         cursor_;
+    Margin         margin_;
+    Fl_Rect        scrn_;
+    PartialUtf8Buf pub_;
+    ScrollbarStyle hscrollbar_style_ { SCROLLBAR_AUTO };
+    OutFlags       oflags_ { LF_TO_CRLF };
+    RedrawStyle    redraw_style_ { RATE_LIMITED };
+    int            scrollbar_size_ { 0 };
+    int            autoscroll_dir_ { 0 };
+    int            autoscroll_amt_ { 0 };
+    float          redraw_rate_ { 0.10f };
+    bool           fontsize_defer_ { true };
+    bool           show_unknown_ { false };
+    bool           ansi_ { true };
+    bool           redraw_modified_ { false };
+    bool           redraw_timer_ { false };
 
-  // A ring buffer is used for the terminal's history (hist) and display (disp) buffer.
-  //    See README-Fl_Terminal.txt, section "RING BUFFER DESCRIPTION" for diagrams/info.
-  //
-  // Ring buffer
-  RingBuffer     ring_;             // terminal history/display ring buffer
-  Selection      select_;           // mouse selection
-  EscapeSeq     *escseq;            // Escape sequence parsing (ESC[ xterm/vt100)
-
-  Cursor         cursor_;           // terminal cursor (position, color, etc)
-  Margin         margin_;           // terminal margins (top,left,bottom,right)
-  Fl_Rect        scrn_;             // terminal screen xywh inside box(), margins, and scrollbar
-  PartialUtf8Buf pub_;              // handles Partial Utf8 Buffer (pub)
-
-  ScrollbarStyle hscrollbar_style_;
-  OutFlags       oflags_;           // output translation flags (CR_TO_LF, LF_TO_CR, LF_TO_CRLF)
-  RedrawStyle    redraw_style_;     // NO_REDRAW, RATE_LIMITED, PER_WRITE
-
-  int            scrollbar_size_;   // local preference for scrollbar size
-  int            autoscroll_dir_;   // 0=autoscroll timer off, 3=scrolling up, 4=scrolling down
-  int            autoscroll_amt_;   // #pixels above or below edge, used for autoscroll speed
-  float          redraw_rate_;      // maximum redraw rate in seconds, default=0.10
-
-  // Special utf8 symbols
-  bool           fontsize_defer_;   // flag defers font calcs until first draw() (issue 837)
-  bool           show_unknown_;     // if true, show unknown chars as '¿' (default off)
-  bool           ansi_;             // if true, parse ansi codes (default on)
-  bool           redraw_modified_;  // display modified; used by update_cb() to rate limit redraws
-  bool           redraw_timer_;     // if true, redraw timer is running
+    Impl(Fl_Terminal *t)
+      : current_style_(true),
+        tabstops_(0),
+        ring_(),
+        select_(t),
+        cursor_(),
+        pub_()
+    {}
+  };
+  Impl *impl_;
 
 protected:
   // Ring buffer management
@@ -1046,35 +1057,35 @@ protected:
   //   derived classes to maintain brevity.
   //
   /// Return the number of rows in the ring buffer.
-  inline int ring_rows(void) const { return ring_.ring_rows(); }
+  inline int ring_rows(void) const { return impl_->ring_.ring_rows(); }
   /// Return the number of columns in the ring buffer.
-  inline int ring_cols(void) const { return ring_.ring_cols(); }
+  inline int ring_cols(void) const { return impl_->ring_.ring_cols(); }
   /// Return the starting row# in the ring buffer. (Always 0)
-  inline int ring_srow(void) const { return ring_.ring_srow(); }
+  inline int ring_srow(void) const { return impl_->ring_.ring_srow(); }
   /// Return the ending row# in the ring buffer (Always ring_rows()-1)
-  inline int ring_erow(void) const { return ring_.ring_erow(); }
+  inline int ring_erow(void) const { return impl_->ring_.ring_erow(); }
   /// Return the number of rows in the scrollback history.
-  inline int hist_rows(void) const { return ring_.hist_rows(); }
+  inline int hist_rows(void) const { return impl_->ring_.hist_rows(); }
   /// Return the number of columns in the scrollback history.
-  inline int hist_cols(void) const { return ring_.hist_cols(); }
+  inline int hist_cols(void) const { return impl_->ring_.hist_cols(); }
   /// Return the starting row# of the scrollback history.
-  inline int hist_srow(void) const { return ring_.hist_srow(); }
+  inline int hist_srow(void) const { return impl_->ring_.hist_srow(); }
   /// Return the ending row# of the scrollback history.
-  inline int hist_erow(void) const { return ring_.hist_erow(); }
+  inline int hist_erow(void) const { return impl_->ring_.hist_erow(); }
   /// Return number of rows in use by the scrollback history.
-  inline int hist_use(void)  const { return ring_.hist_use();  }
+  inline int hist_use(void)  const { return impl_->ring_.hist_use();  }
   /// Return the starting row of the "in use" scrollback history.
-  inline int hist_use_srow(void) const { return ring_.hist_use_srow(); }
+  inline int hist_use_srow(void) const { return impl_->ring_.hist_use_srow(); }
   /// Return the number of rows in the display area.
-  inline int disp_rows(void) const { return ring_.disp_rows(); }
+  inline int disp_rows(void) const { return impl_->ring_.disp_rows(); }
   /// Return the number of columns in the display area.
-  inline int disp_cols(void) const { return ring_.disp_cols(); }
+  inline int disp_cols(void) const { return impl_->ring_.disp_cols(); }
   /// Return the starting row# in the display area.
-  inline int disp_srow(void) const { return ring_.disp_srow(); }
+  inline int disp_srow(void) const { return impl_->ring_.disp_srow(); }
   /// Return the ending row# in the display area.
-  inline int disp_erow(void) const { return ring_.disp_erow(); }
+  inline int disp_erow(void) const { return impl_->ring_.disp_erow(); }
   /// Returns the current offset into the ring buffer.
-  inline int offset(void) const    { return ring_.offset(); }
+  inline int offset(void) const    { return impl_->ring_.offset(); }
 
   // TODO: CLEAN UP WHAT'S PUBLIC, AND WHAT SHOULD BE 'PROTECTED' AND 'PRIVATE'
   //       Some of the public stuff should, quite simply, "not be".
@@ -1109,13 +1120,13 @@ public:
   Fl_Boxtype box(void) const { return Fl_Group::box(); }
   // API: Margins
   /// Return the left margin; see \ref Fl_Terminal_Margins.
-  int   margin_left(void)   const  { return margin_.left();   }
+  int   margin_left(void)   const  { return impl_->margin_.left();   }
   /// Return the right margin; see \ref Fl_Terminal_Margins.
-  int   margin_right(void)  const  { return margin_.right();  }
+  int   margin_right(void)  const  { return impl_->margin_.right();  }
   /// Return the top margin; see \ref Fl_Terminal_Margins.
-  int   margin_top(void)    const  { return margin_.top();    }
+  int   margin_top(void)    const  { return impl_->margin_.top();    }
   /// Return the bottom margin; see \ref Fl_Terminal_Margins.
-  int   margin_bottom(void) const  { return margin_.bottom(); }
+  int   margin_bottom(void) const  { return impl_->margin_.bottom(); }
   void  margin_left(int val);
   void  margin_right(int val);
   void  margin_top(int val);
@@ -1130,31 +1141,31 @@ public:
   void  textfgcolor_default(Fl_Color val) const;
   void  textbgcolor_default(Fl_Color val) const;
   /// Return text font used to draw all text in the terminal.
-  Fl_Font     textfont(void)      const { return current_style_.fontface(); }
+  Fl_Font     textfont(void)      const { return impl_->current_style_.fontface(); }
   /// Return text font size used to draw all text in the terminal.
-  Fl_Fontsize textsize(void)      const { return current_style_.fontsize(); }
+  Fl_Fontsize textsize(void)      const { return impl_->current_style_.fontsize(); }
   /// Return base widget Fl_Group's box() color()
   Fl_Color    color(void)         const { return Fl_Group::color(); }
   /// Return textcolor(). This is a convenience method that returns textfgcolor_default()
   Fl_Color    textcolor(void)     const { return textfgcolor_default(); }
   /// Return text's current foreground color.
-  Fl_Color    textfgcolor(void)   const { return current_style_.fgcolor(); }
+  Fl_Color    textfgcolor(void)   const { return impl_->current_style_.fgcolor(); }
   /// Return text's current background color.
-  Fl_Color    textbgcolor(void)   const { return current_style_.bgcolor(); }
+  Fl_Color    textbgcolor(void)   const { return impl_->current_style_.bgcolor(); }
   /// Return text's default foreground color. \see textfgcolor()
-  Fl_Color    textfgcolor_default(void)   const { return current_style_.defaultfgcolor(); }
+  Fl_Color    textfgcolor_default(void)   const { return impl_->current_style_.defaultfgcolor(); }
   /// Return text's default background color. \see textbgcolor()
-  Fl_Color    textbgcolor_default(void)   const { return current_style_.defaultbgcolor(); }
+  Fl_Color    textbgcolor_default(void)   const { return impl_->current_style_.defaultbgcolor(); }
   void        textfgcolor_xterm(uchar val) const;
   void        textbgcolor_xterm(uchar val) const;
   /// Set mouse selection foreground color.
-  void selectionfgcolor(Fl_Color val) { select_.selectionfgcolor(val); }
+  void selectionfgcolor(Fl_Color val) { impl_->select_.selectionfgcolor(val); }
   /// Set mouse selection background color.
-  void selectionbgcolor(Fl_Color val) { select_.selectionbgcolor(val); }
+  void selectionbgcolor(Fl_Color val) { impl_->select_.selectionbgcolor(val); }
   /// Get mouse selection foreground color.
-  Fl_Color selectionfgcolor(void) const { return select_.selectionfgcolor(); }
+  Fl_Color selectionfgcolor(void) const { return impl_->select_.selectionfgcolor(); }
   /// Get mouse selection background color.
-  Fl_Color selectionbgcolor(void) const { return select_.selectionbgcolor(); }
+  Fl_Color selectionbgcolor(void) const { return impl_->select_.selectionbgcolor(); }
   // API: Text attrib
   void textattrib(uchar val) const;
   uchar textattrib() const;
@@ -1162,7 +1173,7 @@ public:
   RedrawStyle redraw_style(void) const;
   void  redraw_style(RedrawStyle val);
 private:
-  bool  is_redraw_style(RedrawStyle val) const { return redraw_style_ == val; }
+  bool  is_redraw_style(RedrawStyle val) const { return impl_->redraw_style_ == val; }
 public:
   float redraw_rate(void) const;
   void  redraw_rate(float val);
@@ -1172,10 +1183,10 @@ public:
   /// Sets the "error character" utf8 string shown for invalid utf8
   /// or bad ANSI sequences if show_unknown() is true. Default: "¿".
   /// \see show_unknown(bool)
-  void error_char(const char* val) { error_char_ = val; }
+  void error_char(const char* val) { impl_->error_char_ = val; }
   /// Returns the "error character" utf8 string, which is shown for invalid utf8
   /// or bad ANSI sequences if show_unknown() is true. \see show_unknown(bool)
-  const char* error_char(void) const { return error_char_; }
+  const char* error_char(void) const { return impl_->error_char_; }
   // API: ANSI sequences
   bool  ansi(void) const;
   void  ansi(bool val);

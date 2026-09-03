@@ -142,7 +142,6 @@ int Fl_Light_Button::handle(int event) {
 Fl_Light_Button::Fl_Light_Button(int X, int Y, int W, int H, const char* l)
 : Fl_Button(X, Y, W, H, l) {
   type(FL_TOGGLE_BUTTON);
-  selection_color(FL_YELLOW);
   align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
 }
 

@@ -63,9 +63,9 @@
 
  */
 class FL_EXPORT Fl_Clock_Output : public Fl_Widget {
-  int hour_, minute_, second_;
   unsigned long value_;
-  int shadow_; // draw shadows of hands
+  uchar hour_, minute_, second_;
+  uchar shadow_; // draw shadows of hands
   void drawhands(Fl_Color fill_col, Fl_Color line_col) const; // part of draw
 protected:
   void draw() override;

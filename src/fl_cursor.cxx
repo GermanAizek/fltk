@@ -55,7 +55,7 @@ void fl_cursor(Fl_Cursor c, Fl_Color fg, Fl_Color bg) {
     \see cursor(const Fl_RGB_Image*, int, int), default_cursor()
 */
 void Fl_Window::default_cursor(Fl_Cursor c) {
-  cursor_default = c;
+  cursor_default(c);
   cursor(c);
 }
 
@@ -136,7 +136,7 @@ void Fl_Window::cursor(Fl_Cursor c) {
   }
 
   if (c == FL_CURSOR_DEFAULT)
-    c = cursor_default;
+    c = cursor_default();
 
   if (!flx_)
     return;

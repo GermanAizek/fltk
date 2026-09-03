@@ -42,22 +42,14 @@
  */
 Fl_Shortcut_Button::Fl_Shortcut_Button(int X,int Y,int W,int H, const char* l)
 : Fl_Button(X,Y,W,H,l),
+  pre_esc_(0),
   hot_(false),
   pre_hot_(false),
-  default_set_(false),
-  handle_default_button_(false),
-  pre_esc_(0),
-  default_shortcut_(0),
   shortcut_value(0)
 {
   box(FL_DOWN_BOX);
   selection_color(FL_SELECTION_COLOR);
   type(FL_TOGGLE_BUTTON);
-  // suppress warning on unused private members. I keep these around in case
-  // we decide to activate this API again without changing the ABI.
-  (void)default_shortcut_;
-  (void)default_set_;
-
 }
 
 /**
@@ -218,12 +210,10 @@ int Fl_Shortcut_Button::handle(int e) {
       if ((e == FL_RELEASE) && pre_hot_ && !hot_)
         do_end_hot_callback();
       redraw();
-      handle_default_button_ = false;
       return 1;
     case FL_UNFOCUS:
       if (hot_) do_end_hot_callback();
       hot_ = false;
-      handle_default_button_ = false;
       /* FALLTHROUGH */
     case FL_FOCUS:
       redraw();

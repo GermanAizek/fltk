@@ -38,6 +38,7 @@ protected:
     void draw() override;
 public:
     int handle(int) override;
+    Fl_Color default_selection_color() const override { return FL_YELLOW; }
     Fl_Light_Button(int x,int y,int w,int h,const char *l = 0);
 };
 

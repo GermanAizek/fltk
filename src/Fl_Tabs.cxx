@@ -132,9 +132,10 @@ int Fl_Tabs::tab_positions() {
   if (nc != tab_count) {
     clear_tab_positions();
     if (nc) {
-      tab_pos   = static_cast<int*>(std::malloc(static_cast<size_t>(nc + 1) * sizeof(int)));
-      tab_width = static_cast<int*>(std::malloc(static_cast<size_t>(nc) * sizeof(int)));
-      tab_flags = static_cast<int*>(std::malloc(static_cast<size_t>(nc) * sizeof(int)));
+      int* buf  = static_cast<int*>(std::malloc(static_cast<size_t>(3 * nc + 1) * sizeof(int)));
+      tab_pos   = buf;
+      tab_width = buf + (nc + 1);
+      tab_flags = buf + (2 * nc + 1);
     }
     tab_count = nc;
   }
@@ -1326,15 +1327,10 @@ void Fl_Tabs::clear_tab_positions() {
   if (tab_pos) {
     std::free(tab_pos);
     tab_pos = nullptr;
-  }
-  if (tab_width){
-    std::free(tab_width);
     tab_width = nullptr;
-  }
-  if (tab_flags){
-    std::free(tab_flags);
     tab_flags = nullptr;
   }
+  tab_count = 0;
 }
 
 /** Set a method to handle an overflowing tab bar.

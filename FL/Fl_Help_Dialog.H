@@ -37,37 +37,10 @@
 #include <string>
 
 class FL_EXPORT Fl_Help_Dialog {
-  struct PageHistory {
-    std::string file;
-    int line;
-  };
-  std::vector<PageHistory> history_;
-  int index_;
-  int max_;
-  int find_pos_;
+  struct Impl;
+  Impl *impl_;
 public:
   Fl_Help_Dialog();
-private:
-  Fl_Double_Window *window_;
-  Fl_Button *back_;
-  inline void cb_back__i(Fl_Button*, void*);
-  static void cb_back_(Fl_Button*, void*);
-  Fl_Button *forward_;
-  inline void cb_forward__i(Fl_Button*, void*);
-  static void cb_forward_(Fl_Button*, void*);
-  Fl_Button *smaller_;
-  inline void cb_smaller__i(Fl_Button*, void*) const;
-  static void cb_smaller_(Fl_Button*, void*);
-  Fl_Button *larger_;
-  inline void cb_larger__i(Fl_Button*, void*) const;
-  static void cb_larger_(Fl_Button*, void*);
-  Fl_Input *find_;
-  inline void cb_find__i(Fl_Input*, void*);
-  static void cb_find_(Fl_Input*, void*);
-  Fl_Help_View *view_;
-  inline void cb_view__i(Fl_Help_View*, void*);
-  static void cb_view_(Fl_Help_View*, void*);
-public:
   ~Fl_Help_Dialog();
   int h() const;
   void hide() const;

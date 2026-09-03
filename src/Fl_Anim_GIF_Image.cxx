@@ -679,7 +679,7 @@ Fl_Image *Fl_Anim_GIF_Image::copy(int W, int H) const {
     if (gif != nullptr) {
       copied->Fl_GIF_Image::data(gif->data(), gif->count());
       copied->alloc_data = gif->alloc_data;
-      gif->alloc_data = 0;
+      gif->alloc_data = false;
       delete gif;
     }
   }
@@ -875,7 +875,7 @@ bool Fl_Anim_GIF_Image::load(const char *name, const unsigned char *imgdata, siz
     }
     delete[] const_cast<char**>(data());
   }
-  alloc_data = 0;
+  alloc_data = false;
   w(0);
   h(0);
 

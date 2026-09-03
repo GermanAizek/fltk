@@ -74,7 +74,6 @@ class Fl_Widget_Tracker;
 
 class FL_EXPORT Fl_Button : public Fl_Widget {
 
-  int shortcut_;
   signed char value_;
   signed char oldval;
   uchar down_box_;
@@ -119,7 +118,7 @@ public:
     Returns the current shortcut key for the button.
     \retval int
    */
-  int shortcut() const {return shortcut_;}
+  int shortcut() const {return ext_ ? ext_->shortcut_ : 0;}
 
   /**
     Sets the shortcut key to \c s.
@@ -140,7 +139,7 @@ public:
     bits indicates a "don't care" setting).
     \param[in] s bitwise OR of key and shift flags
    */
-  void shortcut(int s) {shortcut_ = s;}
+  void shortcut(int s);
 
   /**
     Returns the current down box type, which is drawn when value() is non-zero.

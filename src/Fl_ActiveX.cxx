@@ -26,7 +26,7 @@
 #endif
 
 Fl_ActiveX::Fl_ActiveX(int X, int Y, int W, int H, const char *L)
-  : Fl_Widget(X, Y, W, H, L), control_ptr_(0), control_name_(0) {
+  : Fl_Widget(X, Y, W, H, L), control_ptr_(0) {
 }
 
 Fl_ActiveX::~Fl_ActiveX() {
@@ -34,10 +34,7 @@ Fl_ActiveX::~Fl_ActiveX() {
 }
 
 void Fl_ActiveX::clear() {
-  if (control_name_) {
-    free((void*)control_name_);
-    control_name_ = 0;
-  }
+  copy_label(0);
 #ifdef _WIN32
   if (control_ptr_) {
     ((IUnknown*)control_ptr_)->Release();
@@ -49,7 +46,7 @@ void Fl_ActiveX::clear() {
 bool Fl_ActiveX::set_control(const char *name) {
   clear();
   if (name) {
-    control_name_ = strdup(name);
+    copy_label(name);
 #ifdef _WIN32
     int len = MultiByteToWideChar(CP_UTF8, 0, name, -1, NULL, 0);
     if (len > 0) {
@@ -100,10 +97,10 @@ void *Fl_ActiveX::query_interface(const char *iid) {
 
 void Fl_ActiveX::draw() {
   draw_box();
-  if (control_name_) {
+  if (label()) {
     fl_color(FL_BLACK);
     fl_font(FL_HELVETICA, 12);
-    fl_draw(control_name_, x(), y(), w(), h(), FL_ALIGN_CENTER);
+    fl_draw(label(), x(), y(), w(), h(), FL_ALIGN_CENTER);
   }
 }
 

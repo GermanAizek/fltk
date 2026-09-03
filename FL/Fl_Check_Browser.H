@@ -57,7 +57,7 @@ public: // IRIX 5.3 C++ compiler doesn't support private structures...
     cb_item *prev;        /**< For internal use only. */
     char checked;         /**< For internal use only. */
     char selected;        /**< For internal use only. */
-    char *text;           /**< For internal use only. */
+    char text[1];         /**< For internal use only. */
   };
 #endif // !FL_DOXYGEN
 

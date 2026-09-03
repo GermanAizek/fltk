@@ -50,8 +50,6 @@ Fl_Wizard::Fl_Wizard(int        xx,     // I - Lefthand position
     Fl_Group(xx, yy, ww, hh, l)
 {
   box(FL_THIN_UP_BOX);
-
-  value_ = (Fl_Widget *)0;
 }
 
 

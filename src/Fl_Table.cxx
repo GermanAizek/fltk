@@ -85,6 +85,7 @@ public:
       delete[] block;
     }
     blocks.clear();
+    std::vector<int*>().swap(blocks);
   }
 
   long scroll_position(int index) const {

@@ -109,10 +109,10 @@ protected:
   static int    alloc_handlers_;        // Allocated format handlers
 
   const char    *name_;                 // Name of image file
-  int           original_;              // Original image?
-  std::atomic<int> refcount_;           // Number of times this image has been used
   Fl_Image      *image_;                // The image that is shared
-  int           alloc_image_;           // Was the image allocated?
+  std::atomic<int> refcount_;           // Number of times this image has been used
+  bool          original_;              // Original image?
+  bool          alloc_image_;           // Was the image allocated?
 
   static int    compare(Fl_Shared_Image **i0, Fl_Shared_Image **i1);
 

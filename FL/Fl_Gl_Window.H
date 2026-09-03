@@ -55,18 +55,32 @@ class Fl_Gl_Window_Driver;
 */
 class FL_EXPORT Fl_Gl_Window : public Fl_Window {
   friend class Fl_Gl_Window_Driver;
+public:
+  struct GlExt {
+    const int *alist { nullptr };
+    Fl_Gl_Choice *g { nullptr };
+    GLContext context_ { nullptr };
+    void *overlay { nullptr };
+  };
+private:
   Fl_Gl_Window_Driver *pGlWindowDriver;
+  GlExt *glext_;
 
   int mode_;
-  const int *alist;
-  Fl_Gl_Choice *g;
-  GLContext context_;
   unsigned char valid_f_;
   unsigned char damage1_; // damage() of back buffer
   virtual void draw_overlay();
   void init();
 
-  void *overlay;
+public:
+  GlExt* ensure_glext() { if (!glext_) glext_ = new GlExt(); return glext_; }
+  const GlExt* glext() const { return glext_; }
+  const int *alist() const { return glext_ ? glext_->alist : nullptr; }
+  void alist(const int *l) { if (l || glext_) ensure_glext()->alist = l; }
+  Fl_Gl_Choice* g() const { return glext_ ? glext_->g : nullptr; }
+  void g(Fl_Gl_Choice *c) { if (c || glext_) ensure_glext()->g = c; }
+  void* overlay() const { return glext_ ? glext_->overlay : nullptr; }
+  void overlay(void *o) { if (o || glext_) ensure_glext()->overlay = o; }
 
   static int can_do(int m, const int *a);
   int mode(int m, const int *a) const;
@@ -134,7 +148,7 @@ public:
    \see Fl_Gl_Window::mode(const int *a) */
   static int can_do(const int *m) { return can_do(0, m); }
   /**  Returns non-zero if the hardware supports the current OpenGL mode. */
-  int can_do() const { return can_do(mode_, alist); }
+  int can_do() const { return can_do(mode_, alist()); }
   /** Returns the current OpenGL capabilities of the window.
    Don't use this if capabilities were set through Fl_Gl_Window::mode(const int *a).
    */
@@ -200,7 +214,7 @@ public:
   /** Returns a pointer to the window's OpenGL rendering context.
    \see void context(GLContext c, int destroy_flag)
   */
-  GLContext context() const { return context_; }
+  GLContext context() const { return glext_ ? glext_->context_ : nullptr; }
   void context(GLContext v, int destroy_flag = 0);
   void make_current() override;
   void swap_buffers() const;
@@ -244,7 +258,7 @@ public:
     Creates a new Fl_Gl_Window widget using the given size, and label string.
     The default boxtype is FL_NO_BOX. The default mode is FL_RGB|FL_DOUBLE|FL_DEPTH.
   */
-  Fl_Gl_Window(int W, int H, const char *l = nullptr) : Fl_Window(W, H, l), pGlWindowDriver(nullptr), mode_(0), alist(nullptr), g(nullptr), context_(nullptr), valid_f_(0), damage1_(0), overlay(nullptr) { init(); }
+  Fl_Gl_Window(int W, int H, const char *l = nullptr) : Fl_Window(W, H, l), pGlWindowDriver(nullptr), glext_(nullptr), mode_(0), valid_f_(0), damage1_(0) { init(); }
   /**
     Creates a new Fl_Gl_Window widget using the given position,
     size, and label string. The default boxtype is FL_NO_BOX. The
@@ -252,7 +266,7 @@ public:
   */
 
   Fl_Gl_Window(int X, int Y, int W, int H, const char *l = nullptr)
-    : Fl_Window(X, Y, W, H, l), pGlWindowDriver(nullptr), mode_(0), alist(nullptr), g(nullptr), context_(nullptr), valid_f_(0), damage1_(0), overlay(nullptr) { init(); }
+    : Fl_Window(X, Y, W, H, l), pGlWindowDriver(nullptr), glext_(nullptr), mode_(0), valid_f_(0), damage1_(0) { init(); }
 };
 
 #endif // Fl_Gl_Window_H

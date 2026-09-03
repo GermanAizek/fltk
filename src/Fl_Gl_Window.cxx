@@ -63,16 +63,16 @@ void Fl_Gl_Window::show() {
   int need_after = 0;
   if (!shown()) {
     Fl_Window::default_size_range();
-    if (g == nullptr) {
-      g = pGlWindowDriver->find(mode_, alist);
-      if ((g == nullptr) && ((mode_ & FL_DOUBLE) == FL_SINGLE)) {
-        g = pGlWindowDriver->find(mode_ | FL_DOUBLE, alist);
-        if (g != nullptr) {
+    if (g() == nullptr) {
+      ensure_glext()->g = pGlWindowDriver->find(mode_, alist());
+      if ((g() == nullptr) && ((mode_ & FL_DOUBLE) == FL_SINGLE)) {
+        ensure_glext()->g = pGlWindowDriver->find(mode_ | FL_DOUBLE, alist());
+        if (g() != nullptr) {
           mode_ |= FL_FAKE_SINGLE;
         }
       }
 
-      if (g == nullptr) {
+      if (g() == nullptr) {
         Fl::error("Insufficient GL support");
         return;
       }
@@ -97,7 +97,7 @@ void Fl_Gl_Window::invalidate() {
 }
 
 int Fl_Gl_Window::mode(int m, const int *a) const {
-  if ((m == mode_) && (a == alist)) {
+  if ((m == mode_) && (a == alist())) {
     return 0;
   }
   return pGlWindowDriver->mode_(m, a);
@@ -117,13 +117,13 @@ void Fl_Gl_Window::make_current() {
     return;
   }
   pGlWindowDriver->make_current_before();
-  if (context_ == nullptr) {
+  if (context() == nullptr) {
     mode_ &= static_cast<int>(~NON_LOCAL_CONTEXT);
-    context_ = pGlWindowDriver->create_gl_context(this, g);
+    ensure_glext()->context_ = pGlWindowDriver->create_gl_context(this, g());
     valid(0U);
     context_valid(0U);
   }
-  pGlWindowDriver->set_gl_context(this, context_);
+  pGlWindowDriver->set_gl_context(this, context());
   pGlWindowDriver->make_current_after();
   if ((static_cast<unsigned int>(mode_) & FL_FAKE_SINGLE) != 0U) {
     glDrawBuffer(GL_FRONT);
@@ -248,7 +248,7 @@ void Fl_Gl_Window::flush() {
     } else if (SWAP_TYPE == static_cast<char>(SWAP)){
       damage(FL_DAMAGE_ALL);
       draw();
-      if (overlay == this) {
+      if (overlay() == this) {
         draw_overlay();
       }
       swap_buffers();
@@ -256,7 +256,7 @@ void Fl_Gl_Window::flush() {
 
       // If we are faking the overlay, use CopyPixels to act like
       // SWAP_TYPE == COPY.  Otherwise overlay redraw is way too slow.
-      if (overlay == this) {
+      if (overlay() == this) {
         // don't draw if only the overlay is damaged:
         if ((damage1_ != 0U) || (damage() != FL_DAMAGE_OVERLAY) || (save_valid == 0U)) {
           draw();
@@ -267,7 +267,7 @@ void Fl_Gl_Window::flush() {
         static Fl_Gl_Window* ortho_window = nullptr;
         const bool orthoinit = (ortho_context == nullptr);
         if (orthoinit) {
-          ortho_context = pGlWindowDriver->create_gl_context(this, g);
+          ortho_context = pGlWindowDriver->create_gl_context(this, g());
         }
         pGlWindowDriver->set_gl_context(this, ortho_context);
         if (orthoinit || (save_valid == 0U) || (ortho_window != this)) {
@@ -292,7 +292,7 @@ void Fl_Gl_Window::flush() {
       }
 
     }
-    if ((overlay == this) && (SWAP_TYPE != static_cast<char>(SWAP))) { // fake overlay in front buffer
+    if ((overlay() == this) && (SWAP_TYPE != static_cast<char>(SWAP))) { // fake overlay in front buffer
       glDrawBuffer(GL_FRONT);
       draw_overlay();
       glDrawBuffer(GL_BACK);
@@ -302,7 +302,7 @@ void Fl_Gl_Window::flush() {
   } else {      // single-buffered context is simpler:
 
     draw();
-    if (overlay == this) {
+    if (overlay() == this) {
       draw_overlay();
     }
     glFlush();
@@ -334,10 +334,10 @@ void Fl_Gl_Window::resize(int X, int Y, int W, int H) {
   or the next time context(x) is called.
 */
 void Fl_Gl_Window::context(GLContext v, int destroy_flag) {
-  if ((context_ != nullptr) && ((static_cast<unsigned int>(mode_) & NON_LOCAL_CONTEXT) == 0U)) {
-    pGlWindowDriver->delete_gl_context(context_);
+  if (glext_ && (glext_->context_ != nullptr) && ((static_cast<unsigned int>(mode_) & NON_LOCAL_CONTEXT) == 0U)) {
+    pGlWindowDriver->delete_gl_context(glext_->context_);
   }
-  context_ = v;
+  if (v || glext_) ensure_glext()->context_ = v;
   if (destroy_flag != 0) {
     mode_ &= static_cast<int>(~NON_LOCAL_CONTEXT);
   } else {
@@ -350,7 +350,7 @@ void Fl_Gl_Window::context(GLContext v, int destroy_flag) {
 */
 void Fl_Gl_Window::hide() {
   context(nullptr);
-  pGlWindowDriver->gl_hide_before(overlay);
+  if (glext_) pGlWindowDriver->gl_hide_before(glext_->overlay);
   Fl_Window::hide();
 }
 
@@ -361,6 +361,7 @@ void Fl_Gl_Window::hide() {
 Fl_Gl_Window::~Fl_Gl_Window() {
   hide();
   delete pGlWindowDriver;
+  delete glext_;
 }
 
 void Fl_Gl_Window::init() {
@@ -369,10 +370,7 @@ void Fl_Gl_Window::init() {
   box(FL_NO_BOX);
 
   mode_    = FL_RGB | FL_DEPTH | FL_DOUBLE;
-  alist    = nullptr;
-  context_ = nullptr;
-  g        = nullptr;
-  overlay  = nullptr;
+  glext_   = nullptr;
   valid_f_ = 0U;
   damage1_ = 0U;
 }
@@ -572,9 +570,9 @@ Fl_Gl_Window_Driver *Fl_Gl_Window_Driver::global() {
 }
 
 void Fl_Gl_Window_Driver::invalidate() {
-  if (pWindow->overlay != nullptr) {
-    static_cast<Fl_Gl_Window*>(pWindow->overlay)->valid(0U);
-    static_cast<Fl_Gl_Window*>(pWindow->overlay)->context_valid(0U);
+  if (pWindow->overlay() != nullptr) {
+    static_cast<Fl_Gl_Window*>(pWindow->overlay())->valid(0U);
+    static_cast<Fl_Gl_Window*>(pWindow->overlay())->context_valid(0U);
   }
 }
 

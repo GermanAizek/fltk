@@ -34,8 +34,10 @@ static void scroll_cb(Fl_Widget*,void *data) {
 //
 static char **parse_path(const char *path) {
   size_t len = strlen(path);
-  char *cp = new char[(len+1)], *word = cp, *s = cp; // freed below or in free_path()
-  char **ap = new char*[(len+1)], **arr = ap;        // overallocates arr[]
+  // Allocate pointer array and string characters in a single contiguous buffer
+  char **ap = (char**)malloc((len + 2) * sizeof(char*) + (len + 1));
+  char *cp = (char*)(ap + (len + 2)), *word = cp, *s = cp;
+  char **arr = ap;
   while (1) {
     if (*path =='/' || *path == 0) {            // handle path sep or eos
       if (word != s) { *s++ = 0; *arr++= word; word = s; }
@@ -45,15 +47,13 @@ static char **parse_path(const char *path) {
     } else { *s++ = *path++; }                  // handle normal char
   }
   *arr = 0;
-  if ( arr == ap ) delete[] cp; // empty arr[]? delete since free_path() can't
   return ap;
 }
 
 // INTERNAL: Free an array 'arr' returned by parse_path()
 static void free_path(char **arr) {
   if ( arr ) {
-    delete[] arr[0];                    // deletes cp in parse_path
-    delete[] arr;                       // deletes ptr array
+    free((void*)arr);
   }
 }
 

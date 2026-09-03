@@ -27,6 +27,7 @@
 
 class FL_EXPORT Fl_Check_Button : public Fl_Light_Button {
 public:
+  Fl_Color default_selection_color() const override { return FL_FOREGROUND_COLOR; }
   Fl_Check_Button(int X, int Y, int W, int H, const char *L = 0);
 };
 

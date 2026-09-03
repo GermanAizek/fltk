@@ -18,6 +18,25 @@
 #include <FL/Fl_Scheme_Choice.H>
 
 
+static Fl_Menu_Item *shared_scheme_menu_ = NULL;
+static int shared_scheme_count_ = 0;
+
+static const Fl_Menu_Item *get_scheme_menu() {
+  int n = Fl_Scheme::num_schemes();
+  if (!shared_scheme_menu_ || shared_scheme_count_ != n) {
+    delete[] shared_scheme_menu_;
+    shared_scheme_menu_ = new Fl_Menu_Item[n + 1];
+    memset(shared_scheme_menu_, 0, sizeof(Fl_Menu_Item) * (n + 1));
+    const char * const *names = Fl_Scheme::names();
+    for (int i = 0; i < n && names[i]; i++) {
+      shared_scheme_menu_[i].text = names[i];
+    }
+    shared_scheme_menu_[n].text = NULL;
+    shared_scheme_count_ = n;
+  }
+  return shared_scheme_menu_;
+}
+
 /**
   The constructor initializes the Fl_Scheme_Choice object with all known schemes.
 
@@ -28,14 +47,7 @@
 Fl_Scheme_Choice::Fl_Scheme_Choice(int X, int Y, int W, int H, const char *L)
   : Fl_Choice(X, Y, W, H, L) {
 
-  const char * const *names = Fl_Scheme::names();
-
-  // Add all known schemes in the order defined by the list of scheme names
-  while (*names) {
-    add(*names);
-    names++;
-  }
-
+  menu(get_scheme_menu());
   callback(scheme_cb_);   // internal callback
   init_value();           // set choice value to current scheme
 }
@@ -54,6 +66,10 @@ Fl_Scheme_Choice::Fl_Scheme_Choice(int X, int Y, int W, int H, const char *L)
   \since 1.4.0
 */
 void Fl_Scheme_Choice::init_value() {
+  const Fl_Menu_Item *sm = get_scheme_menu();
+  if (menu() != sm) {
+    menu(sm);
+  }
   const char *current = Fl::scheme();
 
   value(0);

@@ -150,6 +150,8 @@ void Fl_Tree_Item::show_self(const char *indent) const {
 /// Makes and manages an internal copy of \p 'name'.
 ///
 void Fl_Tree_Item::label(const char *name) {
+  if ( _label && name && strcmp(_label, name) == 0 ) return;
+  if ( !_label && !name ) return;
   if ( _label ) { free((void*)_label); _label = 0; }
   _label = name ? fl_strdup(name) : 0;
   recalc_tree();                // may change label geometry

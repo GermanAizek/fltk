@@ -142,11 +142,11 @@ private:
     int ref_count;
   } counted_NSVGimage;
   counted_NSVGimage* counted_svg_image_;
-  bool rasterized_;
   int raster_w_, raster_h_;
-  bool to_desaturate_;
   Fl_Color average_color_;
   float average_weight_;
+  bool rasterized_;
+  bool to_desaturate_;
   float svg_scaling_(int W, int H) const;
   void rasterize_(int W, int H);
   void cache_size_(int &width, int &height) override;

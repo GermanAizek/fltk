@@ -112,10 +112,10 @@ Fl_Shared_Image::compare(Fl_Shared_Image **i0,          // I - First image
 */
 Fl_Shared_Image::Fl_Shared_Image() : Fl_Image(0,0,0) {
   name_        = 0;
-  refcount_    = 1;
-  original_    = 0;
   image_       = 0;
-  alloc_image_ = 0;
+  refcount_    = 1;
+  original_    = false;
+  alloc_image_ = false;
 }
 
 
@@ -135,10 +135,10 @@ Fl_Shared_Image::Fl_Shared_Image(const char *n,
   name_ = new char[strlen(n) + 1];
   strcpy((char *)name_, n);
 
-  refcount_    = 1;
   image_       = img;
+  refcount_    = 1;
   alloc_image_ = !img;
-  original_    = 1;
+  original_    = true;
 
   if (!img) reload();
   else update();
@@ -349,7 +349,7 @@ Fl_Shared_Image::copy_(int W, int H) const {
 
   temp_shared->refcount_    = 1;
   temp_shared->image_       = temp_image;
-  temp_shared->alloc_image_ = 1;
+  temp_shared->alloc_image_ = true;
 
   temp_shared->update();
 

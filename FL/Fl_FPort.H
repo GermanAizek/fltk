@@ -47,7 +47,7 @@ private:
   Fl_FPort_Callback fport_cb_;
   void* fport_user_data_;
   uint16_t channels_[16]; // 16 proportional channels (11-bit)
-  uint8_t buffer_[128];
+  uint8_t* buffer_;
   State state_;
   uint8_t frame_length_;
   uint8_t frame_type_;

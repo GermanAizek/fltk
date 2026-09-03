@@ -19,16 +19,17 @@
 #include <string.h>
 
 Fl_SUMD::Fl_SUMD() : sumd_cb_(nullptr), sumd_user_data_(nullptr),
+                     buffer_(nullptr),
                      state_(WAIT_HEADER), num_channels_(0), status_(0), 
                      buf_idx_(0), current_len_(0) {
   memset(channels_, 0, sizeof(channels_));
-  memset(buffer_, 0, sizeof(buffer_));
   
   // Register the internal serial callback
   Fl_Serial_Port::callback(serial_cb, this);
 }
 
 Fl_SUMD::~Fl_SUMD() {
+  delete[] buffer_;
 }
 
 int Fl_SUMD::open(const char* port_name) {
@@ -88,6 +89,7 @@ void Fl_SUMD::process_byte(uint8_t b) {
   switch (state_) {
     case WAIT_HEADER:
       if (b == 0xA8) { // SUMD Header
+        if (!buffer_) buffer_ = new uint8_t[128];
         buffer_[0] = b;
         buf_idx_ = 1;
         state_ = WAIT_STATUS;

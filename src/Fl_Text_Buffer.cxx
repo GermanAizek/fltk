@@ -164,7 +164,7 @@ public:
 
   void push(Fl_Text_Undo_Action* action) {
     if (list_size_ == list_capacity_) {
-      list_capacity_ += 25;
+      list_capacity_ = list_capacity_ ? list_capacity_ * 2 : 4;
       list_ = static_cast<Fl_Text_Undo_Action**>(std::realloc(list_, static_cast<size_t>(list_capacity_) * sizeof(Fl_Text_Undo_Action*)));
     }
     list_[list_size_++] = action;
@@ -212,9 +212,10 @@ Fl_Text_Buffer::Fl_Text_Buffer(int requestedSize, int preferredGapSize) :
 {
   mLength = 0;
   mPreferredGapSize = preferredGapSize;
-  mBuf = static_cast<char *>(std::malloc(static_cast<size_t>(requestedSize + mPreferredGapSize)));
+  const size_t initialAlloc = (requestedSize > 0) ? static_cast<size_t>(requestedSize + mPreferredGapSize) : 0;
+  mBuf = initialAlloc ? static_cast<char *>(std::malloc(initialAlloc)) : nullptr;
   mGapStart = 0;
-  mGapEnd = requestedSize + mPreferredGapSize;
+  mGapEnd = static_cast<int>(initialAlloc);
   mTabDist = 8;
   mPrimary.mSelected = false;
   mPrimary.mStart = mPrimary.mEnd = 0;
@@ -230,9 +231,9 @@ Fl_Text_Buffer::Fl_Text_Buffer(int requestedSize, int preferredGapSize) :
   mPredeleteCbArgs = nullptr;
   mCursorPosHint = 0;
   mCanUndo = 1;
-  mUndo = new Fl_Text_Undo_Action();
-  mUndoList = new Fl_Text_Undo_Action_List();
-  mRedoList = new Fl_Text_Undo_Action_List();
+  mUndo = nullptr;
+  mUndoList = nullptr;
+  mRedoList = nullptr;
   input_file_was_transcoded = 0;
   transcoding_warning_action = def_transcoding_warning_action;
 }
@@ -264,8 +265,14 @@ Fl_Text_Buffer::~Fl_Text_Buffer()
  */
 char *Fl_Text_Buffer::text() const {
   char *t = static_cast<char *>(std::malloc(static_cast<size_t>(mLength + 1)));
-  std::memcpy(t, mBuf, static_cast<size_t>(mGapStart));
-  std::memcpy(t+mGapStart, mBuf+mGapEnd, static_cast<size_t>(mLength - mGapStart));
+  if (mLength > 0 && mBuf) {
+    if (mGapStart > 0) {
+      std::memcpy(t, mBuf, static_cast<size_t>(mGapStart));
+    }
+    if (mLength > mGapStart) {
+      std::memcpy(t+mGapStart, mBuf+mGapEnd, static_cast<size_t>(mLength - mGapStart));
+    }
+  }
   t[mLength] = '\0';
   return t;
 }
@@ -277,10 +284,14 @@ char *Fl_Text_Buffer::text() const {
  */
 std::string Fl_Text_Buffer::text_str() const {
   std::string t;
-  if (mLength) {
+  if (mLength > 0 && mBuf) {
     t.reserve(static_cast<size_t>(mLength));
-    t.insert(0, mBuf, static_cast<size_t>(mGapStart));
-    t.insert(static_cast<size_t>(mGapStart), mBuf+mGapEnd, static_cast<size_t>(mLength - mGapStart));
+    if (mGapStart > 0) {
+      t.insert(0, mBuf, static_cast<size_t>(mGapStart));
+    }
+    if (mLength > mGapStart) {
+      t.insert(static_cast<size_t>(mGapStart), mBuf+mGapEnd, static_cast<size_t>(mLength - mGapStart));
+    }
   }
   return t;
 }
@@ -302,7 +313,7 @@ void Fl_Text_Buffer::text(const char *t)
   call_predelete_callbacks(0, length());
 
   /* Save information for redisplay, and get rid of the old buffer */
-  const char *deletedText = text();
+  const char *deletedText = (mNModifyProcs > 0 && mLength > 0) ? text() : nullptr;
   const int deletedLength = mLength;
   std::free(mBuf);
 
@@ -319,12 +330,14 @@ void Fl_Text_Buffer::text(const char *t)
 
   /* Call the saved display routine(s) to update the screen */
   call_modify_callbacks(0, deletedLength, insertedLength, 0, deletedText);
-  std::free(const_cast<char *>(deletedText));
+  if (deletedText) {
+    std::free(const_cast<char *>(deletedText));
+  }
 
   if (mCanUndo) {
-    mUndo->clear();
-    mUndoList->clear();
-    mRedoList->clear();
+    if (mUndo) mUndo->clear();
+    if (mUndoList) mUndoList->clear();
+    if (mRedoList) mRedoList->clear();
   }
 }
 
@@ -356,6 +369,10 @@ char *Fl_Text_Buffer::text_range(int start, int end) const {
   }
   const int copiedLength = end - start;
   s = static_cast<char *>(std::malloc(static_cast<size_t>(copiedLength + 1)));
+  if (copiedLength == 0 || !mBuf) {
+    s[0] = '\0';
+    return s;
+  }
 
   /* Copy the text from the buffer to the returned string */
   if (end <= mGapStart) {
@@ -500,12 +517,14 @@ void Fl_Text_Buffer::replace(int start, int end, const char *text, int insertedL
   IS_UTF8_ALIGNED(text)
 
   call_predelete_callbacks(start, end - start);
-  const char *deletedText = text_range(start, end);
+  const char *deletedText = (mNModifyProcs > 0 && end > start) ? text_range(start, end) : nullptr;
   remove_(start, end);
   const int nInserted = insert_(start, text, insertedLength);
   mCursorPosHint = start + nInserted;
   call_modify_callbacks(start, end - start, nInserted, 0, deletedText);
-  std::free(const_cast<char *>(deletedText));
+  if (deletedText) {
+    std::free(const_cast<char *>(deletedText));
+  }
 }
 
 
@@ -543,11 +562,13 @@ void Fl_Text_Buffer::remove(int start, int end)
 
   call_predelete_callbacks(start, end - start);
   /* Remove and redisplay */
-  const char *deletedText = text_range(start, end);
+  const char *deletedText = (mNModifyProcs > 0 && end > start) ? text_range(start, end) : nullptr;
   remove_(start, end);
   mCursorPosHint = start;
   call_modify_callbacks(start, end - start, 0, 0, deletedText);
-  std::free(const_cast<char *>(deletedText));
+  if (deletedText) {
+    std::free(const_cast<char *>(deletedText));
+  }
 }
 
 
@@ -647,9 +668,11 @@ int Fl_Text_Buffer::apply_undo(Fl_Text_Undo_Action* action, int* cursorPos)
  CursorPos will be at a character boundary.
  */
 int Fl_Text_Buffer::undo(int *cursorPos) {
-  if (!mCanUndo || mUndo->empty()) {
+  if (!mCanUndo || !mUndo || mUndo->empty()) {
     return 0;
   }
+  if (!mUndoList) mUndoList = new Fl_Text_Undo_Action_List();
+  if (!mRedoList) mRedoList = new Fl_Text_Undo_Action_List();
 
   // save the current undo action and add an empty action to avoid generating yankcuts
   Fl_Text_Undo_Action* action = mUndo;
@@ -687,7 +710,7 @@ bool Fl_Text_Buffer::can_undo() const {
  Redo previous undo action.
  */
 int Fl_Text_Buffer::redo(int *cursorPos) {
-  if (!mCanUndo) {
+  if (!mCanUndo || !mRedoList) {
     return 0;
   }
 
@@ -710,7 +733,7 @@ int Fl_Text_Buffer::redo(int *cursorPos) {
  \see canUndo()
  */
 bool Fl_Text_Buffer::can_redo() const {
-  return (mCanUndo && mRedoList->size() != 0);
+  return (mCanUndo && mRedoList && mRedoList->size() != 0);
 }
 
 /*
@@ -718,15 +741,13 @@ bool Fl_Text_Buffer::can_redo() const {
  */
 void Fl_Text_Buffer::canUndo(char flag)
 {
-  if (flag) {
-    if (!mCanUndo) {
-      mUndo = new Fl_Text_Undo_Action();
-    }
-  } else {
-    if (mCanUndo) {
-      delete mUndo;
-      mUndo = nullptr;
-    }
+  if (!flag && mCanUndo) {
+    delete mUndo;
+    mUndo = nullptr;
+    delete mUndoList;
+    mUndoList = nullptr;
+    delete mRedoList;
+    mRedoList = nullptr;
   }
   mCanUndo = flag;
 }
@@ -750,9 +771,11 @@ void Fl_Text_Buffer::tab_distance(int tabDist)
 
   /* Force any display routines to redisplay everything (unfortunately,
    this means copying the whole buffer contents to provide "deletedText" */
-  const char *deletedText = text();
+  const char *deletedText = (mNModifyProcs > 0 && mLength > 0) ? text() : nullptr;
   call_modify_callbacks(0, mLength, mLength, 0, deletedText);
-  std::free(const_cast<char *>(deletedText));
+  if (deletedText) {
+    std::free(const_cast<char *>(deletedText));
+  }
 }
 
 
@@ -1492,6 +1515,10 @@ int Fl_Text_Buffer::insert_(int pos, const char *text, int insertedLength)
   update_selections(pos, 0, insertedLength);
 
   if (mCanUndo) {
+    if (!mUndo) mUndo = new Fl_Text_Undo_Action();
+    if (!mUndoList) mUndoList = new Fl_Text_Undo_Action_List();
+    if (!mRedoList) mRedoList = new Fl_Text_Undo_Action_List();
+
     if (mUndo->undoat == pos && mUndo->undoinsert) {
       // continue inserting text at the given cursor position
       mUndo->undoinsert += insertedLength;
@@ -1527,6 +1554,10 @@ void Fl_Text_Buffer::remove_(int start, int end)
     return;
   }
   if (mCanUndo) {
+    if (!mUndo) mUndo = new Fl_Text_Undo_Action();
+    if (!mUndoList) mUndoList = new Fl_Text_Undo_Action_List();
+    if (!mRedoList) mRedoList = new Fl_Text_Undo_Action_List();
+
     if (mUndo->undoat == end && mUndo->undocut) {
       // continue to remove text at the same cursor position
       mUndo->undobuffersize(mUndo->undocut + end - start + 1);
@@ -1814,18 +1845,20 @@ void Fl_Text_Buffer::reallocate_with_gap(int newGapStart, int newGapLen)
   char *newBuf = static_cast<char *>(std::malloc(static_cast<size_t>(mLength + newGapLen)));
   const int newGapEnd = newGapStart + newGapLen;
 
-  if (newGapStart <= mGapStart) {
-    std::memcpy(newBuf, mBuf, static_cast<size_t>(newGapStart));
-    std::memcpy(&newBuf[newGapEnd], &mBuf[newGapStart],
-           static_cast<size_t>(mGapStart - newGapStart));
-    std::memcpy(&newBuf[newGapEnd + mGapStart - newGapStart],
-           &mBuf[mGapEnd], static_cast<size_t>(mLength - mGapStart));
-  } else {                      /* newGapStart > mGapStart */
-    std::memcpy(newBuf, mBuf, static_cast<size_t>(mGapStart));
-    std::memcpy(&newBuf[mGapStart], &mBuf[mGapEnd], static_cast<size_t>(newGapStart - mGapStart));
-    std::memcpy(&newBuf[newGapEnd],
-           &mBuf[mGapEnd + newGapStart - mGapStart],
-           static_cast<size_t>(mLength - newGapStart));
+  if (mLength > 0 && mBuf) {
+    if (newGapStart <= mGapStart) {
+      std::memcpy(newBuf, mBuf, static_cast<size_t>(newGapStart));
+      std::memcpy(&newBuf[newGapEnd], &mBuf[newGapStart],
+             static_cast<size_t>(mGapStart - newGapStart));
+      std::memcpy(&newBuf[newGapEnd + mGapStart - newGapStart],
+             &mBuf[mGapEnd], static_cast<size_t>(mLength - mGapStart));
+    } else {                      /* newGapStart > mGapStart */
+      std::memcpy(newBuf, mBuf, static_cast<size_t>(mGapStart));
+      std::memcpy(&newBuf[mGapStart], &mBuf[mGapEnd], static_cast<size_t>(newGapStart - mGapStart));
+      std::memcpy(&newBuf[newGapEnd],
+             &mBuf[mGapEnd + newGapStart - mGapStart],
+             static_cast<size_t>(mLength - newGapStart));
+    }
   }
   std::free(mBuf);
   mBuf = newBuf;

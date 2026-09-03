@@ -151,13 +151,8 @@ Fl_Text_Display::Fl_Text_Display(int X, int Y, int W, int H, const char* l)
   mLastChar = 0;
   mContinuousWrap = 0;
   mWrapMarginPix = 0;
-  mLineStarts = new int[static_cast<size_t>(mNVisibleLines)];
-#if VISIBLE_LINES_INIT > 1
-  { // Note: this code is unused unless mNVisibleLines is ever initialized > 1
-    for (int i=1; i<mNVisibleLines; i++) mLineStarts[i] = -1;
-  }
-#endif
-  mLineStarts[0] = 0;
+  mNVisibleLines = 0;
+  mLineStarts = nullptr;
   mTopLineNum = 1;
   mAbsTopLineNum = 1;
   mNeedAbsTopLineNum = 0;
@@ -208,7 +203,7 @@ Fl_Text_Display::Fl_Text_Display(int X, int Y, int W, int H, const char* l)
   linenumber_fgcolor_ = FL_INACTIVE_COLOR;
   linenumber_bgcolor_ = 53;     // ~90% gray
   linenumber_align_   = FL_ALIGN_RIGHT;
-  linenumber_format_  = fl_strdup("%d");
+  linenumber_format_  = nullptr;
 
   // Method calls -- only AFTER all members initialized
   color(FL_BACKGROUND2_COLOR, FL_SELECTION_COLOR);
@@ -369,15 +364,18 @@ Fl_Align Fl_Text_Display::linenumber_align() const {
 void Fl_Text_Display::linenumber_format(const char* val) {
   if ( linenumber_format_ ) {
     std::free(const_cast<char*>(linenumber_format_));
+    linenumber_format_ = nullptr;
   }
-  linenumber_format_ = val ? fl_strdup(val) : nullptr;
+  if (val && strcmp(val, "%d") != 0) {
+    linenumber_format_ = fl_strdup(val);
+  }
 }
 
 /**
  Returns the line number printf() format string.
 */
 const char* Fl_Text_Display::linenumber_format() const {
-  return linenumber_format_;
+  return linenumber_format_ ? linenumber_format_ : "%d";
 }
 
 /**
@@ -625,7 +623,7 @@ void Fl_Text_Display::recalc_display() {
     if (nvlines < 1) {
       nvlines = 1;
     }
-    if (mNVisibleLines != nvlines) {
+    if (mNVisibleLines != nvlines || !mLineStarts) {
       mNVisibleLines = nvlines;
       delete[] mLineStarts;
       mLineStarts = new int [static_cast<size_t>(mNVisibleLines)];
@@ -2115,6 +2113,9 @@ int Fl_Text_Display::position_to_line( int pos, int *lineNum ) const {
   IS_UTF8_ALIGNED2(buffer(), pos)
 
   *lineNum = 0;
+  if (!mLineStarts || mNVisibleLines <= 0) {
+    return 0;
+  }
   if ( pos < mFirstChar ) {
     return 0;
   }
@@ -3181,6 +3182,10 @@ void Fl_Text_Display::calc_line_starts( int startLine, int endLine ) const {
   const int nVis = mNVisibleLines;
   int *lineStarts = mLineStarts;
 
+  if (!lineStarts || nVis <= 0) {
+    return;
+  }
+
   /* Clean up (possibly) messy input parameters */
   if ( endLine < 0 ) { endLine = 0; }
   if ( endLine >= nVis ) { endLine = nVis - 1; }
@@ -3240,6 +3245,10 @@ void Fl_Text_Display::calc_line_starts( int startLine, int endLine ) const {
  the lastChar entry to point to the last buffer position displayed.
  */
 void Fl_Text_Display::calc_last_char() {
+  if (!mLineStarts || mNVisibleLines <= 0) {
+    mLastChar = 0;
+    return;
+  }
   int i = 0;
   for (i = mNVisibleLines - 1; i >= 0 && mLineStarts[i] == -1; i--) {}
   mLastChar = i < 0 ? 0 : line_end(mLineStarts[i], true);
@@ -3452,12 +3461,18 @@ void Fl_Text_Display::draw_line_numbers(bool /*clearAll*/) const {
 }
 
 
+
+
+
 /**
  \brief Returns the width in pixels of the displayed line pointed to by "visLineNum".
  \param visLineNum index into visible lines array
  \return width of line in pixels
  */
 int Fl_Text_Display::measure_vline( int visLineNum ) const {
+  if (!mLineStarts || visLineNum < 0 || visLineNum >= mNVisibleLines) {
+    return 0;
+  }
   const int lineLen = vline_length( visLineNum );
   const int lineStartPos = mLineStarts[ visLineNum ];
   if (lineStartPos < 0 || lineLen == 0) {
@@ -3472,7 +3487,7 @@ int Fl_Text_Display::measure_vline( int visLineNum ) const {
  \return 1 if there are empty lines
  */
 int Fl_Text_Display::empty_vlines() const {
-  return ((mNVisibleLines > 0) && (mLineStarts[ mNVisibleLines - 1 ] == -1)) ? 1 : 0;
+  return ((mNVisibleLines > 0) && mLineStarts && (mLineStarts[ mNVisibleLines - 1 ] == -1)) ? 1 : 0;
 }
 
 
@@ -3486,7 +3501,7 @@ int Fl_Text_Display::empty_vlines() const {
  \return number of bytes in this line
  */
 int Fl_Text_Display::vline_length( int visLineNum ) const {
-  if (visLineNum < 0 || visLineNum >= mNVisibleLines) {
+  if (!mLineStarts || visLineNum < 0 || visLineNum >= mNVisibleLines) {
     return 0;
   }
 

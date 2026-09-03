@@ -22,10 +22,12 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
+struct Fl_Gpio::Callback {
+  void (*cb)(Fl_Gpio*, void*) { nullptr };
+  void* data { nullptr };
+};
 
-Fl_Gpio::Fl_Gpio(int pin) : pin_(pin), fd_(-1), dir_(IN), edge_(NONE), cb_(nullptr), data_(nullptr) {
+Fl_Gpio::Fl_Gpio(int pin) : cb_ctx_(nullptr), fd_(-1), pin_(static_cast<short>(pin)), dir_(IN), edge_(NONE) {
   (void)export_pin();
 }
 
@@ -36,6 +38,7 @@ Fl_Gpio::~Fl_Gpio() {
     fd_ = -1;
   }
   (void)unexport_pin();
+  delete cb_ctx_;
 }
 
 int Fl_Gpio::export_pin() const {
@@ -196,23 +199,35 @@ void Fl_Gpio::fd_callback(int fd, void* data) {
 }
 
 void Fl_Gpio::callback(void (*cb)(Fl_Gpio*, void*), void* data) {
-  cb_ = cb;
-  data_ = data;
+  if (cb == nullptr && data == nullptr) {
+    delete cb_ctx_;
+    cb_ctx_ = nullptr;
+  } else {
+    if (!cb_ctx_) cb_ctx_ = new Callback();
+    cb_ctx_->cb = cb;
+    cb_ctx_->data = data;
+  }
 }
 
 void Fl_Gpio::do_callback() {
-  if (cb_ != nullptr) {
-    cb_(this, data_);
+  if (cb_ctx_ != nullptr && cb_ctx_->cb != nullptr) {
+    cb_ctx_->cb(this, cb_ctx_->data);
   }
 }
 
 #else
 // Fallback for non-Linux platforms
 
-Fl_Gpio::Fl_Gpio(int pin) : pin_(pin), fd_(-1), dir_(IN), edge_(NONE), cb_(nullptr), data_(nullptr) {
+struct Fl_Gpio::Callback {
+  void (*cb)(Fl_Gpio*, void*) { nullptr };
+  void* data { nullptr };
+};
+
+Fl_Gpio::Fl_Gpio(int pin) : cb_ctx_(nullptr), fd_(-1), pin_(static_cast<short>(pin)), dir_(IN), edge_(NONE) {
 }
 
 Fl_Gpio::~Fl_Gpio() {
+  delete cb_ctx_;
 }
 
 int Fl_Gpio::direction(Direction d) {
@@ -234,13 +249,19 @@ int Fl_Gpio::edge(Edge e) {
 }
 
 void Fl_Gpio::callback(void (*cb)(Fl_Gpio*, void*), void* data) {
-  cb_ = cb;
-  data_ = data;
+  if (cb == nullptr && data == nullptr) {
+    delete cb_ctx_;
+    cb_ctx_ = nullptr;
+  } else {
+    if (!cb_ctx_) cb_ctx_ = new Callback();
+    cb_ctx_->cb = cb;
+    cb_ctx_->data = data;
+  }
 }
 
 void Fl_Gpio::do_callback() {
-  if (cb_ != nullptr) {
-    cb_(this, data_);
+  if (cb_ctx_ != nullptr && cb_ctx_->cb != nullptr) {
+    cb_ctx_->cb(this, cb_ctx_->data);
   }
 }
 

@@ -48,7 +48,7 @@ void Fl_Multimedia::init_defaults() {
   error_cb_ = 0;
   error_data_ = 0;
 
-  driver_ = Fl_Multimedia_Driver::new_multimedia_driver(this);
+  driver_ = 0;
 }
 
 Fl_Multimedia::Fl_Multimedia(int X, int Y, int W, int H, const char *L)
@@ -95,6 +95,9 @@ void Fl_Multimedia::set_source(const char *url_or_path) {
   set_error(NoError, 0);
   loops_remaining_ = loops_;
 
+  if (!driver_) {
+    driver_ = Fl_Multimedia_Driver::new_multimedia_driver(this);
+  }
   if (driver_) {
     driver_->set_source(url_or_path);
   }
@@ -102,6 +105,9 @@ void Fl_Multimedia::set_source(const char *url_or_path) {
 }
 
 int Fl_Multimedia::play() {
+  if (!driver_) {
+    driver_ = Fl_Multimedia_Driver::new_multimedia_driver(this);
+  }
   if (!driver_) {
     set_error(ServiceMissingError, "No multimedia driver backend available");
     return 0;

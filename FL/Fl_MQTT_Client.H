@@ -57,40 +57,9 @@ public:
   };
 
 private:
-#if defined(_WIN32)
-  uintptr_t socket_; // SOCKET on Windows
-#else
-  int socket_; // File descriptor on POSIX
-#endif
-
-  std::string hostname_;
-  int port_;
-  std::string client_id_;
-  std::string username_;
-  std::string password_;
-  int keep_alive_;
-  
-  ClientState state_;
-  
-  Fl_MQTT_Message_Callback message_cb_;
-  void* message_cb_data_;
-  
-  Fl_MQTT_State_Callback connected_cb_;
-  void* connected_cb_data_;
-  
-  Fl_MQTT_State_Callback disconnected_cb_;
-  void* disconnected_cb_data_;
-
-  // Buffer for incoming packets
-  std::string recv_buffer_;
-  
-  // Internal socket handler for Fl::add_fd
-  static void socket_cb_static(FL_SOCKET fd, void* data);
-  void socket_cb();
-  
-  // MQTT Protocol helpers
-  int send_packet(const void* data, int len);
-  void handle_packet(const unsigned char* data, int len);
+  struct Impl;
+  Impl* impl_;
+  Impl* ensure_impl();
 
 public:
   /**

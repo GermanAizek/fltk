@@ -34,8 +34,6 @@ class FL_EXPORT Fl_Bitmap : public Fl_Image {
 public:
   /** pointer to raw bitmap data */
   const uchar *array;
-  /** Non-zero if array points to bitmap data allocated internally */
-  int alloc_array;
 
 private:
   /** for internal use */
@@ -43,14 +41,17 @@ private:
   int cache_w_, cache_h_; // size of bitmap when cached
 
 public:
+  /** Non-zero if array points to bitmap data allocated internally */
+  bool alloc_array;
+
   /** The constructors create a new bitmap from the specified bitmap data.
    \see Fl_Bitmap(const uchar *bits, int bits_length, int W, int H) */
   Fl_Bitmap(const uchar *bits, int W, int H) :
-    Fl_Image(W,H,0), array(bits), alloc_array(0), id_(0), cache_w_(0),cache_h_(0) {data((const char **)&array, 1);}
+    Fl_Image(W,H,0), array(bits), id_(0), cache_w_(0), cache_h_(0), alloc_array(false) {data((const char **)&array, 1);}
   /** The constructors create a new bitmap from the specified bitmap data.
    \see Fl_Bitmap(const char *bits, int bits_length, int W, int H) */
   Fl_Bitmap(const char *bits, int W, int H) :
-    Fl_Image(W,H,0), array((const uchar *)bits), alloc_array(0), id_(0), cache_w_(0),cache_h_(0) {data((const char **)&array, 1);}
+    Fl_Image(W,H,0), array((const uchar *)bits), id_(0), cache_w_(0), cache_h_(0), alloc_array(false) {data((const char **)&array, 1);}
   Fl_Bitmap(const uchar *bits, int bits_length, int W, int H);
   Fl_Bitmap(const char *bits, int bits_length, int W, int H);
   virtual ~Fl_Bitmap();

@@ -118,6 +118,31 @@ public:
   }
 };
 
+struct Fl_Input_Undo_Context {
+  Fl_Input_Undo_Action* undo { nullptr };
+  Fl_Input_Undo_Action_List* undo_list { nullptr };
+  Fl_Input_Undo_Action_List* redo_list { nullptr };
+
+  Fl_Input_Undo_Context() {
+    undo = new Fl_Input_Undo_Action();
+    undo_list = new Fl_Input_Undo_Action_List();
+    redo_list = new Fl_Input_Undo_Action_List();
+  }
+
+  ~Fl_Input_Undo_Context() {
+    delete undo;
+    delete undo_list;
+    delete redo_list;
+  }
+};
+
+Fl_Input_Undo_Context* Fl_Input_::ensure_undo_ctx() {
+  if (!undo_ctx_) {
+    undo_ctx_ = new Fl_Input_Undo_Context();
+  }
+  return undo_ctx_;
+}
+
 
 /** \internal
   Converts a given text segment into the text that will be rendered on screen.
@@ -965,6 +990,11 @@ int Fl_Input_::replace(int b, int e, const char* text, int ilen) {
 
   put_in_buffer(size_+ilen);
 
+  Fl_Input_Undo_Context* const uctx = ensure_undo_ctx();
+  Fl_Input_Undo_Action*& undo_ = uctx->undo;
+  Fl_Input_Undo_Action_List* const undo_list_ = uctx->undo_list;
+  Fl_Input_Undo_Action_List* const redo_list_ = uctx->redo_list;
+
   if (e>b) {
     if (b == undo_->undoat) {
       undo_->undobuffersize(undo_->undocut+(e-b));
@@ -1054,6 +1084,8 @@ int Fl_Input_::replace(int b, int e, const char* text, int ilen) {
  \see undo(), redo() */
 int Fl_Input_::apply_undo() {
   was_up_down = 0;
+  if (!undo_ctx_ || !undo_ctx_->undo) return 0;
+  Fl_Input_Undo_Action* const undo_ = undo_ctx_->undo;
   if (!undo_->undocut && !undo_->undoinsert) return 0;
 
   int ilen = undo_->undocut;
@@ -1102,12 +1134,14 @@ int Fl_Input_::apply_undo() {
  \return non-zero if any change was made.
  */
 int Fl_Input_::undo() {
+  if (!undo_ctx_ || !undo_ctx_->undo_list)
+    return 0;
   if (apply_undo() == 0)
     return 0;
 
-  redo_list_->push(undo_);
-  undo_ = undo_list_->pop();
-  if (!undo_) undo_ = new Fl_Input_Undo_Action();
+  undo_ctx_->redo_list->push(undo_ctx_->undo);
+  undo_ctx_->undo = undo_ctx_->undo_list->pop();
+  if (!undo_ctx_->undo) undo_ctx_->undo = new Fl_Input_Undo_Action();
 
   if (when()&FL_WHEN_CHANGED) do_callback(FL_REASON_CHANGED);
 
@@ -1120,7 +1154,7 @@ int Fl_Input_::undo() {
  \return true if the widget can undo the last change
  */
 bool Fl_Input_::can_undo() const {
-  return (undo_->undocut || undo_->undoinsert);
+  return (undo_ctx_ && undo_ctx_->undo && (undo_ctx_->undo->undocut || undo_ctx_->undo->undoinsert));
 }
 
 /**
@@ -1131,15 +1165,17 @@ bool Fl_Input_::can_undo() const {
  \return non-zero if any change was made.
  */
 int Fl_Input_::redo() {
-  Fl_Input_Undo_Action *redo_action = redo_list_->pop();
+  if (!undo_ctx_ || !undo_ctx_->redo_list)
+    return 0;
+  Fl_Input_Undo_Action *redo_action = undo_ctx_->redo_list->pop();
   if (!redo_action)
     return 0;
 
-  if (undo_->undocut || undo_->undoinsert)
-    undo_list_->push(undo_);
+  if (undo_ctx_->undo && (undo_ctx_->undo->undocut || undo_ctx_->undo->undoinsert))
+    undo_ctx_->undo_list->push(undo_ctx_->undo);
   else
-    delete undo_;
-  undo_ = redo_action;
+    delete undo_ctx_->undo;
+  undo_ctx_->undo = redo_action;
 
   int ret = apply_undo();
   if (ret && (when()&FL_WHEN_CHANGED)) do_callback(FL_REASON_CHANGED);
@@ -1153,7 +1189,7 @@ int Fl_Input_::redo() {
  \return true if the widget can redo the last undo action
  */
 bool Fl_Input_::can_redo() const {
-  return (redo_list_->size() > 0);
+  return (undo_ctx_ && undo_ctx_->redo_list && undo_ctx_->redo_list->size() > 0);
 }
 
 /**
@@ -1168,8 +1204,8 @@ bool Fl_Input_::can_redo() const {
 */
 int Fl_Input_::copy_cuts() const {
   // put the yank buffer into the X clipboard
-  if (!undo_->undoyankcut || input_type()==FL_SECRET_INPUT) return 0;
-  Fl::copy(undo_->undobuffer, undo_->undoyankcut, 1);
+  if (!undo_ctx_ || !undo_ctx_->undo || !undo_ctx_->undo->undoyankcut || input_type()==FL_SECRET_INPUT) return 0;
+  Fl::copy(undo_ctx_->undo->undobuffer, undo_ctx_->undo->undoyankcut, 1);
   return 1;
 }
 
@@ -1331,9 +1367,7 @@ Fl_Input_::Fl_Input_(int X, int Y, int W, int H, const char* l)
   xscroll_ = yscroll_ = 0;
   maximum_size_ = 32767;
   shortcut_ = 0;
-  undo_list_ = new Fl_Input_Undo_Action_List();
-  redo_list_ = new Fl_Input_Undo_Action_List();
-  undo_ = new Fl_Input_Undo_Action();
+  undo_ctx_ = nullptr;
   set_flag(SHORTCUT_LABEL);
   set_flag(MAC_USE_ACCENTS_MENU);
   set_flag(NEEDS_KEYBOARD);
@@ -1400,9 +1434,11 @@ void Fl_Input_::put_in_buffer(int len) {
 */
 int Fl_Input_::static_value(const char* str, int len) {
   clear_changed();
-  undo_->clear();
-  undo_list_->clear();
-  redo_list_->clear();
+  if (undo_ctx_) {
+    if (undo_ctx_->undo) undo_ctx_->undo->clear();
+    if (undo_ctx_->undo_list) undo_ctx_->undo_list->clear();
+    if (undo_ctx_->redo_list) undo_ctx_->redo_list->clear();
+  }
   if (str == value_ && len == size_) return 0;
   if (len) { // non-empty new value:
     if (xscroll_ || yscroll_) {
@@ -1569,9 +1605,7 @@ void Fl_Input_::resize(int X, int Y, int W, int H) {
   from the parent Fl_Group.
 */
 Fl_Input_::~Fl_Input_() {
-  delete undo_list_;
-  delete redo_list_;
-  delete undo_;
+  delete undo_ctx_;
   if (bufsize) free((void*)buffer);
   if (placeholder_) free((void*)placeholder_);
 }

@@ -67,54 +67,79 @@ static void encode_remaining_length(std::string& buf, int len) {
     } while (len > 0);
 }
 
-Fl_MQTT_Client::Fl_MQTT_Client() : 
+struct Fl_MQTT_Client::Impl {
+    Fl_MQTT_Client* owner_;
 #if defined(_WIN32)
-    socket_((uintptr_t)-1),
+    uintptr_t socket_; // SOCKET on Windows
 #else
-    socket_(-1),
+    int socket_; // File descriptor on POSIX
 #endif
-    hostname_("localhost"),
-    port_(1883),
-    client_id_("FLTK_MQTT_Client"),
-    keep_alive_(60),
-    state_(Disconnected),
-    message_cb_(NULL),
-    message_cb_data_(NULL),
-    connected_cb_(NULL),
-    connected_cb_data_(NULL),
-    disconnected_cb_(NULL),
-    disconnected_cb_data_(NULL)
-{
+
+    std::string hostname_;
+    int port_;
+    std::string client_id_;
+    std::string username_;
+    std::string password_;
+    int keep_alive_;
+
+    ClientState state_;
+
+    Fl_MQTT_Message_Callback message_cb_;
+    void* message_cb_data_;
+
+    Fl_MQTT_State_Callback connected_cb_;
+    void* connected_cb_data_;
+
+    Fl_MQTT_State_Callback disconnected_cb_;
+    void* disconnected_cb_data_;
+
+    // Buffer for incoming packets
+    std::string recv_buffer_;
+
+    Impl(Fl_MQTT_Client* owner) :
+        owner_(owner),
 #if defined(_WIN32)
-    WSADATA wsaData;
-    WSAStartup(MAKEWORD(2, 2), &wsaData);
+        socket_((uintptr_t)-1),
+#else
+        socket_(-1),
 #endif
-}
-
-Fl_MQTT_Client::~Fl_MQTT_Client() {
-    disconnect();
+        hostname_("localhost"),
+        port_(1883),
+        client_id_("FLTK_MQTT_Client"),
+        keep_alive_(60),
+        state_(Disconnected),
+        message_cb_(NULL),
+        message_cb_data_(NULL),
+        connected_cb_(NULL),
+        connected_cb_data_(NULL),
+        disconnected_cb_(NULL),
+        disconnected_cb_data_(NULL)
+    {
 #if defined(_WIN32)
-    WSACleanup();
+        WSADATA wsaData;
+        WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif
-}
+    }
 
-void Fl_MQTT_Client::set_hostname(const char* hostname) { hostname_ = hostname ? hostname : ""; }
-const char* Fl_MQTT_Client::hostname() const { return hostname_.c_str(); }
+    ~Impl() {
+        disconnect();
+#if defined(_WIN32)
+        WSACleanup();
+#endif
+    }
 
-void Fl_MQTT_Client::set_port(int port) { port_ = port; }
-int Fl_MQTT_Client::port() const { return port_; }
+    int connect();
+    void disconnect();
+    int publish(const char* topic, const void* message, int len);
+    int subscribe(const char* topic);
+    int unsubscribe(const char* topic);
+    int send_packet(const void* data, int len);
+    static void socket_cb_static(FL_SOCKET fd, void* data);
+    void socket_cb();
+    void handle_packet(const unsigned char* data, int len);
+};
 
-void Fl_MQTT_Client::set_client_id(const char* client_id) { client_id_ = client_id ? client_id : ""; }
-const char* Fl_MQTT_Client::client_id() const { return client_id_.c_str(); }
-
-void Fl_MQTT_Client::set_username(const char* username) { username_ = username ? username : ""; }
-void Fl_MQTT_Client::set_password(const char* password) { password_ = password ? password : ""; }
-
-void Fl_MQTT_Client::set_keep_alive(int keep_alive) { keep_alive_ = keep_alive; }
-
-Fl_MQTT_Client::ClientState Fl_MQTT_Client::state() const { return state_; }
-
-int Fl_MQTT_Client::connect() {
+int Fl_MQTT_Client::Impl::connect() {
     if (state_ != Disconnected) {
         return -1;
     }
@@ -170,11 +195,7 @@ int Fl_MQTT_Client::connect() {
 #endif
 
     // 3. Register FLTK fd callback
-#if defined(_WIN32)
     Fl::add_fd((int)socket_, FL_READ | FL_EXCEPT, socket_cb_static, this);
-#else
-    Fl::add_fd((int)socket_, FL_READ | FL_EXCEPT, socket_cb_static, this);
-#endif
 
     // 4. Send MQTT CONNECT packet
     std::string payload;
@@ -212,7 +233,7 @@ int Fl_MQTT_Client::connect() {
     return 0;
 }
 
-void Fl_MQTT_Client::disconnect() {
+void Fl_MQTT_Client::Impl::disconnect() {
     if (state_ == Disconnected) return;
 
     if (state_ == Connected) {
@@ -224,13 +245,10 @@ void Fl_MQTT_Client::disconnect() {
 #if defined(_WIN32)
         Fl::remove_fd((SOCKET)socket_);
         ::closesocket((SOCKET)socket_);
+        socket_ = (uintptr_t)-1;
 #else
         Fl::remove_fd((int)socket_);
         ::close((int)socket_);
-#endif
-#if defined(_WIN32)
-        socket_ = (uintptr_t)-1;
-#else
         socket_ = -1;
 #endif
     }
@@ -239,11 +257,11 @@ void Fl_MQTT_Client::disconnect() {
     recv_buffer_.clear();
 
     if (disconnected_cb_) {
-        disconnected_cb_(this, disconnected_cb_data_);
+        disconnected_cb_(owner_, disconnected_cb_data_);
     }
 }
 
-int Fl_MQTT_Client::publish(const char* topic, const void* message, int len) {
+int Fl_MQTT_Client::Impl::publish(const char* topic, const void* message, int len) {
     if (state_ != Connected) return -1;
 
     std::string variable_header;
@@ -258,11 +276,7 @@ int Fl_MQTT_Client::publish(const char* topic, const void* message, int len) {
     return send_packet(packet.data(), (int)packet.length());
 }
 
-int Fl_MQTT_Client::publish(const char* topic, const char* message) {
-    return publish(topic, message, (int)strlen(message));
-}
-
-int Fl_MQTT_Client::subscribe(const char* topic) {
+int Fl_MQTT_Client::Impl::subscribe(const char* topic) {
     if (state_ != Connected) return -1;
 
     static unsigned short packet_id = 1;
@@ -285,7 +299,7 @@ int Fl_MQTT_Client::subscribe(const char* topic) {
     return send_packet(packet.data(), (int)packet.length());
 }
 
-int Fl_MQTT_Client::unsubscribe(const char* topic) {
+int Fl_MQTT_Client::Impl::unsubscribe(const char* topic) {
     if (state_ != Connected) return -1;
 
     static unsigned short packet_id = 1;
@@ -307,7 +321,7 @@ int Fl_MQTT_Client::unsubscribe(const char* topic) {
     return send_packet(packet.data(), (int)packet.length());
 }
 
-int Fl_MQTT_Client::send_packet(const void* data, int len) {
+int Fl_MQTT_Client::Impl::send_packet(const void* data, int len) {
     if (socket_ == (uintptr_t)-1) return -1;
 #if defined(_WIN32)
     int n = ::send((SOCKET)socket_, (const char*)data, len, 0);
@@ -317,12 +331,12 @@ int Fl_MQTT_Client::send_packet(const void* data, int len) {
     return n == len ? 0 : -1;
 }
 
-void Fl_MQTT_Client::socket_cb_static(FL_SOCKET fd, void* data) {
+void Fl_MQTT_Client::Impl::socket_cb_static(FL_SOCKET fd, void* data) {
     (void)fd;
-    ((Fl_MQTT_Client*)data)->socket_cb();
+    ((Impl*)data)->socket_cb();
 }
 
-void Fl_MQTT_Client::socket_cb() {
+void Fl_MQTT_Client::Impl::socket_cb() {
     char buf[1024];
 #if defined(_WIN32)
     int n = ::recv((SOCKET)socket_, buf, sizeof(buf), 0);
@@ -371,7 +385,7 @@ void Fl_MQTT_Client::socket_cb() {
     }
 }
 
-void Fl_MQTT_Client::handle_packet(const unsigned char* data, int len) {
+void Fl_MQTT_Client::Impl::handle_packet(const unsigned char* data, int len) {
     if (len < 2) return;
     
     unsigned char type = data[0] & 0xF0;
@@ -388,7 +402,7 @@ void Fl_MQTT_Client::handle_packet(const unsigned char* data, int len) {
             unsigned char return_code = data[idx + 1];
             if (return_code == 0) {
                 state_ = Connected;
-                if (connected_cb_) connected_cb_(this, connected_cb_data_);
+                if (connected_cb_) connected_cb_(owner_, connected_cb_data_);
             } else {
                 disconnect();
             }
@@ -410,7 +424,7 @@ void Fl_MQTT_Client::handle_packet(const unsigned char* data, int len) {
                 
                 int payload_len = len - (int)idx;
                 if (payload_len >= 0 && message_cb_) {
-                    message_cb_(this, topic.c_str(), &data[idx], payload_len, message_cb_data_);
+                    message_cb_(owner_, topic.c_str(), &data[idx], payload_len, message_cb_data_);
                 }
             }
         }
@@ -420,17 +434,70 @@ void Fl_MQTT_Client::handle_packet(const unsigned char* data, int len) {
     }
 }
 
+// --- Fl_MQTT_Client Public Methods ---
+
+Fl_MQTT_Client::Fl_MQTT_Client() : impl_(nullptr) {}
+
+Fl_MQTT_Client::~Fl_MQTT_Client() {
+    delete impl_;
+}
+
+Fl_MQTT_Client::Impl* Fl_MQTT_Client::ensure_impl() {
+    if (!impl_) {
+        impl_ = new Impl(this);
+    }
+    return impl_;
+}
+
+void Fl_MQTT_Client::set_hostname(const char* hostname) { ensure_impl()->hostname_ = hostname ? hostname : ""; }
+const char* Fl_MQTT_Client::hostname() const { return impl_ ? impl_->hostname_.c_str() : "localhost"; }
+
+void Fl_MQTT_Client::set_port(int port) { ensure_impl()->port_ = port; }
+int Fl_MQTT_Client::port() const { return impl_ ? impl_->port_ : 1883; }
+
+void Fl_MQTT_Client::set_client_id(const char* client_id) { ensure_impl()->client_id_ = client_id ? client_id : ""; }
+const char* Fl_MQTT_Client::client_id() const { return impl_ ? impl_->client_id_.c_str() : "FLTK_MQTT_Client"; }
+
+void Fl_MQTT_Client::set_username(const char* username) { ensure_impl()->username_ = username ? username : ""; }
+void Fl_MQTT_Client::set_password(const char* password) { ensure_impl()->password_ = password ? password : ""; }
+
+void Fl_MQTT_Client::set_keep_alive(int keep_alive) { ensure_impl()->keep_alive_ = keep_alive; }
+
+Fl_MQTT_Client::ClientState Fl_MQTT_Client::state() const { return impl_ ? impl_->state_ : Disconnected; }
+
+int Fl_MQTT_Client::connect() { return ensure_impl()->connect(); }
+void Fl_MQTT_Client::disconnect() { if (impl_) impl_->disconnect(); }
+
+int Fl_MQTT_Client::publish(const char* topic, const void* message, int len) {
+    if (!impl_) return -1;
+    return impl_->publish(topic, message, len);
+}
+
+int Fl_MQTT_Client::publish(const char* topic, const char* message) {
+    return publish(topic, message, (int)strlen(message));
+}
+
+int Fl_MQTT_Client::subscribe(const char* topic) {
+    if (!impl_) return -1;
+    return impl_->subscribe(topic);
+}
+
+int Fl_MQTT_Client::unsubscribe(const char* topic) {
+    if (!impl_) return -1;
+    return impl_->unsubscribe(topic);
+}
+
 void Fl_MQTT_Client::set_message_callback(Fl_MQTT_Message_Callback cb, void* userdata) {
-    message_cb_ = cb;
-    message_cb_data_ = userdata;
+    ensure_impl()->message_cb_ = cb;
+    ensure_impl()->message_cb_data_ = userdata;
 }
 
 void Fl_MQTT_Client::set_connected_callback(Fl_MQTT_State_Callback cb, void* userdata) {
-    connected_cb_ = cb;
-    connected_cb_data_ = userdata;
+    ensure_impl()->connected_cb_ = cb;
+    ensure_impl()->connected_cb_data_ = userdata;
 }
 
 void Fl_MQTT_Client::set_disconnected_callback(Fl_MQTT_State_Callback cb, void* userdata) {
-    disconnected_cb_ = cb;
-    disconnected_cb_data_ = userdata;
+    ensure_impl()->disconnected_cb_ = cb;
+    ensure_impl()->disconnected_cb_data_ = userdata;
 }

@@ -37,7 +37,6 @@ char Fl_Window::show_next_window_iconic_ = 0;
 Fl_Window *Fl_Window::current_;
 
 void Fl_Window::_Fl_Window() {
-  cursor_default = FL_CURSOR_DEFAULT;
   type(FL_WINDOW);
   box(FL_FLAT_BOX);
   if (Fl::scheme_bg_) {
@@ -48,20 +47,20 @@ void Fl_Window::_Fl_Window() {
     labeltype(FL_NO_LABEL);
   }
   flx_ = 0;
-  xclass_ = 0;
-  iconlabel_ = 0;
+  ext_ = nullptr;
   resizable(0);
-  size_range_set_ = 0;
-  minw_ = maxw_ = minh_ = maxh_ = 0;
-  no_fullscreen_x = 0;
-  no_fullscreen_y = 0;
-  no_fullscreen_w = 0;
-  no_fullscreen_h = 0;
-  fullscreen_screen_top = -1;
-  fullscreen_screen_bottom = -1;
-  fullscreen_screen_left = -1;
-  fullscreen_screen_right = -1;
   callback((Fl_Callback*)default_callback);
+}
+
+Fl_Window::Ext::~Ext() {
+  if (xclass) ::free(xclass);
+}
+
+Fl_Window::Ext* Fl_Window::ensure_ext() {
+  if (!ext_) {
+    ext_ = new Ext();
+  }
+  return ext_;
 }
 
 Fl_Window::Fl_Window(int X,int Y,int W, int H, const char *l) :
@@ -85,7 +84,7 @@ Fl_Group((Fl_Group::current(0),0), 0, W, H, l)
 
 Fl_Window::~Fl_Window() {
   hide();
-  free(xclass_);
+  delete ext_;
   free_icons();
   delete pWindowDriver;
 }
@@ -256,14 +255,16 @@ void Fl_Window::default_xclass(const char *xc)
 */
 void Fl_Window::xclass(const char *xc)
 {
-  if (xclass_) {
-    free(xclass_);
-    xclass_ = 0L;
-  }
   if (xc) {
-    xclass_ = fl_strdup(xc);
+    char *new_xc = fl_strdup(xc);
+    ensure_ext()->xclass = new_xc;
     if (!default_xclass_) {
       default_xclass(xc);
+    }
+  } else {
+    if (ext_ && ext_->xclass) {
+      free(ext_->xclass);
+      ext_->xclass = 0L;
     }
   }
 }
@@ -275,8 +276,8 @@ void Fl_Window::xclass(const char *xc)
 */
 const char *Fl_Window::xclass() const
 {
-  if (xclass_) {
-    return xclass_;
+  if (ext_ && ext_->xclass) {
+    return ext_->xclass;
   } else {
     return default_xclass();
   }
@@ -539,7 +540,11 @@ void Fl_Window::make_current()
 
 void Fl_Window::label(const char *name, const char *mininame) {
   Fl_Widget::label(name);
-  iconlabel_ = mininame;
+  if (mininame) {
+    ensure_ext()->iconlabel = mininame;
+  } else if (ext_) {
+    ext_->iconlabel = nullptr;
+  }
   pWindowDriver->label(name, mininame);
 }
 
@@ -667,14 +672,15 @@ int Fl_Window::handle(int ev)
 void Fl_Window::size_range(int minWidth, int minHeight,
                            int maxWidth, int maxHeight,
                            int deltaX, int deltaY, int aspectRatio) {
-  minw_           = minWidth;
-  minh_           = minHeight;
-  maxw_           = maxWidth;
-  maxh_           = maxHeight;
-  dw_             = deltaX;
-  dh_             = deltaY;
-  aspect_         = aspectRatio;
-  size_range_set_ = 1;
+  Ext* e          = ensure_ext();
+  e->minw         = minWidth;
+  e->minh         = minHeight;
+  e->maxw         = maxWidth;
+  e->maxh         = maxHeight;
+  e->dw           = deltaX;
+  e->dh           = deltaY;
+  e->aspect       = aspectRatio;
+  e->size_range_set = 1;
   pWindowDriver->size_range();  // platform specific stuff
 }
 
@@ -695,14 +701,24 @@ void Fl_Window::size_range(int minWidth, int minHeight,
 uchar Fl_Window::get_size_range(int *minWidth, int *minHeight,
                                 int *maxWidth, int *maxHeight,
                                 int *deltaX, int *deltaY, int *aspectRatio) const {
-  if (minWidth) *minWidth = minw_;
-  if (minHeight) *minHeight = minh_;
-  if (maxWidth) *maxWidth = maxw_;
-  if (maxHeight) *maxHeight = maxh_;
-  if (deltaX) *deltaX = dw_;
-  if (deltaY) *deltaY = dh_;
-  if (aspectRatio) *aspectRatio = aspect_;
-  return size_range_set_;
+  if (ext_) {
+    if (minWidth) *minWidth = ext_->minw;
+    if (minHeight) *minHeight = ext_->minh;
+    if (maxWidth) *maxWidth = ext_->maxw;
+    if (maxHeight) *maxHeight = ext_->maxh;
+    if (deltaX) *deltaX = ext_->dw;
+    if (deltaY) *deltaY = ext_->dh;
+    if (aspectRatio) *aspectRatio = ext_->aspect;
+  } else {
+    if (minWidth) *minWidth = 0;
+    if (minHeight) *minHeight = 0;
+    if (maxWidth) *maxWidth = 0;
+    if (maxHeight) *maxHeight = 0;
+    if (deltaX) *deltaX = 0;
+    if (deltaY) *deltaY = 0;
+    if (aspectRatio) *aspectRatio = 0;
+  }
+  return size_range_set();
 }
 
 /**
@@ -788,7 +804,7 @@ uchar Fl_Window::get_size_range(int *minWidth, int *minHeight,
 */
 void Fl_Window::default_size_range() {
 
-  if (size_range_set_)
+  if (size_range_set())
     return;
   if (!resizable()) {
     size_range(w(), h(), w(), h());
@@ -870,8 +886,10 @@ void Fl_Window::default_size_range() {
 int Fl_Window::is_resizable() {
   default_size_range();
   int ret = 0;
-  if (minw_ != maxw_) ret |= 1;
-  if (minh_ != maxh_) ret |= 2;
+  if (ext_) {
+    if (ext_->minw != ext_->maxw) ret |= 1;
+    if (ext_->minh != ext_->maxh) ret |= 2;
+  }
   return ret;
 }
 

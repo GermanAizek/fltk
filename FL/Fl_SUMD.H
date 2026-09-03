@@ -47,7 +47,7 @@ private:
   Fl_SUMD_Callback sumd_cb_;
   void* sumd_user_data_;
   uint16_t channels_[32]; // Max 32 channels (16-bit)
-  uint8_t buffer_[128];   // Max SUMD frame is roughly 3 + 32*2 + 2 = 69 bytes
+  uint8_t* buffer_;
   State state_;
   uint8_t num_channels_;
   uint8_t status_; // 0x01 = valid, 0x00 = failsafe, 0x81 = failsafe valid

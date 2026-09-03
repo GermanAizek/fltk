@@ -113,14 +113,14 @@
 */
 class FL_EXPORT Fl_Flex : public Fl_Group {
 
-  int margin_left_;           // left margin
-  int margin_top_;            // top margin
-  int margin_right_;          // right margin
-  int margin_bottom_;         // bottom margin
-  int gap_;                   // gap between widgets
-  int fixed_size_size_;       // number of fixed size widgets in array
-  int fixed_size_alloc_;      // allocated size of fixed size array
   Fl_Widget **fixed_size_;    // array of fixed size widgets
+  short margin_left_;         // left margin
+  short margin_top_;          // top margin
+  short margin_right_;        // right margin
+  short margin_bottom_;       // bottom margin
+  short gap_;                 // gap between widgets
+  short fixed_size_size_;     // number of fixed size widgets in array
+  short fixed_size_alloc_;    // allocated size of fixed size array
   bool need_layout_;          // true if layout needs to be calculated
 
 public:
@@ -259,9 +259,13 @@ public:
   void margin(int m, int g = -1) {
     if (m < 0)
       m = 0;
-    margin_left_ = margin_top_ = margin_right_ = margin_bottom_ = m;
-    if (g >= 0)
-      gap_ = g;
+    else if (m > 32767)
+      m = 32767;
+    margin_left_ = margin_top_ = margin_right_ = margin_bottom_ = static_cast<short>(m);
+    if (g >= 0) {
+      if (g > 32767) g = 32767;
+      gap_ = static_cast<short>(g);
+    }
     need_layout(1);
   }
 
@@ -280,10 +284,10 @@ public:
     \see margin(int, int)
   */
   void margin(int left, int top, int right, int bottom) {
-    margin_left_   = left < 0 ? 0 : left;
-    margin_top_    = top < 0 ? 0 : top;
-    margin_right_  = right < 0 ? 0 : right;
-    margin_bottom_ = bottom < 0 ? 0 : bottom;
+    margin_left_   = static_cast<short>(left < 0 ? 0 : (left > 32767 ? 32767 : left));
+    margin_top_    = static_cast<short>(top < 0 ? 0 : (top > 32767 ? 32767 : top));
+    margin_right_  = static_cast<short>(right < 0 ? 0 : (right > 32767 ? 32767 : right));
+    margin_bottom_ = static_cast<short>(bottom < 0 ? 0 : (bottom > 32767 ? 32767 : bottom));
     need_layout(1);
   }
 
@@ -303,7 +307,7 @@ public:
     \param[in]  g   gap size
   */
   void gap(int g) {
-    gap_ = g < 0 ? 0 : g;
+    gap_ = static_cast<short>(g < 0 ? 0 : (g > 32767 ? 32767 : g));
     need_layout(1);
   }
 

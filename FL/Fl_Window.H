@@ -55,35 +55,41 @@ class Fl_Double_Window;
 class FL_EXPORT Fl_Window : public Fl_Group {
   friend class Fl_X;
   friend class Fl_Window_Driver;
+public:
+  struct Ext {
+    int no_fullscreen_x { 0 };
+    int no_fullscreen_y { 0 };
+    int no_fullscreen_w { 0 };
+    int no_fullscreen_h { 0 };
+    int fullscreen_screen_top { -1 };
+    int fullscreen_screen_bottom { -1 };
+    int fullscreen_screen_left { -1 };
+    int fullscreen_screen_right { -1 };
+
+    int minw { 0 };
+    int minh { 0 };
+    int maxw { 0 };
+    int maxh { 0 };
+    int dw { 0 };
+    int dh { 0 };
+    int aspect { 0 };
+
+    const char* iconlabel { nullptr };
+    char* xclass { nullptr };
+
+    Fl_Cursor cursor_default { FL_CURSOR_DEFAULT };
+    uchar size_range_set { 0 };
+
+    ~Ext();
+  };
+
 private:
   static char *default_xclass_;
   static char show_next_window_iconic_; // 1 means create next window in iconic form
 
-  int no_fullscreen_x;
-  int no_fullscreen_y;
-  int no_fullscreen_w;
-  int no_fullscreen_h;
-  int fullscreen_screen_top;
-  int fullscreen_screen_bottom;
-  int fullscreen_screen_left;
-  int fullscreen_screen_right;
-
-  // TODO: it would make sense to merge the use of Fl_X and Fl_Window_Driver, maybe simply by
-  // TODO: deriving Fl_Window_Driver from Fl_X. However, there are a lot of historic kludges
-  // TODO: for some platforms around Fl_X.
   Fl_X *flx_; // points at the system-specific stuff, but exists only after the window is mapped
   Fl_Window_Driver *pWindowDriver; // points at the system-specific stuff at window creation time
-
-  const char* iconlabel_;
-  char* xclass_;
-
-  // private size_range stuff:
-  int minw_, minh_, maxw_, maxh_;
-  int dw_, dh_, aspect_;
-  uchar size_range_set_;        // true (1) if size_range() has been set or calculated
-
-  // cursor stuff
-  Fl_Cursor cursor_default;
+  Ext *ext_;
 
   void _Fl_Window(); // constructor innards
 
@@ -92,6 +98,18 @@ private:
   Fl_Window& operator=(const Fl_Window&);
 
   void is_maximized_(bool b);
+
+public:
+  Ext* ensure_ext();
+  const Ext* ext() const { return ext_; }
+  Fl_Cursor cursor_default() const { return ext_ ? ext_->cursor_default : FL_CURSOR_DEFAULT; }
+  void cursor_default(Fl_Cursor c) { if (c != FL_CURSOR_DEFAULT || ext_) ensure_ext()->cursor_default = c; }
+  uchar size_range_set() const { return ext_ ? ext_->size_range_set : 0; }
+  void size_range_set(uchar v) { if (v || ext_) ensure_ext()->size_range_set = v; }
+  int fullscreen_screen_top() const { return ext_ ? ext_->fullscreen_screen_top : -1; }
+  int fullscreen_screen_bottom() const { return ext_ ? ext_->fullscreen_screen_bottom : -1; }
+  int fullscreen_screen_left() const { return ext_ ? ext_->fullscreen_screen_left : -1; }
+  int fullscreen_screen_right() const { return ext_ ? ext_->fullscreen_screen_right : -1; }
 
 protected:
 
@@ -366,7 +384,7 @@ public:
   /** See void Fl_Window::label(const char*)   */
   const char* label() const     {return Fl_Widget::label();}
   /**  See void Fl_Window::iconlabel(const char*)   */
-  const char* iconlabel() const {return iconlabel_;}
+  const char* iconlabel() const {return ext_ ? ext_->iconlabel : nullptr;}
   /** Sets the window title bar label. */
   void label(const char*);
   /** Sets the icon label. */

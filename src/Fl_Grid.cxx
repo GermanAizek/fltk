@@ -138,6 +138,8 @@ void Fl_Grid::init() {
 Fl_Grid::~Fl_Grid() {
   delete[] Cols_;
   delete[] Rows_;
+  Cols_ = NULL;
+  Rows_ = NULL;
 }
 
 /**

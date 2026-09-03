@@ -21,14 +21,16 @@
 #include <cstring>
 
 Fl_FPort::Fl_FPort() : fport_cb_(nullptr), fport_user_data_(nullptr),
-                       channels_{}, buffer_{}, state_(WAIT_SYNC),
+                       channels_{}, buffer_(nullptr), state_(WAIT_SYNC),
                        frame_length_(0U), frame_type_(0U), buf_idx_(0U), flags_(0U),
                        rssi_(0U), escape_next_(false) {
   // Register the internal serial callback
   callback(serial_cb, this);
 }
 
-Fl_FPort::~Fl_FPort() = default;
+Fl_FPort::~Fl_FPort() {
+  delete[] buffer_;
+}
 
 int Fl_FPort::open(const char* const port_name) {
   int result = -1;
@@ -112,6 +114,7 @@ void Fl_FPort::process_byte(uint8_t b) {
         break;
 
       case WAIT_PAYLOAD:
+        if (!buffer_) buffer_ = new uint8_t[128];
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         buffer_[buf_idx_] = b;
         buf_idx_++;

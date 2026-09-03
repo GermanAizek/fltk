@@ -130,7 +130,7 @@ Fl_XPM_Image::Fl_XPM_Image(const char *name) : Fl_Pixmap((char *const*)0) {
   
   if ((!i) || (i<1+(ncolors<0?1:ncolors)+H)) goto bad_data;
   data((const char **)new_data, i);
-  alloc_data = 1;
+  alloc_data = true;
 
   measure();
   return;

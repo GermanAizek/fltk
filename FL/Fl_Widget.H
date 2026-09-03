@@ -112,12 +112,14 @@ public:
 struct Fl_Widget_Ext {
   Fl_Callback* callback_;
   void* user_data_;
+  int shortcut_;
   Fl_Color selection_color_;
   uchar when_;
 };
 
 class FL_EXPORT Fl_Widget {
   friend class Fl_Group;
+  friend class Fl_Button;
 
   Fl_Group* parent_;
   Fl_Label* label_;
@@ -477,11 +479,14 @@ public:
    */
   void color(Fl_Color bg) {color_ = bg;}
 
+  /** Returns the default selection color for this widget class. */
+  virtual Fl_Color default_selection_color() const { return FL_GRAY; }
+
   /** Gets the selection color.
       \return the current selection color
       \see selection_color(Fl_Color), color(Fl_Color, Fl_Color)
    */
-  Fl_Color selection_color() const {return ext_ ? ext_->selection_color_ : FL_GRAY;}
+  virtual Fl_Color selection_color() const {return ext_ ? ext_->selection_color_ : default_selection_color();}
 
   /** Sets the selection color.
       The selection color is defined for Forms compatibility and is usually
@@ -491,7 +496,7 @@ public:
       \param[in] a the new selection color
       \see selection_color(), color(Fl_Color, Fl_Color)
    */
-  void selection_color(Fl_Color a) { if (a != FL_GRAY && !ext_) alloc_ext(); if (ext_) ext_->selection_color_ = a; }
+  void selection_color(Fl_Color a) { if (a != default_selection_color() && !ext_) alloc_ext(); if (ext_) ext_->selection_color_ = a; }
 
   /** Sets the background and selection color of the widget.
 

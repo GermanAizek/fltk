@@ -327,7 +327,7 @@ void Fl_Flex::fixed(Fl_Widget *child, int size) {
   // if we have no entry yet, add to array of fixed size widgets
   if (idx == -1) {
     if (fixed_size_size_ == fixed_size_alloc_) {
-      fixed_size_alloc_ = alloc_size(fixed_size_alloc_);
+      fixed_size_alloc_ = static_cast<short>(alloc_size(fixed_size_alloc_));
       fixed_size_ = (Fl_Widget **)realloc(fixed_size_, fixed_size_alloc_ * sizeof(Fl_Widget *));
     }
     fixed_size_[fixed_size_size_] = child;
@@ -364,7 +364,7 @@ int Fl_Flex::fixed(Fl_Widget *w) const {
 
   This method is called when the array of fixed size widgets needs to be
   expanded. The current \p size is provided (size can be 0). The default
-  method adds 8 to the current size.
+  method adds 4 to the current size.
 
   This can be used in derived classes to change the allocation strategy.
   Note that this method only \p queries the new size which shall be allocated
@@ -374,5 +374,5 @@ int Fl_Flex::fixed(Fl_Widget *w) const {
   \return     int   new size (to be allocated)
 */
 int Fl_Flex::alloc_size(int size) const {
-  return size + 8;
+  return size + 4;
 }

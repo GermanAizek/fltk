@@ -44,7 +44,8 @@ Fl_Sys_Menu_Bar::Fl_Sys_Menu_Bar(int x,int y,int w,int h,const char *l)
 Fl_Sys_Menu_Bar::~Fl_Sys_Menu_Bar()
 {
   if (driver()) {
-    fl_sys_menu_bar = 0;
+    if (fl_sys_menu_bar == this)
+      fl_sys_menu_bar = 0;
     clear();
   }
 }

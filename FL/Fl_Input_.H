@@ -40,6 +40,7 @@
 
 class Fl_Input_Undo_Action;
 class Fl_Input_Undo_Action_List;
+struct Fl_Input_Undo_Context;
 
 /**
   This class provides a low-overhead text input field.
@@ -101,13 +102,11 @@ class FL_EXPORT Fl_Input_ : public Fl_Widget {
   /** \internal Buffer memory for expanded text. \see expand() */
   char* buffer;
 
-  /** \internal local undo event */
-  Fl_Input_Undo_Action* undo_;
-  Fl_Input_Undo_Action_List* undo_list_;
   /** \internal Store placeholder text. */
   char* placeholder_ { nullptr };
 
-  Fl_Input_Undo_Action_List* redo_list_;
+  /** \internal local undo context allocated on demand */
+  Fl_Input_Undo_Context* undo_ctx_ { nullptr };
 
   /** \internal Size of text in bytes in the \p value_ field. */
   int size_;
@@ -121,11 +120,6 @@ class FL_EXPORT Fl_Input_ : public Fl_Widget {
   /** \internal Position of the other end of the selected text.
       If \p position_ equals \p mark_, no text is selected */
   int mark_;
-
-  /** \internal Behavior of Tab key in multiline input widget.
-      If enabled (default) Tab causes focus nav, otherwise Tab is inserted
-      as a character. */
-  int tab_nav_;
 
   /** \internal Offset to text origin within widget bounds */
   int xscroll_, yscroll_;
@@ -152,8 +146,15 @@ class FL_EXPORT Fl_Input_ : public Fl_Widget {
   /** \internal color of the text cursor */
   Fl_Color cursor_color_;
 
+  /** \internal Behavior of Tab key in multiline input widget.
+      If enabled (default) Tab causes focus nav, otherwise Tab is inserted
+      as a character. */
+  uchar tab_nav_;
+
   /** \internal This is set if no text but only the cursor needs updating. */
   uchar erase_cursor_only;
+
+  Fl_Input_Undo_Context* ensure_undo_ctx();
 
   /** \internal Horizontal cursor position in pixels while moving up or down. */
   static double up_down_pos;
@@ -524,7 +525,7 @@ public:
     \see tab_nav(), Fl::OPTION_ARROW_FOCUS.
   */
   void tab_nav(int val) {
-    tab_nav_ = val;
+    tab_nav_ = val ? 1 : 0;
   }
 
   /**

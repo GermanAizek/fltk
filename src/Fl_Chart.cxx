@@ -319,25 +319,27 @@ void Fl_Chart::draw() {
 
   fl_font(textfont(), textsize());
 
-  switch (type()) {
-    case FL_BAR_CHART:
-      ww++; // makes the bars fill box correctly
-      draw_barchart(xx, yy, ww, hh, numb, entries, min_val, max_val, static_cast<int>(autosize()), maxnumb, textcolor());
-      break;
-    case FL_HORBAR_CHART:
-      hh++; // makes the bars fill box correctly
-      draw_horbarchart(xx, yy, ww, hh, numb, entries, min_val, max_val, static_cast<int>(autosize()), maxnumb, textcolor());
-      break;
-    case FL_PIE_CHART:
-      draw_piechart(xx, yy, ww, hh, numb, entries, 0, textcolor());
-      break;
-    case FL_SPECIALPIE_CHART:
-      draw_piechart(xx, yy, ww, hh, numb, entries, 1, textcolor());
-      break;
-    default:
-      draw_linechart(type(), xx, yy, ww, hh, numb, entries, min_val, max_val, static_cast<int>(autosize()), maxnumb,
-                     textcolor());
-      break;
+  if (entries && numb > 0) {
+    switch (type()) {
+      case FL_BAR_CHART:
+        ww++; // makes the bars fill box correctly
+        draw_barchart(xx, yy, ww, hh, numb, entries, min_val, max_val, static_cast<int>(autosize()), maxnumb, textcolor());
+        break;
+      case FL_HORBAR_CHART:
+        hh++; // makes the bars fill box correctly
+        draw_horbarchart(xx, yy, ww, hh, numb, entries, min_val, max_val, static_cast<int>(autosize()), maxnumb, textcolor());
+        break;
+      case FL_PIE_CHART:
+        draw_piechart(xx, yy, ww, hh, numb, entries, 0, textcolor());
+        break;
+      case FL_SPECIALPIE_CHART:
+        draw_piechart(xx, yy, ww, hh, numb, entries, 1, textcolor());
+        break;
+      default:
+        draw_linechart(type(), xx, yy, ww, hh, numb, entries, min_val, max_val, static_cast<int>(autosize()), maxnumb,
+                       textcolor());
+        break;
+    }
   }
   draw_label();
   fl_pop_clip();
@@ -356,7 +358,7 @@ Fl_Chart::Fl_Chart(int X, int Y, int W, int H, const char *L)
   : Fl_Widget(X, Y, W, H, L),
     numb(0),
     maxnumb(0),
-    sizenumb(FL_CHART_MAX),
+    sizenumb(0),
     entries(nullptr),
     min_val(0.0),
     max_val(0.0),
@@ -366,21 +368,25 @@ Fl_Chart::Fl_Chart(int X, int Y, int W, int H, const char *L)
     textcolor_(FL_FOREGROUND_COLOR) {
   box(FL_BORDER_BOX);
   align(FL_ALIGN_BOTTOM);
-  entries = static_cast<FL_CHART_ENTRY *>(calloc(static_cast<size_t>(FL_CHART_MAX) + 1U, sizeof(FL_CHART_ENTRY)));
 }
 
 /**
   Destroys the Fl_Chart widget and all of its data.
 */
 Fl_Chart::~Fl_Chart() {
-  free(entries);
+  if (entries) free(entries);
 }
 
 /**
   Removes all values from the chart.
 */
 void Fl_Chart::clear() {
+  if (entries) {
+    free(entries);
+    entries = nullptr;
+  }
   numb = 0;
+  sizenumb = 0;
   min_val = 0.0;
   max_val = 0.0;
   redraw();
@@ -397,7 +403,7 @@ void Fl_Chart::clear() {
 void Fl_Chart::add(double val, const char *str, unsigned int col) {
   // Allocate more entries if required
   if (numb >= sizenumb) {
-    sizenumb += FL_CHART_MAX;
+    sizenumb = (sizenumb == 0) ? 16 : sizenumb + 16;
     entries = static_cast<FL_CHART_ENTRY *>(realloc(entries, sizeof(FL_CHART_ENTRY) * (static_cast<size_t>(sizenumb) + 1U)));
   }
   // Shift entries as needed
@@ -430,7 +436,7 @@ void Fl_Chart::insert(int ind, double val, const char *str, unsigned int col) {
   if ((ind >= 1) && (ind <= (numb + 1))) {
     // Allocate more entries if required
     if (numb >= sizenumb) {
-      sizenumb += FL_CHART_MAX;
+      sizenumb = (sizenumb == 0) ? 16 : sizenumb + 16;
       entries = static_cast<FL_CHART_ENTRY *>(realloc(entries, sizeof(FL_CHART_ENTRY) * (static_cast<size_t>(sizenumb) + 1U)));
     }
     // Shift entries as needed

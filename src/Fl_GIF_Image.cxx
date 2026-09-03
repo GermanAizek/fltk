@@ -732,7 +732,7 @@ void Fl_GIF_Image::load_gif_(Fl_Image_Reader &rdr, bool anim/*=false*/)
           }
           char **new_data = convert_to_xpm(moved_image, ScreenWidth, ScreenHeight, CMap, ColorMapSize, has_transparent ? transparent_pixel : -1);
           data((const char **)new_data, Height + 2);
-          alloc_data = 1;
+          alloc_data = true;
           delete[] moved_image;
         } else {
           // Fl_GIF_Image does not apply offsets and just show the first frame at 0, 0
@@ -741,7 +741,7 @@ void Fl_GIF_Image::load_gif_(Fl_Image_Reader &rdr, bool anim/*=false*/)
           d(1);
           char **new_data = convert_to_xpm(Image, Width, Height, CMap, ColorMapSize, has_transparent ? transparent_pixel : -1);
           data((const char **)new_data, Height + 2);
-          alloc_data = 1;
+          alloc_data = true;
         }
       }
 

@@ -152,9 +152,6 @@ Fl_Text_Editor::Fl_Text_Editor(int X, int Y, int W, int H,  const char* l)
   set_flag(MAC_USE_ACCENTS_MENU);
   set_flag(NEEDS_KEYBOARD);
 
-  // default key bindings are lazily shared from default_bindings_list
-  init_default_bindings();
-
   // handle everything else
   default_key_function(kf_default);
 }
@@ -165,9 +162,22 @@ Fl_Text_Editor::Key_Binding* Fl_Text_Editor::global_key_bindings = 0;
 
 /**  Adds all of the default editor key bindings to the specified key binding list.*/
 void Fl_Text_Editor::add_default_key_bindings(Key_Binding** list) {
-  init_default_bindings();
-  for (Key_Binding* cur = default_bindings_list; cur; cur = cur->next) {
-    add_key_binding(cur->key, cur->state, cur->function, list);
+  for (int i = 0; default_key_bindings[i].key; i++) {
+    add_key_binding(default_key_bindings[i].key,
+                    default_key_bindings[i].state,
+                    default_key_bindings[i].func,
+                    list);
+  }
+  if (Fl::screen_driver()) {
+    Key_Binding *extra_key_bindings = Fl::screen_driver()->text_editor_extra_key_bindings;
+    if (extra_key_bindings) {
+      for (int i = 0; extra_key_bindings[i].key; i++) {
+        add_key_binding(extra_key_bindings[i].key,
+                        extra_key_bindings[i].state,
+                        extra_key_bindings[i].function,
+                        list);
+      }
+    }
   }
 }
 
@@ -185,9 +195,33 @@ Fl_Text_Editor::Key_Func Fl_Text_Editor::bound_key_function(int key, int state, 
 
 Fl_Text_Editor::Key_Func Fl_Text_Editor::bound_key_function(int key, int state) const {
   Key_Func f = bound_key_function(key, state, key_bindings);
+  if (!f && global_key_bindings) {
+    f = bound_key_function(key, state, global_key_bindings);
+  }
   if (!f) {
-    init_default_bindings();
-    f = bound_key_function(key, state, default_bindings_list);
+    if (default_bindings_list) {
+      f = bound_key_function(key, state, default_bindings_list);
+    } else {
+      for (int i = 0; default_key_bindings[i].key; i++) {
+        if (default_key_bindings[i].key == key &&
+            (default_key_bindings[i].state == FL_TEXT_EDITOR_ANY_STATE || default_key_bindings[i].state == state)) {
+          f = default_key_bindings[i].func;
+          break;
+        }
+      }
+      if (!f && Fl::screen_driver()) {
+        Key_Binding *extra_key_bindings = Fl::screen_driver()->text_editor_extra_key_bindings;
+        if (extra_key_bindings) {
+          for (int i = 0; extra_key_bindings[i].key; i++) {
+            if (extra_key_bindings[i].key == key &&
+                (extra_key_bindings[i].state == FL_TEXT_EDITOR_ANY_STATE || extra_key_bindings[i].state == state)) {
+              f = extra_key_bindings[i].function;
+              break;
+            }
+          }
+        }
+      }
+    }
   }
   return f;
 }

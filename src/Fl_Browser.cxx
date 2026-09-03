@@ -331,7 +331,7 @@ void Fl_Browser::insert(int line, FL_BLINE* item) {
 void Fl_Browser::insert(int line, const char* newtext, void* d) {
   if (!newtext) newtext = "";           // STR #3269
   int l = (int) strlen(newtext);
-  FL_BLINE* t = (FL_BLINE*)malloc(sizeof(FL_BLINE)+l);
+  FL_BLINE* t = (FL_BLINE*)malloc(offsetof(FL_BLINE, txt) + l + 1);
   t->length = (short)l;
   t->flags = 0;
   strcpy(t->txt, newtext);
@@ -368,7 +368,7 @@ void Fl_Browser::text(int line, const char* newtext) {
   if (!newtext) newtext = "";           // STR #3269
   int l = (int) strlen(newtext);
   if (l > t->length) {
-    FL_BLINE* n = (FL_BLINE*)malloc(sizeof(FL_BLINE)+l);
+    FL_BLINE* n = (FL_BLINE*)malloc(offsetof(FL_BLINE, txt) + l + 1);
     replacing(t, n);
     cache = n;
     n->data = t->data;

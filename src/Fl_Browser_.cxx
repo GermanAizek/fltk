@@ -124,7 +124,6 @@ void Fl_Browser_::resize(int X, int Y, int W, int H) {
 */
 void Fl_Browser_::redraw_line(void* item) {
   if (!redraw1 || redraw1 == item) {redraw1 = item; damage(FL_DAMAGE_EXPOSE);}
-  else if (!redraw2 || redraw2 == item) {redraw2 = item; damage(FL_DAMAGE_EXPOSE);}
   else damage(FL_DAMAGE_SCROLL);
 }
 
@@ -397,7 +396,7 @@ J1:
   for (; l && yy < H; l = item_next(l)) {
     int hh = item_height(l) + linespacing();
     if (hh <= 0) continue;
-    if ((damage()&(FL_DAMAGE_SCROLL|FL_DAMAGE_ALL)) || l == redraw1 || l == redraw2) {
+    if ((damage()&(FL_DAMAGE_SCROLL|FL_DAMAGE_ALL)) || l == redraw1) {
       if (item_selected(l)) {
         fl_color(active_r() ? selection_color() : fl_inactive(selection_color()));
         fl_rectf(X, yy+Y, W, hh);
@@ -425,7 +424,7 @@ J1:
   fl_pop_clip();
 
   fl_push_clip(x(),y(),w(),h());                // STR# 2886
-  redraw1 = redraw2 = 0;
+  redraw1 = 0;
   if (!dont_repeat) {
     dont_repeat = 1;
     // see if changes to full_height caused by calls to slow_height
@@ -1002,7 +1001,7 @@ Fl_Browser_::Fl_Browser_(int X, int Y, int W, int H, const char* L)
   max_width = 0;
   max_width_item = 0;
   scrollbar_size_ = 0;
-  redraw1 = redraw2 = 0;
+  redraw1 = 0;
   end();
 }
 

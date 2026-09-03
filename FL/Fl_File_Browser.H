@@ -39,7 +39,7 @@ class FL_EXPORT Fl_File_Browser : public Fl_Browser {
   const char    *directory_;
   const char    *pattern_;
   const char    *errmsg_;
-  int           filetype_;
+  uchar         filetype_;
   uchar         iconsize_;
 
   int   full_height() const override;
@@ -88,7 +88,7 @@ public:
     files and directories are shown. Otherwise only directories are
     shown.
   */
-  void          filetype(int t) { filetype_ = t; }
+  void          filetype(int t) { filetype_ = static_cast<uchar>(t); }
   void errmsg(const char *emsg);
   /**
     Returns OS error messages, or NULL if none. Use when advised.

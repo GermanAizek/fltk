@@ -38,10 +38,11 @@ void Fl_Window::border(int b) {
 void Fl_Window::fullscreen() {
   if (!is_resizable()) return;
   if (!maximize_active()) {
-    no_fullscreen_x = x();
-    no_fullscreen_y = y();
-    no_fullscreen_w = w();
-    no_fullscreen_h = h();
+    Ext* e = ensure_ext();
+    e->no_fullscreen_x = x();
+    e->no_fullscreen_y = y();
+    e->no_fullscreen_w = w();
+    e->no_fullscreen_h = h();
   }
   if (shown() && !(flags() & Fl_Widget::FULLSCREEN)) {
     pWindowDriver->fullscreen_on();
@@ -59,17 +60,21 @@ void Fl_Window::fullscreen_off(int X,int Y,int W,int H) {
   } else {
     clear_flag(FULLSCREEN);
   }
-  if (!maximize_active())
-    no_fullscreen_x = no_fullscreen_y = no_fullscreen_w = no_fullscreen_h = 0;
+  if (!maximize_active() && ext_)
+    ext_->no_fullscreen_x = ext_->no_fullscreen_y = ext_->no_fullscreen_w = ext_->no_fullscreen_h = 0;
 }
 
 void Fl_Window::fullscreen_off() {
-  if (!no_fullscreen_x && !no_fullscreen_y) {
+  int nx = ext_ ? ext_->no_fullscreen_x : 0;
+  int ny = ext_ ? ext_->no_fullscreen_y : 0;
+  int nw = ext_ ? ext_->no_fullscreen_w : 0;
+  int nh = ext_ ? ext_->no_fullscreen_h : 0;
+  if (!nx && !ny) {
     // Window was initially created fullscreen - default to current monitor
-    no_fullscreen_x = x();
-    no_fullscreen_y = y();
+    nx = x();
+    ny = y();
   }
-  fullscreen_off(no_fullscreen_x, no_fullscreen_y, no_fullscreen_w, no_fullscreen_h);
+  fullscreen_off(nx, ny, nw, nh);
 }
 
 /**
@@ -87,16 +92,19 @@ void Fl_Window::fullscreen_off() {
   */
 void Fl_Window::fullscreen_screens(int top, int bottom, int left, int right) {
   if ((top < 0) || (bottom < 0) || (left < 0) || (right < 0)) {
-    fullscreen_screen_top = -1;
-    fullscreen_screen_bottom = -1;
-    fullscreen_screen_left = -1;
-    fullscreen_screen_right = -1;
+    if (ext_) {
+      ext_->fullscreen_screen_top = -1;
+      ext_->fullscreen_screen_bottom = -1;
+      ext_->fullscreen_screen_left = -1;
+      ext_->fullscreen_screen_right = -1;
+    }
     pWindowDriver->fullscreen_screens(false);
   } else {
-    fullscreen_screen_top = top;
-    fullscreen_screen_bottom = bottom;
-    fullscreen_screen_left = left;
-    fullscreen_screen_right = right;
+    Ext* e = ensure_ext();
+    e->fullscreen_screen_top = top;
+    e->fullscreen_screen_bottom = bottom;
+    e->fullscreen_screen_left = left;
+    e->fullscreen_screen_right = right;
     pWindowDriver->fullscreen_screens(true);
   }
 

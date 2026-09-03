@@ -52,7 +52,7 @@ void Fl_Gl_Window_Driver::make_overlay(void *&o) {
  */
 void Fl_Gl_Window::redraw_overlay() {
   if (!shown()) return;
-  pGlWindowDriver->make_overlay(overlay);
+  pGlWindowDriver->make_overlay(ensure_glext()->overlay);
   pGlWindowDriver->redraw_overlay();
 }
 
@@ -64,7 +64,7 @@ void Fl_Gl_Window::redraw_overlay() {
  method.
  */
 void Fl_Gl_Window::make_overlay_current() {
-  pGlWindowDriver->make_overlay(overlay);
+  pGlWindowDriver->make_overlay(ensure_glext()->overlay);
   pGlWindowDriver->make_overlay_current();
 }
 

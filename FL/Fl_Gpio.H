@@ -34,20 +34,6 @@
   compilation without conditional logic in user code.
 */
 class FL_EXPORT Fl_Gpio {
-  int pin_;
-  int fd_;
-  int dir_;
-  int edge_;
-  void (*cb_)(Fl_Gpio*, void*);
-  void* data_;
-
-  int export_pin() const;
-  int unexport_pin() const;
-  int set_edge_sysfs(int edge_mode);
-  int set_dir_sysfs(int dir_mode);
-  
-  static void fd_callback(int fd, void* data);
-
 public:
   enum Direction {
     IN = 0,
@@ -60,6 +46,23 @@ public:
     FALLING = 2,
     BOTH = 3
   };
+
+private:
+  struct Callback;
+  Callback* cb_ctx_;
+  int fd_;
+  short pin_;
+  unsigned char dir_;
+  unsigned char edge_;
+
+  int export_pin() const;
+  int unexport_pin() const;
+  int set_edge_sysfs(int edge_mode);
+  int set_dir_sysfs(int dir_mode);
+  
+  static void fd_callback(int fd, void* data);
+
+public:
 
   /**
     Initializes a GPIO instance for the specified pin number.

@@ -94,13 +94,13 @@ Fl_SVG_Image::Fl_SVG_Image(const char *name, const unsigned char *svg_data, size
 
 // private constructor
 Fl_SVG_Image::Fl_SVG_Image(const Fl_SVG_Image *source) :
-  Fl_RGB_Image(NULL, 0, 0, 4), counted_svg_image_(source->counted_svg_image_), rasterized_(false),
-to_desaturate_(false), average_weight_(1), proportional(true)
+  Fl_RGB_Image(NULL, 0, 0, 4), counted_svg_image_(source->counted_svg_image_),
+  raster_w_(0), raster_h_(0), average_color_(0), average_weight_(1),
+  rasterized_(false), to_desaturate_(false), proportional(true)
 {
   counted_svg_image_->ref_count++;
   w(source->w());
   h(source->h());
-  raster_w_ = raster_h_ = 0;
 }
 
 

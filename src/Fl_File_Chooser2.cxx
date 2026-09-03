@@ -340,6 +340,7 @@
 //
 
 #include <FL/Fl_File_Chooser.H>
+#include "Fl_File_Chooser_Ext.H"
 #include "Fl_System_Driver.H"
 #include <FL/Fl.H>
 #include <FL/filename.H>
@@ -539,6 +540,7 @@ Fl_File_Chooser::favoritesCB(Fl_Widget *w)
 
 
   if (!w) {
+    ensure_favWindow();
     // Load the favorites list...
     favList->clear();
     favList->deselect();
@@ -643,7 +645,7 @@ Fl_File_Chooser::favoritesCB(Fl_Widget *w)
     update_favorites();
     prefs_->flush();
 
-    favWindow->hide();
+    if (favWindow) favWindow->hide();
   }
 }
 

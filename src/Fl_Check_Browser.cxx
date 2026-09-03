@@ -231,12 +231,11 @@ int Fl_Check_Browser::add(char *s) {
  */
 int Fl_Check_Browser::add(char *s, int b) {
   size_t len = s ? strlen(s) : 0;
-  cb_item *p = (cb_item *)malloc(sizeof(cb_item) + len + 1);
+  cb_item *p = (cb_item *)malloc(sizeof(cb_item) + len);
   p->next = 0;
   p->prev = 0;
   p->checked = b;
   p->selected = 0;
-  p->text = (char *)(p + 1);
   if (s && len > 0) {
     memcpy(p->text, s, len + 1);
   } else {
@@ -285,8 +284,6 @@ int Fl_Check_Browser::remove(int item) {
     else
       last = p->prev;
 
-    if (p->text != (char *)(p + 1))
-      free(p->text);
     free(p);
 
     --nitems_;
@@ -307,8 +304,6 @@ void Fl_Check_Browser::clear() {
   new_list();
   do {
     next = p->next;
-    if (p->text != (char *)(p + 1))
-      free(p->text);
     free(p);
     p = next;
   } while (p);

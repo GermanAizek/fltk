@@ -40,7 +40,7 @@ Fl_RGB_Scaling Fl_Image::scaling_algorithm_ = FL_RGB_SCALING_BILINEAR;
  1 to 4 for color images.
  */
 Fl_Image::Fl_Image(int W, int H, int D) :
-  w_(W), h_(H), d_(D), ld_(0), count_(0), data_w_(W), data_h_(H), data_(nullptr)
+  w_(W), h_(H), data_w_(W), data_h_(H), ld_(0), count_(0), d_(static_cast<uchar>(D)), data_(nullptr)
 {}
 
 /**

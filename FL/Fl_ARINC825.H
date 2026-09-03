@@ -49,7 +49,7 @@ private:
   Fl_ARINC825_Callback arinc825_cb_;
   void* user_data_;
   size_t buf_idx_;
-  uint8_t buffer_[128];
+  uint8_t* buffer_;
 
   static void serial_cb(Fl_Serial_Port* p, void* data);
   void process_byte(uint8_t b);

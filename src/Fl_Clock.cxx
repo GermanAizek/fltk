@@ -140,9 +140,9 @@ void Fl_Clock_Output::draw() {
  */
 void Fl_Clock_Output::value(int H, int m, int s) {
   if ((H != hour_) || (m != minute_) || (s != second_)) {
-    hour_ = H;
-    minute_ = m;
-    second_ = s;
+    hour_ = static_cast<uchar>(H);
+    minute_ = static_cast<uchar>(m);
+    second_ = static_cast<uchar>(s);
     value_ = static_cast<unsigned long>((static_cast<unsigned int>(H) * 3600U) + (static_cast<unsigned int>(m) * 60U) + static_cast<unsigned int>(s));
     damage(FL_DAMAGE_CHILD);
   }
@@ -174,10 +174,10 @@ void Fl_Clock_Output::value(unsigned long v) {
  */
 Fl_Clock_Output::Fl_Clock_Output(int X, int Y, int W, int H, const char *L)
 : Fl_Widget(X, Y, W, H, L),
+  value_(0UL),
   hour_(0),
   minute_(0),
   second_(0),
-  value_(0UL),
   shadow_(1) {
   box(FL_UP_BOX);
   selection_color(fl_gray_ramp(5));

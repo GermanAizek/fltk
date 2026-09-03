@@ -2607,10 +2607,10 @@ void Fl_X::make_xid(Fl_Window* win, XVisualInfo *visual, Colormap colormap)
   // Compute which screen(s) we should be on if we want to go fullscreen
   int fullscreen_top, fullscreen_bottom, fullscreen_left, fullscreen_right;
 
-  fullscreen_top = win->fullscreen_screen_top;
-  fullscreen_bottom = win->fullscreen_screen_bottom;
-  fullscreen_left = win->fullscreen_screen_left;
-  fullscreen_right = win->fullscreen_screen_right;
+  fullscreen_top = win->fullscreen_screen_top();
+  fullscreen_bottom = win->fullscreen_screen_bottom();
+  fullscreen_left = win->fullscreen_screen_left();
+  fullscreen_right = win->fullscreen_screen_right();
 
   if ((fullscreen_top < 0) || (fullscreen_bottom < 0) ||
       (fullscreen_left < 0) || (fullscreen_right < 0)) {
